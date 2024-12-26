@@ -176,7 +176,7 @@ export default function Profile() {
           display: "flex",
           bottom: 0,
           background: "rgba(100 100 100/ 10%)",
-          height: "5rem",
+          height: "5.5rem",
           border: "",
           width: "100%",
           justifyContent: "center",
