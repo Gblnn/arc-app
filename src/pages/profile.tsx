@@ -170,31 +170,6 @@ export default function Profile() {
                 <CircularProgress percentage={95} title="Top" />
                 <CircularProgress percentage={59} title="Me" /> */}
               </div>
-
-              {/* <button
-                style={{
-                  paddingLeft: "1rem",
-                  paddingRight: "1rem",
-                  marginRight: "1rem",
-                  fontSize: "0.8rem",
-                }}
-              >
-                Edit
-              </button> */}
-
-              {/* <Directive
-            title="Users"
-            icon={<Users width={"1.1rem"} color="dodgerblue" />}
-            onClick={() => setAddUserDialog(true)}
-            to={"/users"}
-          />
-
-          <Directive
-            title="Access Requests"
-            icon={<GitPullRequestArrow width={"1.1rem"} color="dodgerblue" />}
-            onClick={() => setAddUserDialog(true)}
-            to={"/access-requests"}
-          /> */}
             </div>
 
             <br />
