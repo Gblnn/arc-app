@@ -91,23 +91,7 @@ export default function Profile() {
           </div>
         ) : (
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-            <div
-              style={{
-                display: "flex",
-                flexFlow: "row",
-                flexWrap: "wrap",
-                gap: "0.5rem",
-                border: "",
-                // borderBottom: "1px solid rgba(100 100 100/ 50%)",
-                borderTop: "1px solid rgba(100 100 100/ 50%)",
-                paddingBottom: "1.5rem",
-                paddingTop: "1.5rem",
-                paddingLeft: "1rem",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div
+            {/* <div
                 style={{
                   display: "flex",
                   gap: "1rem",
@@ -152,25 +136,7 @@ export default function Profile() {
                     {role}
                   </p>
                 </div>
-              </div>
-              <div
-                className=""
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "100%",
-                  border: "",
-                  display: "flex",
-                  gap: "2rem",
-                  marginTop: "1rem",
-                  marginBottom: "1rem",
-                }}
-              >
-                {/* <CircularProgress percentage={78} title="Average" />
-                <CircularProgress percentage={95} title="Top" />
-                <CircularProgress percentage={59} title="Me" /> */}
-              </div>
-            </div>
+              </div> */}
 
             <br />
             <div
@@ -178,7 +144,7 @@ export default function Profile() {
                 display: "flex",
                 flexFlow: "column",
                 gap: "0.5rem",
-                border: "",
+                border: "solid",
                 justifyContent: "center",
                 alignItems: "center",
                 height: "100%",
@@ -198,8 +164,8 @@ export default function Profile() {
                   onClick={() => setStatus(!status)}
                   style={{
                     display: "flex",
-                    width: "12rem",
-                    height: "12rem",
+                    width: "14rem",
+                    height: "14rem",
                     padding: "4rem",
                     borderRadius: "50%",
                     fontSize: "2.5rem",
