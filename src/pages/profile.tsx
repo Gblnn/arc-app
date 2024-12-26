@@ -182,7 +182,7 @@ export default function Profile() {
           justifyContent: "center",
           alignItems: "center",
           gap: "10rem",
-          paddingBottom: "env(safe-area-inset-bottom, 20px)",
+          paddingBottom: "env(safe-area-inset-bottom, 50px)",
         }}
       >
         <BriefcaseBusiness
