@@ -18,6 +18,7 @@ export default function Profile() {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [logoutPrompt, setLogoutPrompt] = useState(false);
+  const [status, setStatus] = useState(false);
 
   const usenavigate = useNavigate();
 
@@ -211,24 +212,27 @@ export default function Profile() {
               <div
                 style={{
                   display: "flex",
-                  border: "solid crimson",
+                  border: status
+                    ? "4px solid crimson"
+                    : "4px solid rgba(100 100 100/ 20%)",
                   borderRadius: "50%",
                   padding: "0.5rem",
                 }}
               >
                 <button
+                  onClick={() => setStatus(!status)}
                   style={{
+                    display: "flex",
                     width: "12rem",
                     height: "12rem",
                     padding: "4rem",
                     borderRadius: "50%",
                     fontSize: "2.5rem",
-                    lineHeight: "2rem",
-                    background: "crimson",
+                    lineHeight: "2.5rem",
+                    background: !status ? "crimson" : "rgba(100 100 100/ 20%)",
                   }}
                 >
-                  {"Start"}
-                  <br /> Work
+                  {status ? "Stop" : "Start"}
                 </button>
               </div>
             </div>
