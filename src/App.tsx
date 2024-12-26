@@ -17,7 +17,7 @@ function App() {
         <Route path="/timesheets" element={<Timesheets />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/users" element={<Users />} />
-        <Route path="profile" element={<Profile />} />
+        <Route path="profile/*" element={<Profile />} />
       </Routes>
     </>
   );

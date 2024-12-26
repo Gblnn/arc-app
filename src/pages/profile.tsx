@@ -7,9 +7,10 @@ import { LoadingOutlined } from "@ant-design/icons";
 import { signOut } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { UserPlus } from "lucide-react";
+import { BriefcaseBusiness, List, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import Work from "./work";
 
 export default function Profile() {
   const [addUserDialog, setAddUserDialog] = useState(false);
@@ -17,12 +18,14 @@ export default function Profile() {
   // const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [logoutPrompt, setLogoutPrompt] = useState(false);
-  const [status, setStatus] = useState(false);
 
+  const [endDialog, setEndDialog] = useState(false);
   const usenavigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchUsers();
+    console.log(location);
   }, []);
 
   const fetchUsers = async () => {
@@ -44,15 +47,17 @@ export default function Profile() {
   };
 
   return (
-    <div
-      style={{
-        padding: "1.25rem",
-        // background:
-        //   "linear-gradient(rgba(18 18 80/ 65%), rgba(100 100 100/ 0%))",
-        height: "100svh",
-      }}
-    >
-      <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
+    <div>
+      <motion.div
+        style={{
+          padding: "1.25rem",
+          // background:
+          //   "linear-gradient(rgba(18 18 80/ 65%), rgba(100 100 100/ 0%))",
+          height: "100svh",
+        }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+      >
         <Back
           noback={role == "profile"}
           title={role == "profile" ? "Arc" : "Profile"}
@@ -136,46 +141,8 @@ export default function Profile() {
                   </p>
                 </div>
               </div> */}
+            <Work />
 
-            <br />
-            <div
-              style={{
-                display: "flex",
-                flexFlow: "column",
-                gap: "0.5rem",
-                border: "solid",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100%",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  border: status
-                    ? "4px solid crimson"
-                    : "4px solid rgba(100 100 100/ 20%)",
-                  borderRadius: "50%",
-                  padding: "0.5rem",
-                }}
-              >
-                <button
-                  onClick={() => setStatus(!status)}
-                  style={{
-                    display: "flex",
-                    width: "14rem",
-                    height: "14rem",
-                    padding: "4rem",
-                    borderRadius: "50%",
-                    fontSize: "2.5rem",
-                    lineHeight: "2.5rem",
-                    background: !status ? "crimson" : "rgba(100 100 100/ 20%)",
-                  }}
-                >
-                  {status ? "Stop" : "Start"}
-                </button>
-              </div>
-            </div>
             {/* <div
               style={{
                 border: "",
@@ -202,6 +169,29 @@ export default function Profile() {
           </motion.div>
         )}
       </motion.div>
+
+      <div
+        style={{
+          position: "fixed",
+          display: "flex",
+          bottom: 0,
+          background: "rgba(100 100 100/ 10%)",
+          height: "5rem",
+          border: "",
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "10rem",
+        }}
+      >
+        <BriefcaseBusiness
+          onClick={() => usenavigate("/profile")}
+          color={location.pathname == "/profile" ? "crimson" : "white"}
+        />
+        <List />
+      </div>
+
+      <DefaultDialog open={endDialog} onCancel={() => setEndDialog(false)} />
 
       <DefaultDialog
         destructive
