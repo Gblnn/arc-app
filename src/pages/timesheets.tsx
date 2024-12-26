@@ -4,14 +4,7 @@ import InputDialog from "@/components/input-dialog";
 import { auth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { motion } from "framer-motion";
-import {
-  Bug,
-  ChevronRight,
-  KeyRound,
-  LoaderCircle,
-  Mail,
-  User,
-} from "lucide-react";
+import { Bug, KeyRound, Mail } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +16,7 @@ export default function Timesheets() {
   const [logoutPrompt, setLogoutPrompt] = useState(false);
   const usenavigate = useNavigate();
   const [issue, setIssue] = useState("");
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   //   const [access, setAccess] = useState(false);
   //   const [admin, setAdmin] = useState(false);
 
@@ -178,7 +171,7 @@ export default function Timesheets() {
             }
           />
           <br />
-          {loading ? (
+          {/* {loading ? (
             <div
               style={{
                 border: "",
@@ -195,20 +188,9 @@ export default function Timesheets() {
             </div>
           ) : (
             <div style={{ display: "flex", flexFlow: "column", gap: "0.5rem" }}>
-              {/* <Directive
-                to={access ? "/record-list" : ""}
-                onClick={Authenticate}
-                title={"Time Sheets"}
-                icon={<FileArchive color="crimson" width={"1.25rem"} />}
-              />
-
-              <Directive
-                to={"/qr-code-generator"}
-                title={"QR Generator"}
-                icon={<QrCode width={"1.25rem"} />}
-              /> */}
+             
             </div>
-          )}
+          )} */}
         </motion.div>
 
         <DefaultDialog
@@ -238,7 +220,7 @@ export default function Timesheets() {
           //   onOk={() => {
           //     issue != "" ? sendBugReport() : "";
           //   }}
-          updating={loading}
+          // updating={loading}
         />
 
         <DefaultDialog

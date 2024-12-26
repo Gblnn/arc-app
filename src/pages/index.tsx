@@ -75,9 +75,9 @@ export default function Index() {
     }
   };
 
-  // const Authenticate = () => {
-  //   access ? usenavigate("/record-list") : message.error("Clearance required");
-  // };
+  const Authenticate = () => {
+    access ? usenavigate("/record-list") : message.error("Clearance required");
+  };
 
   useEffect(() => {
     verifyAccess();
@@ -197,7 +197,7 @@ export default function Index() {
             <div style={{ display: "flex", flexFlow: "column", gap: "0.5rem" }}>
               <Directive
                 to={"/timesheets"}
-                // onClick={Authenticate}
+                onClick={Authenticate}
                 title={"Time Sheet"}
                 icon={<FileArchive color="crimson" width={"1.25rem"} />}
               />

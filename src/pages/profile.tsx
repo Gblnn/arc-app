@@ -8,7 +8,7 @@ import { LoadingOutlined } from "@ant-design/icons";
 import { signOut } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { PlayCircle, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
