@@ -11,6 +11,7 @@ import { BriefcaseBusiness, List, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Work from "./work";
+import Records from "./records";
 
 export default function Profile() {
   const [addUserDialog, setAddUserDialog] = useState(false);
@@ -18,7 +19,7 @@ export default function Profile() {
   // const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [logoutPrompt, setLogoutPrompt] = useState(false);
-
+  const [path, setPath] = useState("work");
   const [endDialog, setEndDialog] = useState(false);
   const usenavigate = useNavigate();
   const location = useLocation();
@@ -141,7 +142,20 @@ export default function Profile() {
                   </p>
                 </div>
               </div> */}
-            <Work />
+            {path == "work" ? (
+              <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
+                <Work />
+              </motion.div>
+            ) : (
+              path == "records" && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                >
+                  <Records />
+                </motion.div>
+              )
+            )}
 
             {/* <div
               style={{
@@ -186,10 +200,15 @@ export default function Profile() {
         }}
       >
         <BriefcaseBusiness
-          onClick={() => usenavigate("/profile")}
-          color={location.pathname == "/profile" ? "crimson" : "white"}
+          style={{ cursor: "pointer" }}
+          onClick={() => setPath("work")}
+          color={path == "work" ? "crimson" : "white"}
         />
-        <List />
+        <List
+          style={{ cursor: "pointer" }}
+          onClick={() => setPath("records")}
+          color={path == "records" ? "crimson" : "white"}
+        />
       </div>
 
       <DefaultDialog open={endDialog} onCancel={() => setEndDialog(false)} />
