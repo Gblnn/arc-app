@@ -13,7 +13,7 @@ export default function Work() {
 
           justifyContent: "center",
           alignItems: "center",
-          height: "80svh",
+          height: "72svh",
         }}
       >
         <div
