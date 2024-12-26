@@ -23,6 +23,7 @@ export default function Profile() {
   const [endDialog, setEndDialog] = useState(false);
   const usenavigate = useNavigate();
   const location = useLocation();
+  const [status, setStatus] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -144,17 +145,10 @@ export default function Profile() {
               </div> */}
             {path == "work" ? (
               <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-                <Work />
+                <Work status={status} onStart={() => setStatus(!status)} />
               </motion.div>
             ) : (
-              path == "records" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                >
-                  <Records />
-                </motion.div>
-              )
+              path == "records" && <Records />
             )}
 
             {/* <div
