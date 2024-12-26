@@ -2,7 +2,6 @@ import Back from "@/components/back";
 import DefaultDialog from "@/components/default-dialog";
 import IndexDropDown from "@/components/index-dropdown";
 import InputDialog from "@/components/input-dialog";
-import LazyLoader from "@/components/lazy-loader";
 import { auth, db } from "@/firebase";
 import { LoadingOutlined } from "@ant-design/icons";
 import { signOut } from "firebase/auth";
@@ -15,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 export default function Profile() {
   const [addUserDialog, setAddUserDialog] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
+  // const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [logoutPrompt, setLogoutPrompt] = useState(false);
   const [status, setStatus] = useState(false);
@@ -40,7 +39,7 @@ export default function Profile() {
     querySnapshot.forEach((doc: any) => {
       fetchedData.push({ id: doc.id, ...doc.data() });
     });
-    setName(fetchedData[0].name);
+    // setName(fetchedData[0].name);
     setRole(fetchedData[0].role);
   };
 
