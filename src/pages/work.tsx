@@ -88,6 +88,7 @@ export default function Work() {
         start: Timestamp.fromDate(new Date()),
         end: "",
         status: true,
+        email: window.name,
       });
       verifyStatus();
       setStatus(true);
@@ -144,7 +145,8 @@ export default function Work() {
               </p> */}
               <p style={{ fontSize: "0.8rem", opacity: "0.5" }}>
                 <b>Session Start </b> :{" "}
-                {moment(sessionStart.toDate()).format("hh:mm:ss")}
+                {sessionStart &&
+                  moment(sessionStart.toDate()).format("hh:mm:ss")}
               </p>
             </motion.div>
 
@@ -199,7 +201,11 @@ export default function Work() {
                 borderRadius: "50%",
                 fontSize: "3rem",
                 lineHeight: "2.5rem",
-                background: !status ? "crimson" : "rgba(100 100 100/ 25%)",
+                background: !status
+                  ? "crimson"
+                  : updating
+                  ? "rgba(100 100 100/ 25%)"
+                  : "rgba(100 100 100/ 25%)",
               }}
             >
               {updating ? (

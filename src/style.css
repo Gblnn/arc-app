@@ -7,6 +7,14 @@
   user-select: none;
 }
 
+td {
+  padding: 0.5rem;
+}
+
+th {
+  padding: 0.45rem;
+}
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,

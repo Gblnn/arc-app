@@ -25,11 +25,11 @@ export default function Profile() {
   const location = useLocation();
 
   useEffect(() => {
-    fetchUsers();
+    fetchRecords();
     console.log(location);
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchRecords = async () => {
     setLoading(true);
     const RecordCollection = collection(db, "users");
     const recordQuery = query(
@@ -92,7 +92,7 @@ export default function Profile() {
               height: "75svh",
             }}
           >
-            <LoadingOutlined style={{ color: "dodgerblue", scale: "3" }} />
+            <LoadingOutlined style={{ color: "crimson", scale: "3" }} />
           </div>
         ) : (
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
@@ -179,29 +179,40 @@ export default function Profile() {
 
       <div
         style={{
-          position: "fixed",
           display: "flex",
-          bottom: 0,
-          background: "rgba(100 100 100/ 10%)",
-          height: "6rem",
-          border: "",
-          width: "100%",
           justifyContent: "center",
           alignItems: "center",
-          gap: "10rem",
-          paddingBottom: "env(safe-area-inset-bottom, 50px)",
         }}
       >
-        <BriefcaseBusiness
-          style={{ cursor: "pointer" }}
-          onClick={() => setPath("work")}
-          color={path == "work" ? "crimson" : "white"}
-        />
-        <List
-          style={{ cursor: "pointer" }}
-          onClick={() => setPath("records")}
-          color={path == "records" ? "crimson" : "white"}
-        />
+        <div
+          style={{
+            position: "fixed",
+            display: "flex",
+            bottom: 0,
+            background: "rgba(100 100 100/ 10%)",
+            height: "",
+            border: "",
+            width: "",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "3rem",
+            paddingBottom: "env(safe-area-inset-bottom, 50px)",
+            marginBottom: "3rem",
+            padding: "1.45rem",
+            borderRadius: "1.5rem",
+          }}
+        >
+          <BriefcaseBusiness
+            style={{ cursor: "pointer" }}
+            onClick={() => setPath("work")}
+            color={path == "work" ? "crimson" : "white"}
+          />
+          <List
+            style={{ cursor: "pointer" }}
+            onClick={() => setPath("records")}
+            color={path == "records" ? "crimson" : "white"}
+          />
+        </div>
       </div>
 
       <DefaultDialog open={endDialog} onCancel={() => setEndDialog(false)} />
