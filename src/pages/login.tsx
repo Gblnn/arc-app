@@ -25,6 +25,7 @@ export default function Login() {
   }, []);
 
   const AuthenticateRole = async () => {
+    message.loading("Authenticating");
     const RecordCollection = collection(db, "users");
     const recordQuery = query(
       RecordCollection,

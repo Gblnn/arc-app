@@ -62,7 +62,7 @@ export default function Profile() {
         <Back
           noback={role == "profile"}
           title={role == "profile" ? "Arc" : "Profile"}
-          subtitle={role == "profile" ? "v2.1.1" : ""}
+          subtitle={role == "profile" ? "v1.0" : ""}
           icon={
             role == "profile" ? (
               <img style={{ width: "2rem" }} src="arc-logo.png" />
@@ -189,13 +189,13 @@ export default function Profile() {
             position: "fixed",
             display: "flex",
             bottom: 0,
-            background: "rgba(100 100 100/ 10%)",
+            background: "rgba(100 100 100/ 20%)",
             height: "",
             border: "",
             width: "",
             justifyContent: "center",
             alignItems: "center",
-            gap: "3rem",
+            gap: "4rem",
             paddingBottom: "env(safe-area-inset-bottom, 50px)",
             marginBottom: "3rem",
             padding: "1.45rem",
