@@ -60,7 +60,11 @@ export default function Work() {
     try {
       setUpdating(true);
       const RecordCollection = collection(db, "records");
-      const recordQuery = query(RecordCollection, where("status", "==", true));
+      const recordQuery = query(
+        RecordCollection,
+        where("status", "==", true),
+        where("email", "==", window.name)
+      );
       const querySnapshot = await getDocs(recordQuery);
       const fetchedData: any = [];
       querySnapshot.forEach((doc: any) => {
@@ -201,11 +205,7 @@ export default function Work() {
                 borderRadius: "50%",
                 fontSize: "3rem",
                 lineHeight: "2.5rem",
-                background: !status
-                  ? "crimson"
-                  : updating
-                  ? "rgba(100 100 100/ 25%)"
-                  : "rgba(100 100 100/ 25%)",
+                background: !status ? "crimson" : "rgba(100 100 100/ 25%)",
               }}
             >
               {updating ? (

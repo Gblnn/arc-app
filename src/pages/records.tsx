@@ -75,10 +75,8 @@ export default function Records() {
                     </td>
                     <td>
                       {e.end
-                        ? moment(e.start.toDate()).diff(
-                            moment(e.end.toDate()),
-                            "h"
-                          )
+                        ? Number(moment(e.end.toDate()).format("hh")) -
+                          Number(moment(e.start.toDate()).format("hh"))
                         : "-"}
                     </td>
                     <td>
