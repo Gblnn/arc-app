@@ -197,7 +197,7 @@ export default function Profile() {
             alignItems: "center",
             gap: "4rem",
             paddingBottom: "env(safe-area-inset-bottom, 50px)",
-            marginBottom: "3rem",
+            marginBottom: "2.5rem",
             padding: "1.45rem",
             borderRadius: "1.5rem",
           }}

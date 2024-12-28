@@ -46,7 +46,7 @@ export default function Records() {
       >
         {!loading ? (
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-            <table style={{ width: "100%", fontSize: "0.8rem" }}>
+            <table style={{ width: "100%", fontSize: "0.9rem" }}>
               <thead style={{}}>
                 <tr style={{ background: "rgba(100 100 100/ 20%)" }}>
                   <th>Date</th>
