@@ -10,8 +10,8 @@ import { motion } from "framer-motion";
 import { BriefcaseBusiness, List, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Work from "./work";
 import Records from "./records";
+import Work from "./work";
 
 export default function Profile() {
   const [addUserDialog, setAddUserDialog] = useState(false);
@@ -23,7 +23,6 @@ export default function Profile() {
   const [endDialog, setEndDialog] = useState(false);
   const usenavigate = useNavigate();
   const location = useLocation();
-  const [status, setStatus] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -145,7 +144,7 @@ export default function Profile() {
               </div> */}
             {path == "work" ? (
               <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-                <Work status={status} onStart={() => setStatus(!status)} />
+                <Work />
               </motion.div>
             ) : (
               path == "records" && <Records />
@@ -184,7 +183,7 @@ export default function Profile() {
           display: "flex",
           bottom: 0,
           background: "rgba(100 100 100/ 10%)",
-          height: "5.5rem",
+          height: "6rem",
           border: "",
           width: "100%",
           justifyContent: "center",
