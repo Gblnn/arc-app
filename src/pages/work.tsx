@@ -139,8 +139,12 @@ export default function Work() {
               }}
             >
               {sessionTime}
-              <p style={{ fontSize: "0.8rem", opacity: "0.5" }}>
+              {/* <p style={{ fontSize: "0.8rem", opacity: "0.5" }}>
                 <b>Session ID </b> : {sessionId}
+              </p> */}
+              <p style={{ fontSize: "0.8rem", opacity: "0.5" }}>
+                <b>Session Start </b> :{" "}
+                {moment(sessionStart.toDate()).format("hh:mm:ss")}
               </p>
             </motion.div>
 
@@ -161,7 +165,7 @@ export default function Work() {
             >
               <p
                 style={{
-                  fontSize: "1rem",
+                  fontSize: "1.1rem",
                   color: "crimson",
                   fontWeight: "600",
                 }}
@@ -195,7 +199,7 @@ export default function Work() {
                 borderRadius: "50%",
                 fontSize: "3rem",
                 lineHeight: "2.5rem",
-                background: !status ? "crimson" : "rgba(100 100 100/ 30%)",
+                background: !status ? "crimson" : "rgba(100 100 100/ 25%)",
               }}
             >
               {updating ? (
