@@ -93,6 +93,8 @@ export default function Work() {
         end: "",
         status: true,
         email: window.name,
+        total: "",
+        overtime: "",
       });
       verifyStatus();
       setStatus(true);
@@ -108,7 +110,13 @@ export default function Work() {
     await updateDoc(doc(db, "records", sessionId), {
       end: Timestamp.fromDate(new Date()),
       status: false,
+      total: moment(sessionStart.toDate()).diff(moment(), "hours"),
+      overtime:
+        moment(sessionStart.toDate()).diff(moment(), "hours") > 10
+          ? moment(sessionStart.toDate()).diff(moment(), "hours") - 10
+          : "",
     });
+
     setUpdating(false);
     setStatus(false);
   };

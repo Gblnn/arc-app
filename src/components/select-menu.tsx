@@ -42,7 +42,7 @@ export default function SelectMenu(props: Props) {
 
         <SelectValue placeholder="Role" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent style={{}}>
         <SelectGroup
           style={{
             display: "flex",
@@ -56,12 +56,12 @@ export default function SelectMenu(props: Props) {
           >
             Admin
           </SelectItem>
-          <SelectItem
+          {/* <SelectItem
             style={{ display: "flex", justifyContent: "flex-start" }}
             value="user"
           >
             User
-          </SelectItem>
+          </SelectItem> */}
 
           <SelectItem
             style={{ display: "flex", justifyContent: "flex-start" }}

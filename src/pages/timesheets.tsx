@@ -17,7 +17,7 @@ export default function Records() {
   }, []);
 
   const exportDb = async () => {
-    const myHeader = ["name", "date", "start", "end", "total", "OT"];
+    const myHeader = ["name", "date", "start", "end", "total", "overtime"];
     records.forEach((e: any) => {
       //date
       e.date = String(moment(e.start.toDate()).format("DD/MM/YYYY"));
@@ -28,13 +28,9 @@ export default function Records() {
       //end
       e.end = e.end != "" ? moment(e.end.toDate()).format("hh:mm") : "-";
       //total
-      // e.total = e.end
-      //   ? moment
-      //       .duration(moment(e.end.toDate()).diff(moment(e.start.toDate())))
-      //       .get("hours")
-      //   : "-";
-
+      e.total = e.total ? e.total : "-";
       //overtime
+      e.overtime = e.overtime ? e.overtime : "-";
       // e.overtime =
       //   e.end != "" &&
       //   moment
@@ -73,6 +69,7 @@ export default function Records() {
       blob,
       "Timesheet(" + String(moment().format("DD/MM/YYYY")) + ").xlsx"
     );
+    window.location.reload();
   };
 
   const fetchRecords = async () => {
@@ -86,6 +83,7 @@ export default function Records() {
       fetchedData.push({ id: doc.id, ...doc.data() });
     });
     setRecords(fetchedData);
+    console.log(records);
   };
 
   return (
