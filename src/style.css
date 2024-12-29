@@ -9,6 +9,17 @@
 
 td {
   padding: 0.5rem;
+  overflow: hidden;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+tr {
+  border: 1px solid rgba(100 100 100/ 20%);
 }
 
 th {
@@ -45,6 +56,11 @@ button {
   transition: 0.3s;
   gap: 0.5rem;
   font-size: 1rem;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.blur {
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }

@@ -1,298 +1,248 @@
 import Back from "@/components/back";
-import DefaultDialog from "@/components/default-dialog";
-import InputDialog from "@/components/input-dialog";
-import { auth } from "@/firebase";
-import { signOut } from "firebase/auth";
+import { db } from "@/firebase";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { Bug, KeyRound, Mail } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { FilePlus, LoaderCircle } from "lucide-react";
+import moment from "moment";
+import { useEffect, useState } from "react";
+import * as XLSX from "@e965/xlsx";
+import { saveAs } from "file-saver";
 
-export default function Timesheets() {
-  const [requestDialog, setRequestDialog] = useState(false);
-  const [bugDialog, setBugDialog] = useState(false);
-  const [loginPrompt, setLoginPrompt] = useState(false);
-  const [valeLoginPrompt, setValeLoginPrompt] = useState(false);
-  const [logoutPrompt, setLogoutPrompt] = useState(false);
-  const usenavigate = useNavigate();
-  const [issue, setIssue] = useState("");
-  // const [loading, setLoading] = useState(false);
-  //   const [access, setAccess] = useState(false);
-  //   const [admin, setAdmin] = useState(false);
+export default function Records() {
+  const [loading, setLoading] = useState(false);
+  const [records, setRecords] = useState<any>([]);
 
-  //   const serviceId = "service_fixajl8";
-  //   const templateId = "template_0f3zy3e";
+  useEffect(() => {
+    fetchRecords();
+  }, []);
 
-  //   const sendBugReport = async () => {
-  //     setLoading(true);
-  //     await emailjs.send(serviceId, templateId, {
-  //       name: auth.currentUser?.email,
-  //       subject:
-  //         "Bug Report - " +
-  //         moment().format("ll") +
-  //         " from " +
-  //         auth.currentUser?.email,
-  //       recipient: "goblinn688@gmail.com",
-  //       message: issue,
-  //     });
-  //     setLoading(false);
-  //     message.success("Bug Report sent");
-  //     setBugDialog(false);
-  //   };
+  const exportDb = async () => {
+    const myHeader = ["name", "date", "start", "end", "total", "OT"];
+    records.forEach((e: any) => {
+      //date
+      e.date = String(moment(e.start.toDate()).format("DD/MM/YYYY"));
+      //start
+      e.start = e.start
+        ? e.start && moment(e.start.toDate()).format("hh:mm")
+        : "-";
+      //end
+      e.end = e.end != "" ? moment(e.end.toDate()).format("hh:mm") : "-";
+      //total
+      // e.total = e.end
+      //   ? moment
+      //       .duration(moment(e.end.toDate()).diff(moment(e.start.toDate())))
+      //       .get("hours")
+      //   : "-";
 
-  //   const verifyAccess = async () => {
-  //     try {
-  //       setLoading(true);
+      //overtime
+      // e.overtime =
+      //   e.end != "" &&
+      //   moment
+      //     .duration(moment(e.end.toDate()).diff(moment(e.start.toDate())))
+      //     .get("hours") > 10
+      //     ? moment
+      //         .duration(moment(e.end.toDate()).diff(moment(e.start.toDate())))
+      //         .get("hours") - 10
+      //     : "-";
 
-  //       const RecordCollection = collection(db, "users");
-  //       const recordQuery = query(
-  //         RecordCollection,
-  //         where("email", "==", window.name)
-  //       );
-  //       const querySnapshot = await getDocs(recordQuery);
-  //       const fetchedData: any = [];
-  //       querySnapshot.forEach((doc: any) => {
-  //         fetchedData.push({ id: doc.id, ...doc.data() });
-  //       });
-  //       setLoading(false);
+      delete e.id;
+      delete e.status;
+      delete e.email;
+    });
+    const worksheet = XLSX.utils.json_to_sheet(records, {
+      header: myHeader,
+    });
+    const workbook = XLSX.utils.book_new();
 
-  //       fetchedData[0].clearance == "Sohar Star United" ||
-  //       fetchedData[0].clearance == "Vale" ||
-  //       fetchedData[0].clearance == "All"
-  //         ? setAccess(true)
-  //         : setAccess(false);
+    const range = XLSX.utils.decode_range(String(worksheet["!ref"]));
+    range.e["c"] = myHeader.length - 1;
+    worksheet["!ref"] = XLSX.utils.encode_range(range);
 
-  //       fetchedData[0].role == "admin" ? setAdmin(true) : setAdmin(false);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
-  //       fetchedData[0].role == "profile" && usenavigate("/profile");
-  //     } catch (error) {
-  //       message.error(String(error));
-  //     }
-  //   };
+    // Buffer to store the generated Excel file
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
 
-  //   const Authenticate = () => {
-  //     access ? usenavigate("/record-list") : message.error("Clearance required");
-  //   };
+    saveAs(
+      blob,
+      "Timesheet(" + String(moment().format("DD/MM/YYYY")) + ").xlsx"
+    );
+  };
 
-  //   useEffect(() => {
-  //     verifyAccess();
-  //   }, []);
+  const fetchRecords = async () => {
+    setLoading(true);
+    const RecordCollection = collection(db, "records");
+    const recordQuery = query(RecordCollection, orderBy("name"));
+    const querySnapshot = await getDocs(recordQuery);
+    setLoading(false);
+    const fetchedData: any = [];
+    querySnapshot.forEach((doc: any) => {
+      fetchedData.push({ id: doc.id, ...doc.data() });
+    });
+    setRecords(fetchedData);
+  };
 
   return (
-    <>
-      {/* <div style={{border:"", display:"flex", alignItems:"center", justifyContent:'center'}}>
-        <ConfettiExplosion/>
-        </div> */}
+    <div style={{ padding: "", display: "flex", flexFlow: "column" }}>
       <div
+        className=""
         style={{
           border: "",
           padding: "1.25rem",
-          // background:
-          //   "linear-gradient(rgba(18 18 80/ 65%), rgba(100 100 100/ 0%))",
-          height: "100svh",
+          paddingBottom: "1rem",
+          position: "sticky",
+          top: 0,
+          zIndex: 1,
+          background: "rgba(100 100 100/ 15%)",
+          borderBottom: "2px solid rgba(100 100 100/ 40%)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
         }}
       >
-        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-          <Back
-            title="Time Sheet"
-            // icon={<img src="" style={{ width: "1.75rem" }} />}
-            extra={
-              <div
-                style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
-              >
-                {/* <button
-                  onClick={() => window.location.reload()}
-                  style={{
-                    paddingLeft: "1rem",
-                    paddingRight: "1rem",
-                    fontSize: "0.75rem",
-                    opacity: "0.75",
-                  }}
-                >
-                  <RefreshCcw width={"1rem"} color="dodgerblue" />
-                  <p style={{ opacity: 0.5, letterSpacing: "0.15rem" }}>
-                    v1.18
-                  </p>
-                </button> */}
-
-                {/* <button onClick={()=>usenavigate("/inbox")} style={{ width:"3rem", background:"rgba(220 20 60/ 20%)"}}>
-                            <Inbox className="" color="crimson"/>
-                        </button> */}
-
-                {/* <button
-                  onClick={() => {
-                    setLogoutPrompt(true);
-                  }}
-                  style={{ width: "3rem" }}
-                >
-                  <LogOut width={"1rem"} color="lightcoral" />
-                </button> */}
-
-                {/* {admin && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                  >
-                    <button
-                      onClick={() => usenavigate("/admin")}
-                      style={{
-                        fontSize: "0.75rem",
-                        paddingLeft: "1rem",
-                        paddingRight: "1rem",
-                        height: "2.5rem",
-                        width: "3rem",
-                      }}
-                    >
-                      {loading ? (
-                        <LoadingOutlined color="dodgerblue" />
-                      ) : (
-                        <KeyRound color="crimson" width={"1rem"} />
-                      )}
-                    </button>
-                  </motion.div>
-                )} */}
-
-                {/* <button
-                  style={{
-                    fontSize: "0.75rem",
-                    paddingLeft: "1rem",
-                    paddingRight: "1rem",
-                  }}
-                  onClick={() => setBugDialog(true)}
-                >
-                  <Bug width={"1rem"} color="lightgreen" />
-                </button> */}
-
-                {/* <IndexDropDown
-                  onLogout={() => setLogoutPrompt(true)}
-                  onProfile={() => usenavigate("/profile")}
-                /> */}
-              </div>
-            }
-          />
-          <br />
-          {/* {loading ? (
-            <div
-              style={{
-                border: "",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "75svh",
-              }}
-            >
-              <LoaderCircle
-                className="animate-spin"
-                style={{ color: "crimson", scale: "2" }}
-              />
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexFlow: "column", gap: "0.5rem" }}>
-             
-            </div>
-          )} */}
-        </motion.div>
-
-        <DefaultDialog
-          title={"Report a Bug"}
-          titleIcon={<Bug color="lightgreen" />}
+        <Back
+          title={"Timesheet"}
+          subtitle={records.length}
           extra={
-            <div
+            <button
+              onClick={exportDb}
               style={{
-                display: "flex",
-                width: "100%",
-                flexFlow: "column",
-                gap: "0.75rem",
-                paddingBottom: "0.5rem",
+                paddingLeft: "1rem",
+                paddingRight: "1rem",
+                fontSize: "0.8rem",
               }}
             >
-              <textarea
-                onChange={(e) => setIssue(e.target.value)}
-                rows={5}
-                placeholder="Describe issue"
-              />
-            </div>
+              <FilePlus color="lightgreen" width={"1.25rem"} />
+              Export
+            </button>
           }
-          open={bugDialog}
-          onCancel={() => setBugDialog(false)}
-          OkButtonText="Report"
-          disabled={issue == ""}
-          //   onOk={() => {
-          //     issue != "" ? sendBugReport() : "";
-          //   }}
-          // updating={loading}
-        />
-
-        <DefaultDialog
-          titleIcon={<Mail />}
-          title="Request Feature"
-          extra={
-            <p
-              style={{
-                fontSize: "0.85rem",
-                opacity: 0.5,
-                marginBottom: "0.5rem",
-              }}
-            >
-              Reach out to the developer to request a new feature? You will be
-              redirected to your e-mail client
-            </p>
-          }
-          open={requestDialog}
-          OkButtonText="Reach out"
-          onCancel={() => setRequestDialog(false)}
-          sendmail
-        />
-
-        <InputDialog
-          title={"Protected Route"}
-          input1Type="password"
-          desc="Enter key to continue"
-          titleIcon={<KeyRound color="dodgerblue" />}
-          open={loginPrompt}
-          onCancel={() => setLoginPrompt(false)}
-          OkButtonText="Continue"
-          inputplaceholder="Password"
-          onOk={() => usenavigate("/records")}
-        />
-
-        <InputDialog
-          title={"Protected Route"}
-          input1Type="password"
-          desc="Enter key to continue"
-          titleIcon={
-            <img
-              src="/vale-logo.png"
-              width={"28rem"}
-              style={{ paddingBottom: "0.25rem", marginRight: "0.25rem" }}
-            />
-          }
-          open={valeLoginPrompt}
-          onCancel={() => setValeLoginPrompt(false)}
-          OkButtonText="Continue"
-          inputplaceholder="Password"
-          onOk={() => usenavigate("/vale-records")}
-        />
-
-        <DefaultDialog
-          destructive
-          OkButtonText="Logout"
-          title={"Confirm Logout?"}
-          open={logoutPrompt}
-          onCancel={() => {
-            setLogoutPrompt(false);
-            window.location.reload();
-          }}
-          onOk={() => {
-            signOut(auth);
-            usenavigate("/");
-            window.name = "";
-            console.log(window.name);
-            window.location.reload();
-          }}
         />
       </div>
-      {/* <ReleaseNote /> */}
-    </>
+
+      <div
+        style={{
+          width: "auto",
+          border: "",
+          height: "",
+          padding: "",
+          display: "flex",
+          flexFlow: "column",
+        }}
+      >
+        {!loading ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            style={{ display: "flex", flexFlow: "column", padding: "" }}
+          >
+            <table
+              style={{
+                width: "auto",
+                fontSize: "0.8rem",
+                position: "sticky",
+                top: 0,
+                height: "",
+              }}
+            >
+              <thead style={{}}>
+                <tr
+                  style={{
+                    background: "rgba(100 100 100/ 40%)",
+                    position: "sticky",
+                    top: 0,
+                  }}
+                >
+                  <th>Name</th>
+                  <th>Date</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Total</th>
+                  <th style={{}}>OT</th>
+                </tr>
+              </thead>
+              <tbody
+                style={{
+                  textAlign: "center",
+                  background: "rgba(100 100 100/ 10%)",
+                  overflowY: "scroll",
+                  height: "",
+                  border: "",
+                }}
+              >
+                {records.map((e: any) => (
+                  <tr key={e.id} style={{}}>
+                    <td>{e.name}</td>
+                    <td>{moment(e.start.toDate()).format("DD/MM/YY")}</td>
+                    <td>
+                      {e.start
+                        ? e.start && moment(e.start.toDate()).format("hh:mm")
+                        : "-"}
+                    </td>
+                    <td>
+                      {e.end != ""
+                        ? moment(e.end.toDate()).format("hh:mm")
+                        : "-"}
+                    </td>
+                    <td>
+                      {/* {e.end
+                        ? Number(moment(e.end.toDate()).format("hh")) -
+                          Number(moment(e.start.toDate()).format("hh"))
+                        : "-"} */}
+                      {e.end
+                        ? moment
+                            .duration(
+                              moment(e.end.toDate()).diff(
+                                moment(e.start.toDate())
+                              )
+                            )
+                            .get("hours")
+                        : "-"}
+                    </td>
+                    <td>
+                      {e.end &&
+                      moment
+                        .duration(
+                          moment(e.end.toDate()).diff(moment(e.start.toDate()))
+                        )
+                        .get("hours") > 10
+                        ? moment
+                            .duration(
+                              moment(e.end.toDate()).diff(
+                                moment(e.start.toDate())
+                              )
+                            )
+                            .get("hours") - 10
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </motion.div>
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              height: "70svh",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <LoaderCircle
+              color="crimson"
+              height={"3rem"}
+              width={"3rem"}
+              className="animate-spin"
+            />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

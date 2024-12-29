@@ -53,7 +53,7 @@ export default function Records() {
                   <th>Start</th>
                   <th>End</th>
                   <th>Total</th>
-                  <th style={{}}>O.T</th>
+                  <th style={{}}>OT</th>
                 </tr>
               </thead>
               <tbody
@@ -66,7 +66,9 @@ export default function Records() {
                   <tr key={e.id}>
                     <td>{moment(e.start.toDate()).format("DD/MM/YY")}</td>
                     <td>
-                      {e.start && moment(e.start.toDate()).format("hh:mm:ss")}
+                      {e.start
+                        ? e.start && moment(e.start.toDate()).format("hh:mm:ss")
+                        : "-"}
                     </td>
                     <td>
                       {e.end != ""
@@ -74,17 +76,34 @@ export default function Records() {
                         : "-"}
                     </td>
                     <td>
-                      {e.end
+                      {/* {e.end
                         ? Number(moment(e.end.toDate()).format("hh")) -
                           Number(moment(e.start.toDate()).format("hh"))
+                        : "-"} */}
+                      {e.end
+                        ? moment
+                            .duration(
+                              moment(e.end.toDate()).diff(
+                                moment(e.start.toDate())
+                              )
+                            )
+                            .get("hours")
                         : "-"}
                     </td>
                     <td>
-                      {e.end
-                        ? moment(e.start.toDate()).diff(
-                            moment(e.end.toDate()),
-                            "h"
-                          )
+                      {e.end &&
+                      moment
+                        .duration(
+                          moment(e.end.toDate()).diff(moment(e.start.toDate()))
+                        )
+                        .get("hours") > 10
+                        ? moment
+                            .duration(
+                              moment(e.end.toDate()).diff(
+                                moment(e.start.toDate())
+                              )
+                            )
+                            .get("hours") - 10
                         : "-"}
                     </td>
                   </tr>
