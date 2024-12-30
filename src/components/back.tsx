@@ -13,6 +13,7 @@ interface Props {
   editMode?: boolean;
   fontSize?: string;
   editModeLoading?: boolean;
+  noblur?: boolean;
 }
 
 export default function Back(props: Props) {
@@ -36,7 +37,7 @@ export default function Back(props: Props) {
             onClick={() => {
               usenavigate(-1);
             }}
-            style={{ backdropFilter: "blur(16px)" }}
+            style={{ backdropFilter: props.noblur ? "none" : "blur(16px)" }}
           >
             <ChevronLeft />
           </button>

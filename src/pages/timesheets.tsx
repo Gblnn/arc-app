@@ -91,11 +91,13 @@ export default function Records() {
       >
         <Back
           title={"Timesheet"}
+          noblur
           subtitle={records.length}
           extra={
             <button
               onClick={exportDb}
               style={{
+                backdropFilter: "none",
                 paddingLeft: "1rem",
                 paddingRight: "1rem",
                 fontSize: "0.8rem",
