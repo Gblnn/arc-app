@@ -32,6 +32,7 @@ export default function Back(props: Props) {
       <div style={{ display: "flex" }}>
         {props.noback ? null : (
           <button
+            id="back"
             onClick={() => {
               usenavigate(-1);
             }}

@@ -114,7 +114,7 @@ export default function Work() {
       overtime:
         moment(sessionStart.toDate()).diff(moment(), "hours") > 10
           ? moment(sessionStart.toDate()).diff(moment(), "hours") - 10
-          : "",
+          : 0,
     });
 
     setUpdating(false);

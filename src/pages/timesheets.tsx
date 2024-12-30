@@ -27,19 +27,6 @@ export default function Records() {
         : "-";
       //end
       e.end = e.end != "" ? moment(e.end.toDate()).format("hh:mm") : "-";
-      //total
-      e.total = e.total ? e.total : "-";
-      //overtime
-      e.overtime = e.overtime ? e.overtime : "-";
-      // e.overtime =
-      //   e.end != "" &&
-      //   moment
-      //     .duration(moment(e.end.toDate()).diff(moment(e.start.toDate())))
-      //     .get("hours") > 10
-      //     ? moment
-      //         .duration(moment(e.end.toDate()).diff(moment(e.start.toDate())))
-      //         .get("hours") - 10
-      //     : "-";
 
       delete e.id;
       delete e.status;
@@ -83,7 +70,6 @@ export default function Records() {
       fetchedData.push({ id: doc.id, ...doc.data() });
     });
     setRecords(fetchedData);
-    console.log(records);
   };
 
   return (
