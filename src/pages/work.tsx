@@ -110,10 +110,10 @@ export default function Work() {
     await updateDoc(doc(db, "records", sessionId), {
       end: Timestamp.fromDate(new Date()),
       status: false,
-      total: moment(sessionStart.toDate()).diff(moment(), "hours"),
+      total: moment().diff(moment(sessionStart.toDate()), "hours"),
       overtime:
-        moment(sessionStart.toDate()).diff(moment(), "hours") > 10
-          ? moment(sessionStart.toDate()).diff(moment(), "hours") - 10
+        moment().diff(moment(sessionStart.toDate()), "hours") > 10
+          ? moment().diff(moment(sessionStart.toDate()), "hours") - 10
           : 0,
     });
 
@@ -152,6 +152,11 @@ export default function Work() {
               }}
             >
               {sessionTime}
+
+              {/* {moment(moment().diff(moment(sessionStart.toDate()))).format(
+                "hh:mm:ss"
+              )} */}
+
               {/* <p style={{ fontSize: "0.8rem", opacity: "0.5" }}>
                 <b>Session ID </b> : {sessionId}
               </p> */}
