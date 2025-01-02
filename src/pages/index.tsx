@@ -9,7 +9,14 @@ import { message } from "antd";
 import { signOut } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { Bug, FileArchive, KeyRound, LoaderCircle, Mail } from "lucide-react";
+import {
+  Bug,
+  FileClock,
+  KeyRound,
+  LoaderCircle,
+  Mail,
+  FileText,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -100,7 +107,7 @@ export default function Index() {
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
           <Back
             title="Arc"
-            subtitle={"v1.0"}
+            subtitle={"v1.1"}
             icon={<img src="/arc-logo.png" style={{ width: "2rem" }} />}
             noback
             extra={
@@ -141,7 +148,7 @@ export default function Index() {
                     whileInView={{ opacity: 1 }}
                   >
                     <button
-                      onClick={() => usenavigate("/admin")}
+                      onClick={() => usenavigate("/users")}
                       style={{
                         fontSize: "0.75rem",
                         paddingLeft: "1rem",
@@ -199,7 +206,13 @@ export default function Index() {
                 to={"/timesheets"}
                 onClick={Authenticate}
                 title={"Time Sheet"}
-                icon={<FileArchive color="crimson" width={"1.25rem"} />}
+                icon={<FileClock color="crimson" width={"1.25rem"} />}
+              />
+
+              <Directive
+                to={""}
+                title={"Invoices"}
+                icon={<FileText color="crimson" width={"1.25rem"} />}
               />
 
               {/* <Directive

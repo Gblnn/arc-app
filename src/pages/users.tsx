@@ -1,8 +1,6 @@
 import Back from "@/components/back";
-import ClearanceMenu from "@/components/clearance-menu";
 import DefaultDialog from "@/components/default-dialog";
 import Directive from "@/components/directive";
-import IOMenu from "@/components/editor-menu";
 import InputDialog from "@/components/input-dialog";
 import RefreshButton from "@/components/refresh-button";
 import SelectMenu from "@/components/select-menu";
@@ -25,7 +23,6 @@ import {
   AtSign,
   Eye,
   MinusCircle,
-  PenLine,
   Smartphone,
   User,
   UserPlus,
@@ -248,11 +245,8 @@ export default function Users() {
               icon={<AtSign width={"1.24rem"} color="crimson" />}
             />
             <SelectMenu value={role.toLowerCase()} onChange={setRole} />
-            <ClearanceMenu
-              value={clearance ? clearance : "Undefined"}
-              onChange={setClearance}
-            />
-            <IOMenu
+
+            {/* <IOMenu
               title="Editing"
               placeholder="Clearance"
               icon={<PenLine color="crimson" width={"1.25rem"} />}
@@ -265,7 +259,7 @@ export default function Users() {
               value={sensitive_data == "true" ? "true" : "false"}
               onChange={setSensitiveData}
               icon={<Eye color="crimson" width={"1.25rem"} />}
-            />
+            /> */}
           </div>
         }
         title_extra={
