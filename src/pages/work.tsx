@@ -5,15 +5,15 @@ import {
   collection,
   doc,
   getDocs,
+  onSnapshot,
   query,
-  Timestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
-import { LoaderCircle } from "lucide-react";
-import { useEffect, useState } from "react";
-import moment from "moment";
 import { motion } from "framer-motion";
+import { LoaderCircle } from "lucide-react";
+import moment from "moment";
+import { useEffect, useState } from "react";
 
 // interface Props {
 //   status?: boolean;
@@ -34,10 +34,28 @@ export default function Work() {
     });
   }, []);
 
+  useEffect(() => {
+    onSnapshot(query(collection(db, "records")), (snapshot: any) => {
+      snapshot.docChanges().forEach((change: any) => {
+        if (change.type === "added") {
+          verifyAccess();
+          verifyStatus();
+        }
+        if (change.type === "modified") {
+          verifyAccess();
+          verifyStatus();
+        }
+        if (change.type === "removed") {
+          verifyAccess();
+          verifyStatus();
+        }
+      });
+    });
+  }, []);
+
   const verifyAccess = async () => {
     try {
       setUpdating(true);
-
       const RecordCollection = collection(db, "users");
       const recordQuery = query(
         RecordCollection,
@@ -89,7 +107,7 @@ export default function Work() {
       setUpdating(true);
       await addDoc(collection(db, "records"), {
         name: name,
-        start: Timestamp.fromDate(new Date()),
+        start: new Date(),
         end: "",
         status: true,
         email: window.name,
@@ -108,7 +126,7 @@ export default function Work() {
   const endWork = async () => {
     setUpdating(true);
     await updateDoc(doc(db, "records", sessionId), {
-      end: Timestamp.fromDate(new Date()),
+      end: new Date(),
       status: false,
       total: moment().diff(moment(sessionStart.toDate()), "hours"),
       overtime:

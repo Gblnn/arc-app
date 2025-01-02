@@ -1,6 +1,12 @@
 import Back from "@/components/back";
 import { db } from "@/firebase";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
 import { motion } from "framer-motion";
 import { FilePlus, LoaderCircle } from "lucide-react";
 import moment from "moment";
@@ -16,9 +22,28 @@ export default function Records() {
     fetchRecords();
   }, []);
 
+  useEffect(() => {
+    onSnapshot(query(collection(db, "records")), (snapshot: any) => {
+      snapshot.docChanges().forEach((change: any) => {
+        if (change.type === "added") {
+          fetchRecords();
+        }
+        if (change.type === "modified") {
+          fetchRecords();
+        }
+        if (change.type === "removed") {
+          fetchRecords();
+        }
+      });
+    });
+  }, []);
+
   const exportDb = async () => {
     const myHeader = ["name", "date", "start", "end", "total", "overtime"];
     records.forEach((e: any) => {
+      const start = e.start.toDate();
+      const end = e.end != "" ? e.end.toDate() : "";
+      const total = moment(end).diff(moment(start), "minutes");
       //date
       e.date = String(moment(e.start.toDate()).format("DD/MM/YYYY"));
       //start
@@ -27,6 +52,8 @@ export default function Records() {
         : "-";
       //end
       e.end = e.end != "" ? moment(e.end.toDate()).format("hh:mm") : "-";
+
+      e.total = total;
 
       delete e.id;
       delete e.status;
@@ -186,7 +213,7 @@ export default function Records() {
                                 moment(e.start.toDate())
                               )
                             )
-                            .get("hours")
+                            .get("minutes")
                         : "-"}
                     </td>
                     <td>

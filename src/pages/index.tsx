@@ -101,7 +101,7 @@ export default function Index() {
           <Back
             title="Arc"
             subtitle={"v1.0"}
-            icon={<img src="/arc-logo.png" style={{ width: "1.75rem" }} />}
+            icon={<img src="/arc-logo.png" style={{ width: "2rem" }} />}
             noback
             extra={
               <div
