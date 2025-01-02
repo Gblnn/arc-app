@@ -213,7 +213,7 @@ export default function Records() {
                                 moment(e.start.toDate())
                               )
                             )
-                            .get("minutes")
+                            .get("minutes") / 60
                         : "-"}
                     </td>
                     <td>
