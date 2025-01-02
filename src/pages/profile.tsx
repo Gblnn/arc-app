@@ -5,7 +5,13 @@ import InputDialog from "@/components/input-dialog";
 import { auth, db } from "@/firebase";
 import { LoadingOutlined } from "@ant-design/icons";
 import { signOut } from "firebase/auth";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 import { motion } from "framer-motion";
 import { BriefcaseBusiness, List, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -27,6 +33,22 @@ export default function Profile() {
   useEffect(() => {
     fetchRecords();
     console.log(location);
+  }, []);
+
+  useEffect(() => {
+    onSnapshot(query(collection(db, "records")), (snapshot: any) => {
+      snapshot.docChanges().forEach((change: any) => {
+        if (change.type === "added") {
+          fetchRecords();
+        }
+        if (change.type === "modified") {
+          fetchRecords();
+        }
+        if (change.type === "removed") {
+          fetchRecords();
+        }
+      });
+    });
   }, []);
 
   const fetchRecords = async () => {
