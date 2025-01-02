@@ -67,12 +67,12 @@ export default function Records() {
                     <td>{moment(e.start.toDate()).format("DD/MM/YY")}</td>
                     <td>
                       {e.start
-                        ? e.start && moment(e.start.toDate()).format("hh:mm:ss")
+                        ? e.start && moment(e.start.toDate()).format("hh:mm A")
                         : "-"}
                     </td>
                     <td>
                       {e.end != ""
-                        ? moment(e.end.toDate()).format("hh:mm:ss")
+                        ? moment(e.end.toDate()).format("hh:mm A")
                         : "-"}
                     </td>
                     <td>
@@ -81,13 +81,15 @@ export default function Records() {
                           Number(moment(e.start.toDate()).format("hh"))
                         : "-"} */}
                       {e.end
-                        ? moment
-                            .duration(
-                              moment(e.end.toDate()).diff(
-                                moment(e.start.toDate())
+                        ? Math.round(
+                            moment
+                              .duration(
+                                moment(e.end.toDate()).diff(
+                                  moment(e.start.toDate())
+                                )
                               )
-                            )
-                            .get("hours")
+                              .get("hours")
+                          )
                         : "-"}
                     </td>
                     <td>
@@ -97,13 +99,15 @@ export default function Records() {
                           moment(e.end.toDate()).diff(moment(e.start.toDate()))
                         )
                         .get("hours") > 10
-                        ? moment
-                            .duration(
-                              moment(e.end.toDate()).diff(
-                                moment(e.start.toDate())
+                        ? Math.round(
+                            moment
+                              .duration(
+                                moment(e.end.toDate()).diff(
+                                  moment(e.start.toDate())
+                                )
                               )
-                            )
-                            .get("hours") - 10
+                              .get("hours") - 10
+                          )
                         : "-"}
                     </td>
                   </tr>
