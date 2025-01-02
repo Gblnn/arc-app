@@ -27,6 +27,7 @@ import {
   User,
   UserPlus,
 } from "lucide-react";
+
 import { useEffect, useState } from "react";
 
 export default function Users() {
@@ -246,20 +247,7 @@ export default function Users() {
             />
             <SelectMenu value={role.toLowerCase()} onChange={setRole} />
 
-            {/* <IOMenu
-              title="Editing"
-              placeholder="Clearance"
-              icon={<PenLine color="crimson" width={"1.25rem"} />}
-              value={editor == "true" ? "true" : "false"}
-              onChange={setEditor}
-            />
-            <IOMenu
-              title="Sensitive Data"
-              placeholder="Sensitive Data"
-              value={sensitive_data == "true" ? "true" : "false"}
-              onChange={setSensitiveData}
-              icon={<Eye color="crimson" width={"1.25rem"} />}
-            /> */}
+            {/* <div style={{ height: "10rem" }}></div> */}
           </div>
         }
         title_extra={
