@@ -8,7 +8,7 @@ import {
   query,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { FilePlus, LoaderCircle } from "lucide-react";
+import { Dot, FilePlus, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import * as XLSX from "@e965/xlsx";
@@ -43,7 +43,9 @@ export default function Records() {
     records.forEach((e: any) => {
       const start = e.start.toDate();
       const end = e.end != "" ? e.end.toDate() : "";
-      const total = moment(end).diff(moment(start), "minutes");
+      const total = (moment(end).diff(moment(start), "minutes") / 60).toFixed(
+        2
+      );
       //date
       e.date = String(moment(e.start.toDate()).format("DD/MM/YYYY"));
       //start
@@ -54,6 +56,8 @@ export default function Records() {
       e.end = e.end != "" ? moment(e.end.toDate()).format("hh:mm") : "-";
 
       e.total = total;
+
+      e.overtime = Number(total) > 10 ? Number(total) - 10 : "-";
 
       delete e.id;
       delete e.status;
@@ -111,7 +115,7 @@ export default function Records() {
           top: 0,
           zIndex: 1,
           background: "rgba(100 100 100/ 15%)",
-          borderBottom: "2px solid rgba(100 100 100/ 40%)",
+          // borderBottom: "1px solid rgba(100 100 100/ 40%)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
         }}
@@ -189,7 +193,33 @@ export default function Records() {
               >
                 {records.map((e: any) => (
                   <tr key={e.id} style={{}}>
-                    <td>{e.name}</td>
+                    <td
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: "0.45rem",
+                      }}
+                    >
+                      {!e.end && (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Dot
+                            style={{ position: "absolute", scale: "2" }}
+                            className="animate-ping"
+                            color="lightgreen"
+                          />
+                          <Dot color="lightgreen" />
+                        </div>
+                      )}
+
+                      {e.name}
+                    </td>
                     <td>{moment(e.start.toDate()).format("DD/MM/YY")}</td>
                     <td>
                       {e.start
@@ -207,13 +237,15 @@ export default function Records() {
                           Number(moment(e.start.toDate()).format("hh"))
                         : "-"} */}
                       {e.end
-                        ? moment
-                            .duration(
-                              moment(e.end.toDate()).diff(
-                                moment(e.start.toDate())
+                        ? (
+                            moment
+                              .duration(
+                                moment(e.end.toDate()).diff(
+                                  moment(e.start.toDate())
+                                )
                               )
-                            )
-                            .get("minutes") / 60
+                              .get("minutes") / 60
+                          ).toFixed(2)
                         : "-"}
                     </td>
                     <td>
