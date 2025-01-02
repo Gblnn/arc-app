@@ -10,7 +10,7 @@ import {
   query,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { FilePlus, LoaderCircle } from "lucide-react";
+import { FileDown, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
@@ -134,7 +134,7 @@ export default function Records() {
                 fontSize: "0.8rem",
               }}
             >
-              <FilePlus color="lightgreen" width={"1.25rem"} />
+              <FileDown color="lightgreen" width={"1.25rem"} />
               Export
             </button>
           }
