@@ -37,9 +37,12 @@ export default function Back(props: Props) {
             onClick={() => {
               usenavigate(-1);
             }}
-            style={{ backdropFilter: props.noblur ? "none" : "blur(16px)" }}
+            style={{
+              backdropFilter: props.noblur ? "none" : "blur(16px)",
+              width: "2.5rem",
+            }}
           >
-            <ChevronLeft />
+            <ChevronLeft width={"1.25rem"} />
           </button>
         )}
 

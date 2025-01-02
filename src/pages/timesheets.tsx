@@ -1,5 +1,7 @@
 import Back from "@/components/back";
 import { db } from "@/firebase";
+import * as XLSX from "@e965/xlsx";
+import { saveAs } from "file-saver";
 import {
   collection,
   getDocs,
@@ -8,11 +10,9 @@ import {
   query,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { Dot, FilePlus, LoaderCircle } from "lucide-react";
+import { FilePlus, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import * as XLSX from "@e965/xlsx";
-import { saveAs } from "file-saver";
 
 export default function Records() {
   const [loading, setLoading] = useState(false);
@@ -43,17 +43,17 @@ export default function Records() {
     records.forEach((e: any) => {
       const start = e.start.toDate();
       const end = e.end != "" ? e.end.toDate() : "";
-      const total = (moment(end).diff(moment(start), "minutes") / 60).toFixed(
-        2
-      );
+      const total = e.end
+        ? (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
+        : "-";
       //date
       e.date = String(moment(e.start.toDate()).format("DD/MM/YYYY"));
       //start
       e.start = e.start
-        ? e.start && moment(e.start.toDate()).format("hh:mm")
+        ? e.start && moment(e.start.toDate()).format("hh:mm A")
         : "-";
       //end
-      e.end = e.end != "" ? moment(e.end.toDate()).format("hh:mm") : "-";
+      e.end = e.end != "" ? moment(e.end.toDate()).format("hh:mm A") : "-";
 
       e.total = total;
 
@@ -141,6 +141,8 @@ export default function Records() {
         />
       </div>
 
+      <div></div>
+
       <div
         style={{
           width: "auto",
@@ -199,9 +201,11 @@ export default function Records() {
                         justifyContent: "center",
                         alignItems: "center",
                         gap: "0.45rem",
+                        fontWeight: "600",
+                        color: !e.end ? "lightgreen" : "",
                       }}
                     >
-                      {!e.end && (
+                      {/* {!e.end && (
                         <div
                           style={{
                             display: "flex",
@@ -216,19 +220,19 @@ export default function Records() {
                           />
                           <Dot color="lightgreen" />
                         </div>
-                      )}
+                      )} */}
 
                       {e.name}
                     </td>
                     <td>{moment(e.start.toDate()).format("DD/MM/YY")}</td>
                     <td>
                       {e.start
-                        ? e.start && moment(e.start.toDate()).format("hh:mm")
+                        ? e.start && moment(e.start.toDate()).format("hh:mm A")
                         : "-"}
                     </td>
                     <td>
                       {e.end != ""
-                        ? moment(e.end.toDate()).format("hh:mm")
+                        ? moment(e.end.toDate()).format("hh:mm A")
                         : "-"}
                     </td>
                     <td>
@@ -236,32 +240,31 @@ export default function Records() {
                         ? Number(moment(e.end.toDate()).format("hh")) -
                           Number(moment(e.start.toDate()).format("hh"))
                         : "-"} */}
-                      {e.end
+                      {e.end != ""
                         ? (
-                            moment
-                              .duration(
-                                moment(e.end.toDate()).diff(
-                                  moment(e.start.toDate())
-                                )
-                              )
-                              .get("minutes") / 60
+                            moment(e.end.toDate()).diff(
+                              moment(e.start.toDate()),
+                              "minutes"
+                            ) / 60
                           ).toFixed(2)
                         : "-"}
                     </td>
                     <td>
-                      {e.end &&
-                      moment
-                        .duration(
-                          moment(e.end.toDate()).diff(moment(e.start.toDate()))
-                        )
-                        .get("hours") > 10
-                        ? moment
-                            .duration(
+                      {e.end != "" &&
+                      moment(e.end.toDate()).diff(
+                        moment(e.start.toDate()),
+                        "minutes"
+                      ) /
+                        60 >
+                        10
+                        ? Number(
+                            (
                               moment(e.end.toDate()).diff(
-                                moment(e.start.toDate())
-                              )
-                            )
-                            .get("hours") - 10
+                                moment(e.start.toDate()),
+                                "minutes"
+                              ) / 60
+                            ).toFixed(2)
+                          ) - 10
                         : "-"}
                     </td>
                   </tr>
