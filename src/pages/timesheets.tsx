@@ -428,7 +428,15 @@ export default function Records() {
         OkButtonText="Update"
         open={editTimeDialog}
         onCancel={() => setEditTimeDialog(false)}
-        extra={<input type="time" value={selectedTime}></input>}
+        extra={
+          <div style={{ width: "100%", marginTop: "1rem", border: "" }}>
+            <input
+              style={{ width: "100%", height: "2.5rem" }}
+              type="time"
+              value={selectedTime}
+            />
+          </div>
+        }
       />
     </div>
   );
