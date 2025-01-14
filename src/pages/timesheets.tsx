@@ -433,7 +433,7 @@ export default function Records() {
             <input
               style={{ width: "100%", height: "2.5rem" }}
               type="time"
-              value={selectedTime}
+              defaultValue={selectedTime}
             />
           </div>
         }
