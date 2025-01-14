@@ -15,7 +15,7 @@ import {
   query,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, FileDown, LoaderCircle } from "lucide-react";
+import { BriefcaseBusiness, Clock, FileDown, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
@@ -23,9 +23,11 @@ export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<any>([]);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const [editTimeDialog, setEditTimeDialog] = useState(false);
   const [refreshCompleted, setRefreshCompleted] = useState(false);
   const [selectedName, setSelectedName] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
   const [selectedID, setSelectedID] = useState("");
 
   useEffect(() => {
@@ -152,9 +154,16 @@ export default function Records() {
         <Back
           title={"Timesheet"}
           noblur
-          subtitle={records.length}
+          // subtitle={records.length}
           extra={
-            <div style={{ display: "flex", gap: "0.5rem" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               <button
                 onClick={exportDb}
                 style={{
@@ -234,14 +243,6 @@ export default function Records() {
                     className="active:bg-slate-800"
                     key={e.id}
                     style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setDeleteDialog(true);
-                      setSelectedName(e.name);
-                      setSelectedDate(
-                        moment(e.start.toDate()).format("DD/MM/YYYY")
-                      );
-                      setSelectedID(e.id);
-                    }}
                   >
                     <td
                       style={{
@@ -251,6 +252,14 @@ export default function Records() {
                         gap: "0.45rem",
                         fontWeight: "600",
                         color: !e.end ? "lightgreen" : "",
+                      }}
+                      onClick={() => {
+                        setDeleteDialog(true);
+                        setSelectedName(e.name);
+                        setSelectedDate(
+                          moment(e.start.toDate()).format("DD/MM/YYYY")
+                        );
+                        setSelectedID(e.id);
                       }}
                     >
                       {/* {!e.end && (
@@ -272,18 +281,51 @@ export default function Records() {
 
                       {e.name}
                     </td>
-                    <td>{moment(e.start.toDate()).format("DD/MM/YY")}</td>
-                    <td>
+                    <td
+                      onClick={() => {
+                        setDeleteDialog(true);
+                        setSelectedName(e.name);
+                        setSelectedDate(
+                          moment(e.start.toDate()).format("DD/MM/YYYY")
+                        );
+                        setSelectedID(e.id);
+                      }}
+                    >
+                      {moment(e.start.toDate()).format("DD/MM/YY")}
+                    </td>
+                    <td
+                      className="active:bg-slate-600"
+                      onClick={() => {
+                        setEditTimeDialog(true);
+                        setSelectedTime(
+                          moment(e.start.toDate()).format("hh:mm A")
+                        );
+                      }}
+                    >
                       {e.start
                         ? e.start && moment(e.start.toDate()).format("hh:mm A")
                         : "-"}
                     </td>
-                    <td>
+                    <td
+                      className="active:bg-slate-600"
+                      onClick={() => {
+                        setEditTimeDialog(true);
+                      }}
+                    >
                       {e.end != ""
                         ? moment(e.end.toDate()).format("hh:mm A")
                         : "-"}
                     </td>
-                    <td>
+                    <td
+                      onClick={() => {
+                        setDeleteDialog(true);
+                        setSelectedName(e.name);
+                        setSelectedDate(
+                          moment(e.start.toDate()).format("DD/MM/YYYY")
+                        );
+                        setSelectedID(e.id);
+                      }}
+                    >
                       {/* {e.end
                         ? Number(moment(e.end.toDate()).format("hh")) -
                           Number(moment(e.start.toDate()).format("hh"))
@@ -297,7 +339,16 @@ export default function Records() {
                           ).toFixed(2)
                         : "-"}
                     </td>
-                    <td>
+                    <td
+                      onClick={() => {
+                        setDeleteDialog(true);
+                        setSelectedName(e.name);
+                        setSelectedDate(
+                          moment(e.start.toDate()).format("DD/MM/YYYY")
+                        );
+                        setSelectedID(e.id);
+                      }}
+                    >
                       {e.end != "" &&
                       moment(e.end.toDate()).diff(
                         moment(e.start.toDate()),
@@ -369,6 +420,15 @@ export default function Records() {
         destructive
         open={deleteDialog}
         onCancel={() => setDeleteDialog(false)}
+      />
+
+      <DefaultDialog
+        title={"Edit Time"}
+        titleIcon={<Clock color="crimson" />}
+        OkButtonText="Update"
+        open={editTimeDialog}
+        onCancel={() => setEditTimeDialog(false)}
+        extra={<input type="time" value={selectedTime}></input>}
       />
     </div>
   );
