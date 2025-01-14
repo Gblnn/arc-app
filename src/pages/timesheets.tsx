@@ -1,22 +1,32 @@
 import Back from "@/components/back";
+import DefaultDialog from "@/components/default-dialog";
+import RefreshButton from "@/components/refresh-button";
 import { db } from "@/firebase";
 import * as XLSX from "@e965/xlsx";
+import { message } from "antd";
 import { saveAs } from "file-saver";
 import {
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   onSnapshot,
   orderBy,
   query,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { FileDown, LoaderCircle } from "lucide-react";
+import { BriefcaseBusiness, FileDown, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
 export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<any>([]);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [refreshCompleted, setRefreshCompleted] = useState(false);
+  const [selectedName, setSelectedName] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedID, setSelectedID] = useState("");
 
   useEffect(() => {
     fetchRecords();
@@ -101,6 +111,25 @@ export default function Records() {
       fetchedData.push({ id: doc.id, ...doc.data() });
     });
     setRecords(fetchedData);
+
+    setRefreshCompleted(true);
+    setTimeout(() => {
+      setRefreshCompleted(false);
+    }, 1000);
+  };
+
+  const deleteSelected = async () => {
+    try {
+      setLoading(true);
+      await deleteDoc(doc(db, "records", selectedID));
+      setLoading(false);
+      setDeleteDialog(false);
+    } catch (error) {
+      setDeleteDialog(false);
+      message.error("Errors Logged");
+      console.log(error);
+      setLoading(false);
+    }
   };
 
   return (
@@ -125,18 +154,25 @@ export default function Records() {
           noblur
           subtitle={records.length}
           extra={
-            <button
-              onClick={exportDb}
-              style={{
-                backdropFilter: "none",
-                paddingLeft: "1rem",
-                paddingRight: "1rem",
-                fontSize: "0.8rem",
-              }}
-            >
-              <FileDown color="lightgreen" width={"1.25rem"} />
-              Export
-            </button>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                onClick={exportDb}
+                style={{
+                  backdropFilter: "none",
+                  paddingLeft: "1rem",
+                  paddingRight: "1rem",
+                  fontSize: "0.8rem",
+                }}
+              >
+                <FileDown color="lightgreen" width={"1.25rem"} />
+                Export
+              </button>
+              <RefreshButton
+                fetchingData={loading}
+                onClick={fetchRecords}
+                refreshCompleted={refreshCompleted}
+              />
+            </div>
           }
         />
       </div>
@@ -194,7 +230,19 @@ export default function Records() {
                 }}
               >
                 {records.map((e: any) => (
-                  <tr key={e.id} style={{}}>
+                  <tr
+                    className="active:bg-slate-800"
+                    key={e.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      setDeleteDialog(true);
+                      setSelectedName(e.name);
+                      setSelectedDate(
+                        moment(e.start.toDate()).format("DD/MM/YYYY")
+                      );
+                      setSelectedID(e.id);
+                    }}
+                  >
                     <td
                       style={{
                         display: "flex",
@@ -291,6 +339,37 @@ export default function Records() {
           </div>
         )}
       </div>
+      <DefaultDialog
+        updating={loading}
+        title={"Delete Record?"}
+        OkButtonText="Delete"
+        onOk={deleteSelected}
+        extra={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "",
+              flexFlow: "column",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
+          >
+            <br />
+            <BriefcaseBusiness color="crimson" />
+            <p
+              style={{ opacity: 0.75, fontSize: "1.25rem", fontWeight: "500" }}
+            >
+              {selectedName}
+            </p>
+            <p style={{ opacity: 0.75 }}>{selectedDate}</p>
+            <br />
+          </div>
+        }
+        destructive
+        open={deleteDialog}
+        onCancel={() => setDeleteDialog(false)}
+      />
     </div>
   );
 }

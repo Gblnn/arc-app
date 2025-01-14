@@ -1,6 +1,6 @@
 import { db } from "@/firebase";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
-import { LoaderCircle } from "lucide-react";
+import { ChevronDown, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -46,6 +46,37 @@ export default function Records() {
       >
         {!loading ? (
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
+            <p
+              style={{
+                fontWeight: "500",
+                fontSize: "1.5rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                margin: "",
+                border: "",
+                justifyContent: "center",
+              }}
+            >
+              {moment().format("MMMM")}
+              <b style={{ color: "crimson", fontWeight: "800" }}>
+                {moment().format("YYYY")}
+              </b>
+              <ChevronDown width={"1rem"} />
+            </p>
+            <br />
+            <div
+              style={{
+                border: "",
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.9rem",
+              }}
+            >
+              <button className="wide-btn">Hours</button>
+              <button className="wide-btn">Overtime</button>
+            </div>
+            <br />
             <table style={{ width: "100%", fontSize: "0.9rem" }}>
               <thead style={{}}>
                 <tr style={{ background: "rgba(100 100 100/ 20%)" }}>

@@ -44,8 +44,15 @@ input:after {
   user-select: initial;
 }
 
+.wide-btn {
+  padding: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
 button {
   padding: 0.5rem;
+
   border-radius: 0.5rem;
   font-size: 1rem;
   display: flex;
