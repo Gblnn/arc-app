@@ -343,9 +343,7 @@ export default function Records() {
                       onClick={() => {
                         setDeleteDialog(true);
                         setSelectedName(e.name);
-                        setSelectedDate(
-                          moment(e.start.toDate()).format("DD/MM/YYYY")
-                        );
+                        setSelectedDate(e.start.toDate());
                         setSelectedID(e.id);
                       }}
                     >
@@ -361,9 +359,11 @@ export default function Records() {
                               moment(e.end.toDate()).diff(
                                 moment(e.start.toDate()),
                                 "minutes"
-                              ) / 60
+                              ) /
+                                60 -
+                              10
                             ).toFixed(2)
-                          ) - 10
+                          )
                         : "-"}
                     </td>
                   </tr>
