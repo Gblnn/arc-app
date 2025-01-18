@@ -14,10 +14,12 @@ export default function RefreshButton(props: Props) {
       <button
         className="transitions"
         style={{
+          backdropFilter: "none",
           paddingLeft: "1rem",
           paddingRight: "1rem",
           width: "3rem",
           height: "2.75rem",
+          background: "rgba(100 100 100/ 30%)",
         }}
         onClick={props.onClick}
       >
