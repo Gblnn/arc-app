@@ -211,7 +211,7 @@ export default function Profile() {
             position: "fixed",
             display: "flex",
             bottom: 0,
-            background: "rgba(100 100 100/ 20%)",
+            background: "rgba(50 50 50/ 20%)",
             height: "",
             border: "",
             width: "",
@@ -222,6 +222,7 @@ export default function Profile() {
             marginBottom: "2.5rem",
             padding: "1.45rem",
             borderRadius: "1.5rem",
+            backdropFilter: "blur(16px)",
           }}
         >
           <BriefcaseBusiness

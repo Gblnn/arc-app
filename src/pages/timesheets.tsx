@@ -163,6 +163,18 @@ export default function Records() {
     }
   };
 
+  const Deallocate = async () => {
+    try {
+      timeType == "start"
+        ? message.info("Cannot Deallocate Start Time")
+        : timeType == "end"
+        ? await updateDoc(doc(db, "records", selectedID), { end: "" })
+        : {};
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   // const checkOutput = () => {
   //   const timestamp = moment(time, "hh:mm").format();
   //   try {
@@ -248,7 +260,7 @@ export default function Records() {
                 width: "auto",
                 fontSize: "0.8rem",
                 position: "sticky",
-                top: 0,
+
                 height: "",
               }}
             >
@@ -481,13 +493,14 @@ export default function Records() {
         updating={loading}
         title_extra={
           <button
+            onClick={Deallocate}
             style={{
               fontSize: "0.8rem",
               paddingLeft: "1rem",
               paddingRight: "1rem",
             }}
           >
-            <ListX width={"1rem"} />
+            <ListX width={"1rem"} color="crimson" />
             Deallocate
           </button>
         }

@@ -8,14 +8,15 @@ import {
   sum,
   where,
 } from "firebase/firestore";
+import { motion } from "framer-motion";
 import { ChevronDown, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 
 export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<any>([]);
+  const [totalSum, setSum] = useState(0);
 
   useEffect(() => {
     fetchRecords();
@@ -45,12 +46,13 @@ export default function Records() {
     const recordQuery = query(
       collection(db, "records"),
       where("email", "==", window.name),
-      orderBy("start")
+      orderBy("start", "desc")
     );
     const snapshot = await getAggregateFromServer(recordQuery, {
       total: sum("total"),
     });
     console.log("total hours", snapshot.data().total);
+    setSum(snapshot.data().total);
   };
 
   return (
@@ -94,7 +96,7 @@ export default function Records() {
                 fontSize: "0.9rem",
               }}
             >
-              <button className="wide-btn">Hours</button>
+              <button className="wide-btn">Hours : {totalSum}</button>
               <button className="wide-btn">Overtime</button>
             </div>
             <br />
@@ -108,6 +110,7 @@ export default function Records() {
                   <th style={{}}>OT</th>
                 </tr>
               </thead>
+
               <tbody
                 style={{
                   textAlign: "center",
