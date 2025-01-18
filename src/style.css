@@ -26,7 +26,7 @@ th {
   padding: 0.45rem;
 }
 
-/* input:-webkit-autofill,
+input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
@@ -34,7 +34,7 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: #ffffff !important;
 }
 
-input,
+/* input,
 input:before,
 input:after {
   -webkit-user-select: initial;
