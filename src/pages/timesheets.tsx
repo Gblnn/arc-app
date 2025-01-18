@@ -13,6 +13,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  updateDoc,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { BriefcaseBusiness, Clock, FileDown, LoaderCircle } from "lucide-react";
@@ -29,6 +30,8 @@ export default function Records() {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedID, setSelectedID] = useState("");
+  const [time, setTime] = useState("");
+  const [timeType, setTimeType] = useState("");
 
   useEffect(() => {
     fetchRecords();
@@ -131,6 +134,35 @@ export default function Records() {
       message.error("Errors Logged");
       console.log(error);
       setLoading(false);
+    }
+  };
+
+  const updateTime = async () => {
+    try {
+      setLoading(true);
+      timeType == "start"
+        ? await updateDoc(doc(db, "records", selectedID), { start: time })
+        : timeType == "end"
+        ? await updateDoc(doc(db, "records", selectedID), { end: time })
+        : {};
+    } catch (error) {
+      setLoading(false);
+      message.error("Errors Logged");
+      console.log(error);
+    }
+  };
+
+  const formatTime = () => {
+    setTime(String(new Date(time)));
+  };
+
+  const checkOutput = () => {
+    formatTime();
+    try {
+      console.log(time);
+    } catch (error) {
+      message.error("Errors Logged");
+      console.log(error);
     }
   };
 
@@ -281,6 +313,8 @@ export default function Records() {
 
                       {e.name}
                     </td>
+
+                    {/* DATE */}
                     <td
                       onClick={() => {
                         setDeleteDialog(true);
@@ -293,23 +327,30 @@ export default function Records() {
                     >
                       {moment(e.start.toDate()).format("DD/MM/YY")}
                     </td>
+
+                    {/* START */}
                     <td
                       className="active:bg-slate-600"
                       onClick={() => {
+                        setTimeType("start");
                         setEditTimeDialog(true);
-                        setSelectedTime(
-                          moment(e.start.toDate()).format("hh:mm A")
-                        );
+                        setSelectedTime(e.start.toDate());
+                        setSelectedID(e.id);
                       }}
                     >
                       {e.start
                         ? e.start && moment(e.start.toDate()).format("hh:mm A")
                         : "-"}
                     </td>
+
+                    {/* END */}
                     <td
                       className="active:bg-slate-600"
                       onClick={() => {
+                        setTimeType("end");
                         setEditTimeDialog(true);
+                        setSelectedTime(e.end.toDate());
+                        setSelectedID(e.id);
                       }}
                     >
                       {e.end != ""
@@ -428,12 +469,14 @@ export default function Records() {
         OkButtonText="Update"
         open={editTimeDialog}
         onCancel={() => setEditTimeDialog(false)}
+        onOk={checkOutput}
         extra={
           <div style={{ width: "100%", marginTop: "1rem", border: "" }}>
             <input
               style={{ width: "100%", height: "2.5rem" }}
               type="time"
-              defaultValue={selectedTime}
+              value={time}
+              onChange={(e: any) => setTime(e.target.value)}
             />
           </div>
         }

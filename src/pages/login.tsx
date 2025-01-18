@@ -201,6 +201,7 @@ export default function Login() {
                 className={loading ? "disabled" : ""}
                 style={{
                   background: "crimson",
+                  color: "white",
                   display: "flex",
                   gap: "0.75rem",
                 }}

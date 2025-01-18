@@ -7,7 +7,7 @@ import "./style.css";
 import { ThemeProvider } from "./components/theme-provider.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider>
+  <ThemeProvider defaultTheme="dark">
     <BrowserRouter>
       <App />
     </BrowserRouter>

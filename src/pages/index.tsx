@@ -76,7 +76,12 @@ export default function Index() {
 
       fetchedData[0].role == "admin" ? setAdmin(true) : setAdmin(false);
 
-      fetchedData[0].role == "profile" && usenavigate("/profile");
+      // Navigation
+      fetchedData[0].role == "profile"
+        ? usenavigate("/profile")
+        : fetchedData[0].role == "" &&
+          usenavigate("/") &&
+          message.error("Session timed out");
     } catch (error) {
       message.error(String(error));
     }
