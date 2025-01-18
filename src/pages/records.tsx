@@ -9,7 +9,7 @@ import {
   where,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { ChevronDown, LoaderCircle } from "lucide-react";
+import { CalendarDays, ChevronDown, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
@@ -30,7 +30,7 @@ export default function Records() {
     const recordQuery = query(
       RecordCollection,
       where("email", "==", window.name),
-      orderBy("start")
+      orderBy("start", "desc")
     );
     const querySnapshot = await getDocs(recordQuery);
     setLoading(false);
@@ -81,6 +81,7 @@ export default function Records() {
                 justifyContent: "center",
               }}
             >
+              <CalendarDays color="crimson" />
               {moment().format("MMMM")}
               <b style={{ color: "crimson", fontWeight: "800" }}>
                 {moment().format("YYYY")}

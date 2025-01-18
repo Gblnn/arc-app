@@ -81,26 +81,28 @@ export default function Profile() {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
       >
-        <Back
-          noback={role == "profile"}
-          title={role == "profile" ? "Arc" : "Profile"}
-          subtitle={role == "profile" ? "v1.0" : ""}
-          icon={
-            role == "profile" ? (
-              <img style={{ width: "2rem" }} src="arc-logo.png" />
-            ) : (
-              ""
-            )
-          }
-          extra={
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              {/* <button style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
+        <div style={{ border: "solid" }}>
+          <Back
+            noback={role == "profile"}
+            title={role == "profile" ? "Arc" : "Profile"}
+            subtitle={role == "profile" ? "v1.2" : ""}
+            icon={
+              role == "profile" ? (
+                <img style={{ width: "2rem" }} src="arc-logo.png" />
+              ) : (
+                ""
+              )
+            }
+            extra={
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                {/* <button style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
                 v2.0
               </button> */}
-              <IndexDropDown onLogout={() => setLogoutPrompt(true)} />
-            </div>
-          }
-        />
+                <IndexDropDown onLogout={() => setLogoutPrompt(true)} />
+              </div>
+            }
+          />
+        </div>
 
         <br />
 

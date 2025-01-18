@@ -175,16 +175,6 @@ export default function Records() {
     }
   };
 
-  // const checkOutput = () => {
-  //   const timestamp = moment(time, "hh:mm").format();
-  //   try {
-  //     console.log(timestamp);
-  //   } catch (error) {
-  //     message.error("Errors Logged");
-  //     console.log(error);
-  //   }
-  // };
-
   return (
     <div style={{ padding: "", display: "flex", flexFlow: "column" }}>
       <div
@@ -222,10 +212,10 @@ export default function Records() {
                   paddingLeft: "1rem",
                   paddingRight: "1rem",
                   fontSize: "0.8rem",
+                  height: "2.75rem",
                 }}
               >
                 <FileDown color="lightgreen" width={"1.25rem"} />
-                Export
               </button>
               <RefreshButton
                 fetchingData={loading}
