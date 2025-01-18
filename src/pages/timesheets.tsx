@@ -105,7 +105,7 @@ export default function Records() {
   const fetchRecords = async () => {
     setLoading(true);
     const RecordCollection = collection(db, "records");
-    const recordQuery = query(RecordCollection, orderBy("name"));
+    const recordQuery = query(RecordCollection, orderBy("start", "desc"));
     const querySnapshot = await getDocs(recordQuery);
     setLoading(false);
     const fetchedData: any = [];
