@@ -25,7 +25,7 @@ export default function IndexDropDown(props: Props) {
       <DropdownMenu>
         <DropdownMenuTrigger
           className={props.className}
-          style={{ outline: "none" }}
+          style={{ outline: "none", backdropFilter: "none" }}
         >
           <EllipsisVerticalIcon width={"1.1rem"} />
         </DropdownMenuTrigger>
