@@ -13,9 +13,17 @@ import {
   onSnapshot,
   orderBy,
   query,
+  Timestamp,
+  updateDoc,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, Clock, FileDown, LoaderCircle } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Clock,
+  FileDown,
+  ListX,
+  LoaderCircle,
+} from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
@@ -136,34 +144,33 @@ export default function Records() {
     }
   };
 
-  // const updateTime = async () => {
-  //   try {
-  //     setLoading(true);
-  //     timeType == "start"
-  //       ? await updateDoc(doc(db, "records", selectedID), { start: time })
-  //       : timeType == "end"
-  //       ? await updateDoc(doc(db, "records", selectedID), { end: time })
-  //       : {};
-  //   } catch (error) {
-  //     setLoading(false);
-  //     message.error("Errors Logged");
-  //     console.log(error);
-  //   }
-  // };
-
-  const formatTime = () => {
-    setTime(String(new Date(time)));
-  };
-
-  const checkOutput = () => {
-    formatTime();
+  const updateTime = async () => {
     try {
-      console.log(time, timeType, selectedTime);
+      const timestamp = Timestamp.fromDate(moment(time, "hh:mm").toDate());
+      setLoading(true);
+      timeType == "start"
+        ? await updateDoc(doc(db, "records", selectedID), { start: timestamp })
+        : timeType == "end"
+        ? await updateDoc(doc(db, "records", selectedID), { end: timestamp })
+        : {};
+      setLoading(false);
+      setEditTimeDialog(false);
     } catch (error) {
+      setLoading(false);
       message.error("Errors Logged");
       console.log(error);
     }
   };
+
+  // const checkOutput = () => {
+  //   const timestamp = moment(time, "hh:mm").format();
+  //   try {
+  //     console.log(timestamp);
+  //   } catch (error) {
+  //     message.error("Errors Logged");
+  //     console.log(error);
+  //   }
+  // };
 
   return (
     <div style={{ padding: "", display: "flex", flexFlow: "column" }}>
@@ -348,7 +355,7 @@ export default function Records() {
                       onClick={() => {
                         setTimeType("end");
                         setEditTimeDialog(true);
-                        setSelectedTime(e.end.toDate());
+                        setSelectedTime(e.end ? e.end.toDate() : "");
                         setSelectedID(e.id);
                       }}
                     >
@@ -468,7 +475,20 @@ export default function Records() {
         OkButtonText="Update"
         open={editTimeDialog}
         onCancel={() => setEditTimeDialog(false)}
-        onOk={checkOutput}
+        onOk={updateTime}
+        updating={loading}
+        title_extra={
+          <button
+            style={{
+              fontSize: "0.8rem",
+              paddingLeft: "1rem",
+              paddingRight: "1rem",
+            }}
+          >
+            <ListX width={"1rem"} />
+            Deallocate
+          </button>
+        }
         extra={
           <div style={{ width: "100%", marginTop: "1rem", border: "" }}>
             <input

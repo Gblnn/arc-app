@@ -108,13 +108,18 @@ export default function DefaultDialog(props: Props) {
                     style={{
                       display: "flex",
                       alignItems: "center",
+
                       gap: "1rem",
                       border: "",
                       width: "100%",
                     }}
                   >
                     <div
-                      style={{ border: "", height: "100%", display: "flex" }}
+                      style={{
+                        border: "",
+                        height: "",
+                        display: "flex",
+                      }}
                     >
                       {props.titleIcon}
                     </div>
@@ -125,6 +130,7 @@ export default function DefaultDialog(props: Props) {
                         flexFlow: "column",
                         border: "",
                         gap: "0.25rem",
+                        alignItems: "center",
                       }}
                     >
                       <div
@@ -139,6 +145,7 @@ export default function DefaultDialog(props: Props) {
                       >
                         <p
                           style={{
+                            display: "flex",
                             border: "",
                             maxWidth: "150px",
                             textOverflow: "ellipsis",
@@ -146,6 +153,7 @@ export default function DefaultDialog(props: Props) {
                             overflow: "hidden",
                             whiteSpace: "",
                             textTransform: "capitalize",
+                            alignItems: "center",
                           }}
                         >
                           {props.title}
