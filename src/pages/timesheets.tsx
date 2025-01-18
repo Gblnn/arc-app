@@ -35,7 +35,7 @@ export default function Records() {
   const [refreshCompleted, setRefreshCompleted] = useState(false);
   const [selectedName, setSelectedName] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
+  // const [selectedTime, setSelectedTime] = useState("");
   const [selectedID, setSelectedID] = useState("");
   const [time, setTime] = useState("");
   const [timeType, setTimeType] = useState("");
@@ -340,7 +340,7 @@ export default function Records() {
                       onClick={() => {
                         setTimeType("start");
                         setEditTimeDialog(true);
-                        setSelectedTime(e.start.toDate());
+                        // setSelectedTime(e.start.toDate());
                         setSelectedID(e.id);
                       }}
                     >
@@ -355,7 +355,7 @@ export default function Records() {
                       onClick={() => {
                         setTimeType("end");
                         setEditTimeDialog(true);
-                        setSelectedTime(e.end ? e.end.toDate() : "");
+                        // setSelectedTime(e.end ? e.end.toDate() : "");
                         setSelectedID(e.id);
                       }}
                     >
