@@ -71,6 +71,38 @@ export default function Profile() {
 
   return (
     <div>
+      <div
+        style={{
+          background: "rgba(50 50 50/ 10%)",
+          backdropFilter: "blur(16px)",
+          border: "",
+          position: "fixed",
+          width: "100%",
+          padding: "1.25rem",
+          zIndex: "2",
+        }}
+      >
+        <Back
+          noback={role == "profile"}
+          title={role == "profile" ? "Arc" : "Profile"}
+          subtitle={role == "profile" ? "v1.2" : ""}
+          icon={
+            role == "profile" ? (
+              <img style={{ width: "2rem" }} src="arc-logo.png" />
+            ) : (
+              ""
+            )
+          }
+          extra={
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              {/* <button style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
+                v2.0
+              </button> */}
+              <IndexDropDown onLogout={() => setLogoutPrompt(true)} />
+            </div>
+          }
+        />
+      </div>
       <motion.div
         style={{
           padding: "1.25rem",
@@ -81,29 +113,7 @@ export default function Profile() {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
       >
-        <div style={{ border: "solid" }}>
-          <Back
-            noback={role == "profile"}
-            title={role == "profile" ? "Arc" : "Profile"}
-            subtitle={role == "profile" ? "v1.2" : ""}
-            icon={
-              role == "profile" ? (
-                <img style={{ width: "2rem" }} src="arc-logo.png" />
-              ) : (
-                ""
-              )
-            }
-            extra={
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                {/* <button style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
-                v2.0
-              </button> */}
-                <IndexDropDown onLogout={() => setLogoutPrompt(true)} />
-              </div>
-            }
-          />
-        </div>
-
+        <div style={{ height: "3.5rem" }}></div>
         <br />
 
         {loading ? (

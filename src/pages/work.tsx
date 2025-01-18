@@ -190,7 +190,7 @@ export default function Work() {
               whileInView={{ opacity: 1 }}
               style={{
                 position: "absolute",
-                marginTop: "23rem",
+                marginTop: "21rem",
                 fontSize: "4rem",
                 textAlign: "center",
                 display: "flex",

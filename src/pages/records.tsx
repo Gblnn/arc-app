@@ -17,11 +17,12 @@ export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<any>([]);
   const [totalSum, setSum] = useState(0);
+  const [totalOvertime, setOvertime] = useState(0);
 
   useEffect(() => {
     fetchRecords();
     getSum();
-    console.log(records);
+    // console.log(records);
   }, []);
 
   const fetchRecords = async () => {
@@ -50,9 +51,11 @@ export default function Records() {
     );
     const snapshot = await getAggregateFromServer(recordQuery, {
       total: sum("total"),
+      overtime: sum("overtime"),
     });
-    console.log("total hours", snapshot.data().total);
+    // console.log("total hours", snapshot.data().total);
     setSum(snapshot.data().total);
+    setOvertime(snapshot.data().overtime);
   };
 
   return (
@@ -98,7 +101,7 @@ export default function Records() {
               }}
             >
               <button className="wide-btn">Hours : {totalSum}</button>
-              <button className="wide-btn">Overtime</button>
+              <button className="wide-btn">Overtime : {totalOvertime}</button>
             </div>
             <br />
             <table style={{ width: "100%", fontSize: "0.9rem" }}>

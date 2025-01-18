@@ -23,6 +23,7 @@ import {
   FileDown,
   ListX,
   LoaderCircle,
+  Trash2,
 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -39,6 +40,9 @@ export default function Records() {
   const [selectedID, setSelectedID] = useState("");
   const [time, setTime] = useState("");
   const [timeType, setTimeType] = useState("");
+
+  // const [selectedStart, setSelectedStart] = useState("");
+  // const [selectedEnd, setSelectedEnd] = useState("");
 
   useEffect(() => {
     fetchRecords();
@@ -148,11 +152,17 @@ export default function Records() {
     try {
       const timestamp = Timestamp.fromDate(moment(time, "hh:mm").toDate());
       setLoading(true);
-      timeType == "start"
-        ? await updateDoc(doc(db, "records", selectedID), { start: timestamp })
-        : timeType == "end"
-        ? await updateDoc(doc(db, "records", selectedID), { end: timestamp })
-        : {};
+      if (timeType == "start") {
+        await updateDoc(doc(db, "records", selectedID), { start: timestamp });
+      } else if (timeType == "end") {
+        await updateDoc(doc(db, "records", selectedID), { end: timestamp });
+      }
+      // timeType == "start"
+      //   ? await updateDoc(doc(db, "records", selectedID), { start: timestamp })
+      //   : timeType == "end"
+      //   ? await updateDoc(doc(db, "records", selectedID), { end: timestamp })
+      //   : {};
+
       setLoading(false);
       setEditTimeDialog(false);
       setTime("");
@@ -444,6 +454,7 @@ export default function Records() {
       <DefaultDialog
         updating={loading}
         title={"Delete Record?"}
+        titleIcon={<Trash2 color="crimson" height={""} />}
         OkButtonText="Delete"
         onOk={deleteSelected}
         extra={
@@ -459,12 +470,10 @@ export default function Records() {
           >
             <br />
             <BriefcaseBusiness color="crimson" />
-            <p
-              style={{ opacity: 0.75, fontSize: "1.25rem", fontWeight: "500" }}
-            >
+            <p style={{ fontSize: "1.25rem", fontWeight: "600" }}>
               {selectedName}
             </p>
-            <p style={{ opacity: 0.75 }}>{selectedDate}</p>
+            <p style={{}}>{selectedDate}</p>
             <br />
           </div>
         }
