@@ -501,6 +501,7 @@ export default function Records() {
               type="time"
               value={time}
               onChange={(e: any) => setTime(e.target.value)}
+              placeholder="Select Time"
             />
           </div>
         }
