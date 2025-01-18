@@ -13,7 +13,6 @@ import {
   onSnapshot,
   orderBy,
   query,
-  updateDoc,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { BriefcaseBusiness, Clock, FileDown, LoaderCircle } from "lucide-react";
@@ -137,20 +136,20 @@ export default function Records() {
     }
   };
 
-  const updateTime = async () => {
-    try {
-      setLoading(true);
-      timeType == "start"
-        ? await updateDoc(doc(db, "records", selectedID), { start: time })
-        : timeType == "end"
-        ? await updateDoc(doc(db, "records", selectedID), { end: time })
-        : {};
-    } catch (error) {
-      setLoading(false);
-      message.error("Errors Logged");
-      console.log(error);
-    }
-  };
+  // const updateTime = async () => {
+  //   try {
+  //     setLoading(true);
+  //     timeType == "start"
+  //       ? await updateDoc(doc(db, "records", selectedID), { start: time })
+  //       : timeType == "end"
+  //       ? await updateDoc(doc(db, "records", selectedID), { end: time })
+  //       : {};
+  //   } catch (error) {
+  //     setLoading(false);
+  //     message.error("Errors Logged");
+  //     console.log(error);
+  //   }
+  // };
 
   const formatTime = () => {
     setTime(String(new Date(time)));
@@ -159,7 +158,7 @@ export default function Records() {
   const checkOutput = () => {
     formatTime();
     try {
-      console.log(time);
+      console.log(time, timeType, selectedTime);
     } catch (error) {
       message.error("Errors Logged");
       console.log(error);
