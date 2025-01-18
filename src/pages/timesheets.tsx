@@ -155,6 +155,7 @@ export default function Records() {
         : {};
       setLoading(false);
       setEditTimeDialog(false);
+      setTime("");
     } catch (error) {
       setLoading(false);
       message.error("Errors Logged");
@@ -341,6 +342,7 @@ export default function Records() {
                         setTimeType("start");
                         setEditTimeDialog(true);
                         // setSelectedTime(e.start.toDate());
+                        setTime(moment(e.start).format("HH:MM A"));
                         setSelectedID(e.id);
                       }}
                     >

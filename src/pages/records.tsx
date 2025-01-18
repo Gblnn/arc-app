@@ -1,5 +1,13 @@
 import { db } from "@/firebase";
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import {
+  collection,
+  getAggregateFromServer,
+  getDocs,
+  orderBy,
+  query,
+  sum,
+  where,
+} from "firebase/firestore";
 import { ChevronDown, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -11,6 +19,7 @@ export default function Records() {
 
   useEffect(() => {
     fetchRecords();
+    getSum();
     console.log(records);
   }, []);
 
@@ -30,6 +39,18 @@ export default function Records() {
       fetchedData.push({ id: doc.id, ...doc.data() });
     });
     setRecords(fetchedData);
+  };
+
+  const getSum = async () => {
+    const recordQuery = query(
+      collection(db, "records"),
+      where("email", "==", window.name),
+      orderBy("start")
+    );
+    const snapshot = await getAggregateFromServer(recordQuery, {
+      total: sum("total"),
+    });
+    console.log("total hours", snapshot.data().total);
   };
 
   return (
