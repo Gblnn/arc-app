@@ -26,7 +26,7 @@ th {
   padding: 0.45rem;
 }
 
-input:-webkit-autofill,
+/* input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
@@ -42,6 +42,12 @@ input:after {
   -moz-user-select: initial;
   -ms-user-select: initial;
   user-select: initial;
+} */
+
+input {
+  -webkit-appearance: none;
+  appearance: none;
+  -moz-appearance: none;
 }
 
 .wide-btn {
