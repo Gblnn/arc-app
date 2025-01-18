@@ -12,7 +12,7 @@ export default function RefreshButton(props: Props) {
   return (
     <>
       <button
-        className="transitions blue-glass"
+        className="transitions"
         style={{
           paddingLeft: "1rem",
           paddingRight: "1rem",
