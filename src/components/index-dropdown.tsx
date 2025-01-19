@@ -122,7 +122,15 @@ export default function IndexDropDown(props: Props) {
                   >
                     {props.name?.split(" ")[0]}
                   </p>
-                  <p style={{ fontSize: "0.75rem" }}>{window.name}</p>
+                  <p
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 500,
+                      color: "",
+                    }}
+                  >
+                    {window.name}
+                  </p>
                 </div>
               </div>
             </DropdownMenuItem>

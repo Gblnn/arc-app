@@ -89,7 +89,6 @@ export default function Records() {
               <b style={{ color: "crimson", fontWeight: "800" }}>
                 {moment().format("YYYY")}
               </b>
-              <ChevronDown width={"1rem"} />
             </p>
             <br />
             <div

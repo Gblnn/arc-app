@@ -370,7 +370,7 @@ export default function Records() {
                         </div>
                       )} */}
 
-                      {e.name}
+                      {e.name.split(" ")[0]}
                     </td>
 
                     {/* DATE */}
