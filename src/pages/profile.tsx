@@ -13,7 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, List, Truck, UserPlus } from "lucide-react";
+import { List, Truck, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Records from "./records";
