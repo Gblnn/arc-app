@@ -9,7 +9,7 @@ import {
   where,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { CalendarDays, ChevronDown, LoaderCircle } from "lucide-react";
+import { CalendarDays, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
