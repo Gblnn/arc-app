@@ -13,7 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, List, UserPlus } from "lucide-react";
+import { BriefcaseBusiness, List, Truck, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Records from "./records";
@@ -240,7 +240,7 @@ export default function Profile() {
             backdropFilter: "blur(16px)",
           }}
         >
-          <BriefcaseBusiness
+          <Truck
             style={{ cursor: "pointer" }}
             onClick={() => setPath("work")}
             color={path == "work" ? "crimson" : "white"}
