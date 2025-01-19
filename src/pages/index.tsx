@@ -31,6 +31,12 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [access, setAccess] = useState(false);
   const [admin, setAdmin] = useState(false);
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    verifyAccess();
+    fetchUsers();
+  }, []);
 
   //   const serviceId = "service_fixajl8";
   //   const templateId = "template_0f3zy3e";
@@ -51,6 +57,25 @@ export default function Index() {
   //     message.success("Bug Report sent");
   //     setBugDialog(false);
   //   };
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const RecordCollection = collection(db, "users");
+    const recordQuery = query(
+      RecordCollection,
+      where("email", "==", window.name)
+    );
+    const querySnapshot = await getDocs(recordQuery);
+    setLoading(false);
+    const fetchedData: any = [];
+
+    querySnapshot.forEach((doc: any) => {
+      fetchedData.push({ id: doc.id, ...doc.data() });
+    });
+    setName(fetchedData[0].name);
+    console.log(fetchedData[0].name);
+    console.log(window.name);
+  };
 
   const verifyAccess = async () => {
     try {
@@ -90,10 +115,6 @@ export default function Index() {
   const Authenticate = () => {
     access ? usenavigate("/record-list") : message.error("Clearance required");
   };
-
-  useEffect(() => {
-    verifyAccess();
-  }, []);
 
   return (
     <>
@@ -183,6 +204,7 @@ export default function Index() {
                 </button> */}
 
                 <IndexDropDown
+                  name={name ? name : ""}
                   onLogout={() => setLogoutPrompt(true)}
                   onProfile={() => usenavigate("/profile")}
                 />

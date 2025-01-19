@@ -9,6 +9,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   orderBy,
@@ -151,12 +152,48 @@ export default function Records() {
   const updateTime = async () => {
     try {
       const timestamp = Timestamp.fromDate(moment(time, "hh:mm").toDate());
+      let updates = {};
       setLoading(true);
       if (timeType == "start") {
         await updateDoc(doc(db, "records", selectedID), { start: timestamp });
       } else if (timeType == "end") {
         await updateDoc(doc(db, "records", selectedID), { end: timestamp });
       }
+
+      const recordRef = doc(db, "records", selectedID);
+      const recordSnap = await getDoc(recordRef);
+      if (recordSnap.exists()) {
+        const record = recordSnap.data();
+        const start = record.start ? record.start.toDate() : null;
+        const end = record.end ? record.end.toDate() : null;
+
+        if (timeType === "start" && end) {
+          const total = Number(
+            (
+              moment(end).diff(moment(timestamp.toDate()), "minutes") / 60
+            ).toFixed(2)
+          );
+
+          const overtime =
+            Number(total) > 10 ? Number((total - 10).toFixed(2)) : "";
+
+          updates = { ...updates, total, overtime };
+        } else if (timeType === "end" && start) {
+          const total = Number(
+            (
+              moment(timestamp.toDate()).diff(moment(start), "minutes") / 60
+            ).toFixed(2)
+          );
+
+          const overtime =
+            Number(total) > 10 ? Number((total - 10).toFixed(2)) : "";
+
+          updates = { ...updates, total, overtime };
+        }
+      }
+
+      await updateDoc(recordRef, updates);
+
       // timeType == "start"
       //   ? await updateDoc(doc(db, "records", selectedID), { start: timestamp })
       //   : timeType == "end"
@@ -178,7 +215,10 @@ export default function Records() {
       timeType == "start"
         ? message.info("Cannot Deallocate Start Time")
         : timeType == "end"
-        ? await updateDoc(doc(db, "records", selectedID), { end: "" })
+        ? await updateDoc(doc(db, "records", selectedID), {
+            end: "",
+            status: true,
+          })
         : {};
     } catch (error) {
       console.log(error);
@@ -356,6 +396,8 @@ export default function Records() {
                         // setSelectedTime(e.start.toDate());
                         setTime(moment(e.start).format("HH:MM A"));
                         setSelectedID(e.id);
+                        // setSelectedStart(e.start ? e.start : "");
+                        // setSelectedEnd(e.end ? e.end : "");
                       }}
                     >
                       {e.start
@@ -371,6 +413,8 @@ export default function Records() {
                         setEditTimeDialog(true);
                         // setSelectedTime(e.end ? e.end.toDate() : "");
                         setSelectedID(e.id);
+                        // setSelectedStart(e.start ? e.start : "");
+                        // setSelectedEnd(e.end ? e.end : "");
                       }}
                     >
                       {e.end != ""

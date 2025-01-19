@@ -185,7 +185,7 @@ export default function Login() {
                     style={{
                       fontSize: "0.8rem",
                       fontWeight: "600",
-                      color: "indianred",
+                      color: "crimson",
                       cursor: "pointer",
                     }}
                     to={"/user-reset"}

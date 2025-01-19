@@ -1,5 +1,6 @@
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import { EllipsisVerticalIcon, LogOut, RefreshCcw, User } from "lucide-react";
+import { LoaderCircle, LogOut, RefreshCcw, User } from "lucide-react";
+import LazyLoader from "./lazy-loader";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ interface Props {
   className?: any;
   onLogout?: any;
   onProfile?: any;
+  name?: any;
 }
 
 export default function IndexDropDown(props: Props) {
@@ -25,13 +27,27 @@ export default function IndexDropDown(props: Props) {
       <DropdownMenu>
         <DropdownMenuTrigger
           className={props.className}
-          style={{ outline: "none", backdropFilter: "none" }}
+          style={{
+            outline: "none",
+            backdropFilter: "none",
+            display: "flex",
+            border: "",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
-          <EllipsisVerticalIcon width={"1.1rem"} />
+          {props.name ? (
+            <LazyLoader background="rgba(100 100 100/ 0%)" name={props.name} />
+          ) : (
+            <LoaderCircle
+              className="animate-spin"
+              style={{ margin: "0.14rem" }}
+            />
+          )}
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          style={{ margin: "0.25rem", marginRight: "1.25rem" }}
+          style={{ margin: "0.25rem", marginRight: "1.25rem", width: "12rem" }}
         >
           <DropdownMenuGroup>
             {/* <DropdownMenuItem
@@ -70,6 +86,47 @@ export default function IndexDropDown(props: Props) {
               <Inbox className="mr-2 " color="crimson" />
               <span style={{ width: "100%" }}>Inbox</span>
             </DropdownMenuItem> */}
+            <DropdownMenuItem
+              onClick={() => {}}
+              style={{
+                width: "100%",
+                display: "",
+                border: "",
+                justifyContent: "",
+                flexFlow: "",
+              }}
+            >
+              <div
+                style={{
+                  border: "",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                }}
+              >
+                <LazyLoader
+                  fontSize="1.25rem"
+                  height="3rem"
+                  width="3rem"
+                  name={window.name}
+                />
+                <div style={{ border: "" }}>
+                  <p
+                    style={{
+                      border: "",
+                      fontSize: "0.9rem",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {props.name?.split(" ")[0]}
+                  </p>
+                  <p style={{ fontSize: "0.75rem" }}>{window.name}</p>
+                </div>
+              </div>
+            </DropdownMenuItem>
+
+            <hr style={{ marginTop: "0.25rem", marginBottom: "0.25rem" }} />
 
             <DropdownMenuItem
               onClick={() => window.location.reload()}

@@ -100,8 +100,12 @@ export default function Records() {
                 fontSize: "0.9rem",
               }}
             >
-              <button className="wide-btn">Hours : {totalSum}</button>
-              <button className="wide-btn">Overtime : {totalOvertime}</button>
+              <button className="wide-btn">
+                Hours <b style={{ color: "crimson" }}>{totalSum}</b>
+              </button>
+              <button className="wide-btn">
+                Overtime <b style={{ color: "lightgreen" }}>{totalOvertime}</b>
+              </button>
             </div>
             <br />
             <table style={{ width: "100%", fontSize: "0.9rem" }}>

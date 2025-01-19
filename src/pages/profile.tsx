@@ -22,7 +22,7 @@ import Work from "./work";
 export default function Profile() {
   const [addUserDialog, setAddUserDialog] = useState(false);
   const [loading, setLoading] = useState(false);
-  // const [name, setName] = useState("");
+  const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [logoutPrompt, setLogoutPrompt] = useState(false);
   const [path, setPath] = useState("work");
@@ -65,7 +65,7 @@ export default function Profile() {
     querySnapshot.forEach((doc: any) => {
       fetchedData.push({ id: doc.id, ...doc.data() });
     });
-    // setName(fetchedData[0].name);
+    setName(fetchedData[0].name);
     setRole(fetchedData[0].role);
   };
 
@@ -98,7 +98,10 @@ export default function Profile() {
               {/* <button style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
                 v2.0
               </button> */}
-              <IndexDropDown onLogout={() => setLogoutPrompt(true)} />
+              <IndexDropDown
+                name={name ? name : ""}
+                onLogout={() => setLogoutPrompt(true)}
+              />
             </div>
           }
         />

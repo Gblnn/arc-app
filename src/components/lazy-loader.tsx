@@ -1,8 +1,7 @@
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { LoadingOutlined } from "@ant-design/icons";
 
 interface Props {
-  name: any;
+  name?: any;
   type?: string;
   profile?: string;
   block?: boolean;
@@ -18,10 +17,11 @@ interface Props {
 
 export default function LazyLoader(props: Props) {
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", border: "", width: "" }}>
       <div
         style={{
-          zIndex: "-1",
+          border: "",
+          zIndex: "",
           fontSize: props.fontSize ? props.fontSize : "",
           background: props.background
             ? props.background
@@ -31,17 +31,16 @@ export default function LazyLoader(props: Props) {
           color: "white",
           height: props.height ? props.height : "1.75rem",
           width: props.width ? props.width : "1.75rem",
-          position: "absolute",
           borderRadius: "50%",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          border:
-            props.state == "archived"
-              ? "2px solid goldenrod"
-              : props.omni
-              ? "2px solid violet"
-              : "",
+          // border:
+          //   props.state == "archived"
+          //     ? "2px solid goldenrod"
+          //     : props.omni
+          //     ? "2px solid violet"
+          //     : "",
         }}
       >
         <p
@@ -59,7 +58,7 @@ export default function LazyLoader(props: Props) {
         </p>
       </div>
 
-      <LazyLoadImage
+      {/* <LazyLoadImage
         placeholder={
           <div
             style={{
@@ -85,7 +84,7 @@ export default function LazyLoader(props: Props) {
           zIndex: 100,
         }}
         src={props.profile}
-      />
+      /> */}
     </div>
   );
 }
