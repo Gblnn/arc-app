@@ -107,6 +107,7 @@ export default function IndexDropDown(props: Props) {
                 }}
               >
                 <LazyLoader
+                  gradient
                   fontSize="1.25rem"
                   height="3rem"
                   width="3rem"
@@ -124,7 +125,8 @@ export default function IndexDropDown(props: Props) {
                   </p>
                   <p
                     style={{
-                      fontSize: "0.75rem",
+                      fontSize: "0.65rem",
+                      opacity: "0.75",
                       fontWeight: 500,
                       color: "",
                     }}
