@@ -73,8 +73,6 @@ export default function Index() {
       fetchedData.push({ id: doc.id, ...doc.data() });
     });
     setName(fetchedData[0].name);
-    console.log(fetchedData[0].name);
-    console.log(window.name);
   };
 
   const verifyAccess = async () => {

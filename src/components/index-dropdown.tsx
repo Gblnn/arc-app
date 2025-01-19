@@ -34,6 +34,7 @@ export default function IndexDropDown(props: Props) {
             border: "",
             justifyContent: "center",
             alignItems: "center",
+            borderRadius: "50%",
           }}
         >
           {props.name ? (
@@ -47,7 +48,7 @@ export default function IndexDropDown(props: Props) {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          style={{ margin: "0.25rem", marginRight: "1.25rem", width: "12rem" }}
+          style={{ margin: "0.25rem", marginRight: "1.25rem", width: "14rem" }}
         >
           <DropdownMenuGroup>
             {/* <DropdownMenuItem
@@ -115,7 +116,7 @@ export default function IndexDropDown(props: Props) {
                   <p
                     style={{
                       border: "",
-                      fontSize: "0.9rem",
+                      fontSize: "1.05rem",
                       fontWeight: "600",
                     }}
                   >
