@@ -236,7 +236,7 @@ export default function Records() {
           position: "sticky",
           top: 0,
           zIndex: 1,
-          background: "rgba(100 100 100/ 15%)",
+          background: "rgba(60 60 60/ 75%)",
           // borderBottom: "1px solid rgba(100 100 100/ 40%)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
@@ -445,12 +445,12 @@ export default function Records() {
                         : "-"}
                     </td>
                     <td
-                      onClick={() => {
-                        setDeleteDialog(true);
-                        setSelectedName(e.name);
-                        setSelectedDate(e.start.toDate());
-                        setSelectedID(e.id);
-                      }}
+                    // onClick={() => {
+                    //   setDeleteDialog(true);
+                    //   setSelectedName(e.name);
+                    //   setSelectedDate(e.start.toDate());
+                    //   setSelectedID(e.id);
+                    // }}
                     >
                       {e.end != "" &&
                       moment(e.end.toDate()).diff(
@@ -498,7 +498,7 @@ export default function Records() {
       <DefaultDialog
         updating={loading}
         title={"Delete Record?"}
-        titleIcon={<Trash2 color="crimson" height={""} />}
+        titleIcon={<Trash2 color="crimson" />}
         OkButtonText="Delete"
         onOk={deleteSelected}
         extra={
@@ -513,7 +513,7 @@ export default function Records() {
             }}
           >
             <br />
-            <BriefcaseBusiness color="crimson" />
+            <BriefcaseBusiness color="crimson" width={"2rem"} />
             <p style={{ fontSize: "1.25rem", fontWeight: "600" }}>
               {selectedName}
             </p>

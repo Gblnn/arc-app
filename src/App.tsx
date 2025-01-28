@@ -6,6 +6,7 @@ import Timesheets from "./pages/timesheets";
 import AdminPage from "./pages/admin-page";
 import Users from "./pages/users";
 import Profile from "./pages/profile";
+import Invoice from "./pages/invoice";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/users" element={<Users />} />
         <Route path="profile/*" element={<Profile />} />
+        <Route path="/invoice-gen" element={<Invoice />} />
       </Routes>
     </>
   );

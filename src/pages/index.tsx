@@ -235,8 +235,8 @@ export default function Index() {
               />
 
               <Directive
-                to={""}
-                title={"Invoices"}
+                to={"/invoice-gen"}
+                title={"Invoicer"}
                 icon={<FileText color="crimson" width={"1.25rem"} />}
               />
 
