@@ -2,10 +2,9 @@ import Back from "@/components/back";
 import TaxInvoice from "@/invoice-templates/tax-invoice";
 import Template1 from "@/invoice-templates/template-1";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
-import { DownloadCloud, FileDown } from "lucide-react";
+import { DownloadCloud } from "lucide-react";
 import moment from "moment";
 import { usePDF } from "react-to-pdf";
-import ReactPDF from "@react-pdf/renderer";
 
 export default function Invoice() {
   const { toPDF, targetRef } = usePDF({
