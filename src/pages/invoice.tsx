@@ -1,7 +1,6 @@
 import Back from "@/components/back";
-import TaxInvoice from "@/invoice-templates/tax-invoice";
+import Menu from "@/components/menu";
 import Template1 from "@/invoice-templates/template-1";
-import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import { DownloadCloud } from "lucide-react";
 import moment from "moment";
 import { usePDF } from "react-to-pdf";
@@ -50,29 +49,40 @@ export default function Invoice() {
               }}
             >
               <button onClick={() => toPDF()}>
-                <DownloadCloud color="dodgerblue" />
-              </button>
-              <button>
-                <PDFDownloadLink
-                  document={
-                    <TaxInvoice
-                      amount={65}
-                      date={moment().format("DD.MM.YYYY")}
-                      clientName="ABC"
-                    />
-                  }
-                  fileName="example.pdf"
-                ></PDFDownloadLink>
+                <DownloadCloud color="dodgerblue" className="animate-pulse" />
               </button>
             </div>
           }
         />
       </div>
 
-      {/* <br /> */}
-      <PDFViewer style={{ width: "100%", height: "100svh" }}>
+      {/* <PDFViewer style={{ width: "100%", height: "100svh" }}>
         <TaxInvoice amount={65} />
-      </PDFViewer>
+      </PDFViewer> */}
+      <br />
+
+      <div
+        style={{
+          display: "flex",
+          border: "",
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "1rem",
+          padding: "1rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <Menu
+          title="Invoice Type"
+          placeholder="Invoice Type"
+          items={["Cash Invoice", "Tax Invoice"]}
+        />
+        <Menu title="Client" items={[""]} addable />
+        <input type="text" placeholder="Date (Leave Empty for Current Date)" />
+      </div>
+
+      <br />
 
       <div ref={targetRef} style={{}}>
         <Template1

@@ -6,15 +6,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserCircle } from "lucide-react";
+import { Plus, UserCircle } from "lucide-react";
 
 interface Props {
   title?: string;
   value?: string;
   onChange?: any;
+  placeholder?: string;
+  items?: any;
+  addable?: boolean;
 }
 
-export default function SelectMenu(props: Props) {
+export default function Menu(props: Props) {
   return (
     <Select defaultValue={props.value} onValueChange={props.onChange}>
       <SelectTrigger
@@ -37,11 +40,11 @@ export default function SelectMenu(props: Props) {
               fontWeight: "600",
             }}
           >
-            Type
+            {props.title}
           </p>
         </div>
 
-        <SelectValue placeholder="Role" />
+        <SelectValue placeholder={props.placeholder} />
       </SelectTrigger>
       <SelectContent style={{}}>
         <SelectGroup
@@ -51,25 +54,34 @@ export default function SelectMenu(props: Props) {
             flexFlow: "column",
           }}
         >
-          <SelectItem
+          {/* <SelectItem
             style={{ display: "flex", justifyContent: "flex-start" }}
             value="admin"
           >
             Admin
           </SelectItem>
-          {/* <SelectItem
-            style={{ display: "flex", justifyContent: "flex-start" }}
-            value="user"
-          >
-            User
-          </SelectItem> */}
+          
 
           <SelectItem
             style={{ display: "flex", justifyContent: "flex-start" }}
             value="profile"
           >
             Profile
-          </SelectItem>
+          </SelectItem> */}
+          {props.items.map((item: any) => (
+            <SelectItem
+              style={{ display: "flex", justifyContent: "flex-start" }}
+              value="admin"
+            >
+              {item}
+            </SelectItem>
+          ))}
+          {props.addable && (
+            <button style={{ justifyContent: "flex-start" }}>
+              <Plus color="crimson" />
+              Add
+            </button>
+          )}
         </SelectGroup>
       </SelectContent>
     </Select>
