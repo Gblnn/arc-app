@@ -1,8 +1,6 @@
 import Back from "@/components/back";
 import Menu from "@/components/menu";
-import Template1 from "@/invoice-templates/template-1";
 import { DownloadCloud } from "lucide-react";
-import moment from "moment";
 import { usePDF } from "react-to-pdf";
 
 export default function Invoice() {
@@ -62,6 +60,7 @@ export default function Invoice() {
       <br />
 
       <div
+        ref={targetRef}
         style={{
           display: "flex",
           border: "",
@@ -84,13 +83,16 @@ export default function Invoice() {
 
       <br />
 
-      <div ref={targetRef} style={{}}>
-        <Template1
-          clientName="M/s SAMA NEBRAS"
-          amount={65}
-          date={moment().format("DD.MM.YYYY")}
-        />
-      </div>
+      {/* <ScrollArea style={{ width: "100%" }}>
+        <div ref={targetRef} style={{}}>
+          <Template1
+            clientName="M/s SAMA NEBRAS"
+            amount={65}
+            date={moment().format("DD.MM.YYYY")}
+          />
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea> */}
 
       <br />
     </div>

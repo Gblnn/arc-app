@@ -70,8 +70,9 @@ export default function Menu(props: Props) {
           </SelectItem> */}
           {props.items.map((item: any) => (
             <SelectItem
+              key={item}
               style={{ display: "flex", justifyContent: "flex-start" }}
-              value="admin"
+              value={item ? item : "empty"}
             >
               {item}
             </SelectItem>
