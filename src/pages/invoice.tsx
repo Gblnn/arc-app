@@ -1,6 +1,9 @@
 import Back from "@/components/back";
 import Menu from "@/components/menu";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import Template1 from "@/invoice-templates/template-1";
 import { DownloadCloud } from "lucide-react";
+import moment from "moment";
 import { usePDF } from "react-to-pdf";
 
 export default function Invoice() {
@@ -83,7 +86,7 @@ export default function Invoice() {
 
       <br />
 
-      {/* <ScrollArea style={{ width: "100%" }}>
+      <ScrollArea style={{ width: "100%" }}>
         <div ref={targetRef} style={{}}>
           <Template1
             clientName="M/s SAMA NEBRAS"
@@ -92,7 +95,7 @@ export default function Invoice() {
           />
         </div>
         <ScrollBar orientation="horizontal" />
-      </ScrollArea> */}
+      </ScrollArea>
 
       <br />
     </div>
