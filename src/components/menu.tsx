@@ -54,20 +54,6 @@ export default function Menu(props: Props) {
             flexFlow: "column",
           }}
         >
-          {/* <SelectItem
-            style={{ display: "flex", justifyContent: "flex-start" }}
-            value="admin"
-          >
-            Admin
-          </SelectItem>
-          
-
-          <SelectItem
-            style={{ display: "flex", justifyContent: "flex-start" }}
-            value="profile"
-          >
-            Profile
-          </SelectItem> */}
           {props.items.map((item: any) => (
             <SelectItem
               key={item}

@@ -10,7 +10,7 @@ import { UserCircle } from "lucide-react";
 
 interface Props {
   title?: string;
-  value?: string;
+  value?: any;
   onChange?: any;
 }
 
@@ -37,7 +37,7 @@ export default function SelectMenu(props: Props) {
               fontWeight: "600",
             }}
           >
-            Type
+            {props.title}
           </p>
         </div>
 
@@ -57,12 +57,6 @@ export default function SelectMenu(props: Props) {
           >
             Admin
           </SelectItem>
-          {/* <SelectItem
-            style={{ display: "flex", justifyContent: "flex-start" }}
-            value="user"
-          >
-            User
-          </SelectItem> */}
 
           <SelectItem
             style={{ display: "flex", justifyContent: "flex-start" }}

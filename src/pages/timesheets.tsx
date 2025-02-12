@@ -1,6 +1,8 @@
 import Back from "@/components/back";
 import DefaultDialog from "@/components/default-dialog";
+import Menu from "@/components/menu";
 import RefreshButton from "@/components/refresh-button";
+import SelectMenu from "@/components/select-menu";
 import { db } from "@/firebase";
 import * as XLSX from "@e965/xlsx";
 import { message } from "antd";
@@ -16,6 +18,7 @@ import {
   query,
   Timestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
 import {
@@ -32,6 +35,7 @@ import { useEffect, useState } from "react";
 export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<any>([]);
+  const [users, setUsers] = useState<any>([]);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [editTimeDialog, setEditTimeDialog] = useState(false);
   const [refreshCompleted, setRefreshCompleted] = useState(false);
@@ -47,7 +51,28 @@ export default function Records() {
 
   useEffect(() => {
     fetchRecords();
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const RecordCollection = collection(db, "users");
+      const recordQuery = query(
+        RecordCollection,
+        where("role", "==", "profile")
+      );
+      const querySnapshot = await getDocs(recordQuery);
+      setLoading(false);
+      const fetchedData: any = [];
+      querySnapshot.forEach((doc: any) => {
+        fetchedData.push({ id: doc.id, ...doc.data() });
+      });
+
+      setUsers(fetchedData);
+      console.log(users);
+    } catch (error) {}
+  };
 
   useEffect(() => {
     onSnapshot(query(collection(db, "records")), (snapshot: any) => {
@@ -225,6 +250,10 @@ export default function Records() {
     }
   };
 
+  // const months = Array.from({ length: 12 }, (i: any) => {
+  //   return new Date(0, i).toLocaleString("en-US", { month: "long" });
+  // });
+
   return (
     <div style={{ padding: "", display: "flex", flexFlow: "column" }}>
       <div
@@ -277,7 +306,17 @@ export default function Records() {
         />
       </div>
 
-      <div></div>
+      <div
+        style={{
+          display: "flex",
+          padding: "1rem",
+          gap: "1rem",
+          background: "rgba(100 100 100/ 20%)",
+        }}
+      >
+        <Menu title="Name" items={["", ""]} />
+        <SelectMenu title="Date" />
+      </div>
 
       <div
         style={{
