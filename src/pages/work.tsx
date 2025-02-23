@@ -20,7 +20,11 @@ import { useEffect, useState } from "react";
 //   onStart?: any;
 // }
 
-export default function Work() {
+interface Props {
+  allocated_hours?: any;
+}
+
+export default function Work(props: Props) {
   const [status, setStatus] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [name, setName] = useState("");
@@ -113,6 +117,7 @@ export default function Work() {
         email: window.name,
         total: "",
         overtime: "",
+        allocated_hours: Number(props.allocated_hours),
       });
       verifyStatus();
       setStatus(true);
@@ -204,10 +209,10 @@ export default function Work() {
                 style={{
                   fontSize: "1.1rem",
                   color: "crimson",
-                  fontWeight: "600",
+                  fontWeight: "",
                 }}
               >
-                Reset Shift
+                <b>Allocated Hours</b> {props.allocated_hours}
               </p>
             </motion.div>
           </>

@@ -256,8 +256,12 @@ export default function Records() {
       const total = end
         ? (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
         : "-";
+      const allocatedHours = e.allocated_hours;
+
       const overtime =
-        end && Number(total) > 10 ? (Number(total) - 10).toFixed(2) : "-";
+        end && Number(total) > Number(allocatedHours)
+          ? (Number(total) - Number(allocatedHours)).toFixed(2)
+          : "-";
 
       return {
         ...e,
@@ -265,7 +269,7 @@ export default function Records() {
         formattedStart: moment(start).format("hh:mm A"),
         formattedEnd: end ? moment(end).format("hh:mm A") : "-",
         total,
-        overtime,
+        formattedOvertime: overtime,
       };
     });
   }, [records]);
@@ -333,7 +337,7 @@ export default function Records() {
         <td style={{ padding: "1rem" }} onClick={() => onDeleteClick(record)}>
           {record.total}
         </td>
-        <td style={{ padding: "1rem" }}>{record.overtime}</td>
+        <td style={{ padding: "1rem" }}>{record.formattedOvertime}</td>
       </tr>
     );
   });

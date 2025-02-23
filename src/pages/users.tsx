@@ -61,7 +61,7 @@ export default function Users() {
         name: name,
         email: email,
         role: "profile",
-        total_hours: "9",
+        allocated_hours: "9",
         editor: "false",
         sensitive_data: "false",
       });
@@ -111,7 +111,7 @@ export default function Users() {
       setLoading(true);
       await updateDoc(doc(db, "users", docid), {
         role: role,
-        total_hours: totalHours,
+        allocated_hours: totalHours,
       });
       setLoading(false);
       setUserDialog(false);
@@ -188,7 +188,7 @@ export default function Users() {
                   setDisplayName(user.name);
                   setDisplayEmail(user.email);
                   setRole(user.role);
-                  setTotalHours(user.total_hours || "9");
+                  setTotalHours(user.allocated_hours || "9");
                 }}
                 key={user.id}
                 icon={

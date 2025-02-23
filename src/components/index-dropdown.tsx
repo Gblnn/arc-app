@@ -19,6 +19,7 @@ interface Props {
   onLogout?: any;
   onProfile?: any;
   name?: any;
+  allocated_hours?: any;
 }
 
 export default function IndexDropDown(props: Props) {
@@ -48,7 +49,7 @@ export default function IndexDropDown(props: Props) {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          style={{ margin: "0.25rem", marginRight: "1.25rem", width: "14rem" }}
+          style={{ margin: "0.25rem", marginRight: "1.25rem", width: "15rem" }}
         >
           <DropdownMenuGroup>
             {/* <DropdownMenuItem
@@ -95,6 +96,8 @@ export default function IndexDropDown(props: Props) {
                 border: "",
                 justifyContent: "",
                 flexFlow: "",
+                paddingTop: "1rem",
+                paddingBottom: "1rem",
               }}
             >
               <div
@@ -127,11 +130,22 @@ export default function IndexDropDown(props: Props) {
                     style={{
                       fontSize: "0.65rem",
                       opacity: "0.75",
-                      fontWeight: 500,
-                      color: "",
+                      fontWeight: 800,
+                      color: "dodgerblue",
                     }}
                   >
                     {window.name}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "0.7rem",
+                      background: "rgba(100 100 100/ 20%)",
+                      paddingLeft: "0.5rem",
+                      paddingRight: "0.5rem",
+                      borderRadius: "0.5rem",
+                    }}
+                  >
+                    <b>Allocated Hours</b> {props.allocated_hours}
                   </p>
                 </div>
               </div>

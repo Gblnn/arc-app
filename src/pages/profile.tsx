@@ -15,7 +15,7 @@ import {
 import { motion } from "framer-motion";
 import { List, Truck, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Records from "./records";
 import Work from "./work";
 
@@ -28,11 +28,10 @@ export default function Profile() {
   const [path, setPath] = useState("work");
   const [endDialog, setEndDialog] = useState(false);
   const usenavigate = useNavigate();
-  const location = useLocation();
+  const [allocated_hours, setAllocatedHours] = useState(0);
 
   useEffect(() => {
     fetchRecords();
-    console.log(location);
   }, []);
 
   useEffect(() => {
@@ -67,6 +66,7 @@ export default function Profile() {
     });
     setName(fetchedData[0].name);
     setRole(fetchedData[0].role);
+    setAllocatedHours(fetchedData[0].allocated_hours);
   };
 
   return (
@@ -99,6 +99,7 @@ export default function Profile() {
                 v2.0
               </button> */}
               <IndexDropDown
+                allocated_hours={allocated_hours}
                 name={name ? name : ""}
                 onLogout={() => setLogoutPrompt(true)}
               />
@@ -181,7 +182,7 @@ export default function Profile() {
               </div> */}
             {path == "work" ? (
               <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-                <Work />
+                <Work allocated_hours={allocated_hours} />
               </motion.div>
             ) : (
               path == "records" && <Records />
