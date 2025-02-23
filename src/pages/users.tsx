@@ -1,9 +1,9 @@
 import Back from "@/components/back";
+import CustomDropdown from "@/components/custom-dropdown";
 import DefaultDialog from "@/components/default-dialog";
 import Directive from "@/components/directive";
 import InputDialog from "@/components/input-dialog";
 import RefreshButton from "@/components/refresh-button";
-import SelectMenu from "@/components/select-menu";
 import { db } from "@/firebase";
 import { LoadingOutlined } from "@ant-design/icons";
 import { message } from "antd";
@@ -45,13 +45,11 @@ export default function Users() {
 
   const [display_name, setDisplayName] = useState("");
   const [display_email, setDisplayEmail] = useState("");
-  // const [role, setRole] = useState("");
   const [docid, setDocid] = useState("");
   const [deleteConfirmDiaog, setDeleteConfirmDialog] = useState(false);
   const [role, setRole] = useState("");
-  const [clearance, setClearance] = useState("");
-  const [editor, setEditor] = useState("");
-  const [sensitive_data, setSensitiveData] = useState("");
+
+  const [totalHours, setTotalHours] = useState("");
 
   const auth = getAuth();
 
@@ -63,7 +61,7 @@ export default function Users() {
         name: name,
         email: email,
         role: "profile",
-        clearance: "Sohar Star United",
+        total_hours: "9",
         editor: "false",
         sensitive_data: "false",
       });
@@ -76,13 +74,6 @@ export default function Users() {
       message.error(String(error));
     }
   };
-
-  // const [email, setEmail] = useState("")
-  // const [password, setPassword] = useState("")
-
-  // const Authenticate = () => {
-
-  // }
 
   useEffect(() => {
     fetchUsers();
@@ -120,9 +111,7 @@ export default function Users() {
       setLoading(true);
       await updateDoc(doc(db, "users", docid), {
         role: role,
-        clearance: clearance,
-        editor: editor,
-        sensitive_data: sensitive_data,
+        total_hours: totalHours,
       });
       setLoading(false);
       setUserDialog(false);
@@ -199,9 +188,7 @@ export default function Users() {
                   setDisplayName(user.name);
                   setDisplayEmail(user.email);
                   setRole(user.role);
-                  setClearance(user.clearance);
-                  setEditor(user.editor);
-                  setSensitiveData(user.sensitive_data);
+                  setTotalHours(user.total_hours || "9");
                 }}
                 key={user.id}
                 icon={
@@ -220,63 +207,6 @@ export default function Users() {
           </div>
         )}
       </motion.div>
-
-      <DefaultDialog
-        title={display_name}
-        titleIcon={<User color="crimson" />}
-        codeIcon={<AtSign color="crimson" width={"1rem"} />}
-        open={userDialog}
-        OkButtonText="Update"
-        onCancel={() => setUserDialog(false)}
-        onOk={updateUser}
-        updating={loading}
-        extra={
-          <div
-            style={{
-              width: "100%",
-              display: "flex",
-              flexFlow: "column",
-              gap: "0.5rem",
-              touchAction: "manipulation",
-            }}
-          >
-            <Directive
-              notName
-              title={display_email}
-              noArrow
-              icon={<AtSign width={"1.24rem"} color="crimson" />}
-            />
-            <SelectMenu
-              value={role.toLowerCase()}
-              onChange={setRole}
-              style={{
-                cursor: "pointer",
-                WebkitTapHighlightColor: "transparent",
-                touchAction: "manipulation",
-                userSelect: "none",
-              }}
-            />
-
-            {/* <div style={{ height: "10rem" }}></div> */}
-          </div>
-        }
-        title_extra={
-          <div>
-            <button
-              onClick={() => setDeleteConfirmDialog(true)}
-              style={{
-                fontSize: "0.75rem",
-                paddingLeft: "1rem",
-                paddingRight: "1rem",
-                height: "2rem",
-              }}
-            >
-              <MinusCircle width={"1rem"} color="crimson" />
-              Remove
-            </button>
-          </div>
-        }
-      />
 
       <DefaultDialog
         destructive
@@ -306,6 +236,75 @@ export default function Users() {
         disabled={!name || !email || !passconfirm || password != passconfirm}
         onOk={createUser}
         updating={loading}
+      />
+
+      <DefaultDialog
+        title={display_name}
+        titleIcon={<User color="crimson" />}
+        codeIcon={<AtSign color="crimson" width={"1rem"} />}
+        open={userDialog}
+        OkButtonText="Update"
+        onCancel={() => setUserDialog(false)}
+        onOk={updateUser}
+        updating={loading}
+        extra={
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              flexFlow: "column",
+              gap: "1rem",
+            }}
+          >
+            <Directive
+              notName
+              title={display_email}
+              noArrow
+              icon={<AtSign width={"1.24rem"} color="crimson" />}
+            />
+
+            <div>
+              <CustomDropdown
+                value={role}
+                onChange={setRole}
+                options={[
+                  { value: "admin", label: "Admin" },
+                  { value: "profile", label: "Profile" },
+                ]}
+                placeholder="Select Role"
+              />
+            </div>
+
+            <div>
+              <CustomDropdown
+                value={totalHours}
+                onChange={setTotalHours}
+                options={[
+                  { value: "9", label: "9 Hours" },
+                  { value: "9.5", label: "9.5 Hours" },
+                  { value: "10", label: "10 Hours" },
+                ]}
+                placeholder="Select Hours"
+              />
+            </div>
+          </div>
+        }
+        title_extra={
+          <div>
+            <button
+              onClick={() => setDeleteConfirmDialog(true)}
+              style={{
+                fontSize: "0.75rem",
+                paddingLeft: "1rem",
+                paddingRight: "1rem",
+                height: "2rem",
+              }}
+            >
+              <MinusCircle width={"1rem"} color="crimson" />
+              Remove
+            </button>
+          </div>
+        }
       />
     </div>
   );

@@ -1,8 +1,7 @@
 import Back from "@/components/back";
+import CustomDropdown from "@/components/custom-dropdown";
 import DefaultDialog from "@/components/default-dialog";
-import Menu from "@/components/menu";
 import RefreshButton from "@/components/refresh-button";
-import SelectMenu from "@/components/select-menu";
 import { db } from "@/firebase";
 import * as XLSX from "@e965/xlsx";
 import { message } from "antd";
@@ -30,7 +29,7 @@ import {
   Trash2,
 } from "lucide-react";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Records() {
   const [loading, setLoading] = useState(false);
@@ -45,6 +44,8 @@ export default function Records() {
   const [selectedID, setSelectedID] = useState("");
   const [time, setTime] = useState("");
   const [timeType, setTimeType] = useState("");
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   // const [selectedStart, setSelectedStart] = useState("");
   // const [selectedEnd, setSelectedEnd] = useState("");
@@ -70,95 +71,111 @@ export default function Records() {
       });
 
       setUsers(fetchedData);
-      console.log(users);
     } catch (error) {}
   };
 
   useEffect(() => {
-    onSnapshot(query(collection(db, "records")), (snapshot: any) => {
-      snapshot.docChanges().forEach((change: any) => {
-        if (change.type === "added") {
-          fetchRecords();
-        }
-        if (change.type === "modified") {
-          fetchRecords();
-        }
-        if (change.type === "removed") {
-          fetchRecords();
-        }
-      });
+    const unsubscribe = onSnapshot(query(collection(db, "records")), () => {
+      fetchRecords();
     });
+
+    return () => unsubscribe();
   }, []);
 
-  const exportDb = async () => {
-    const myHeader = ["name", "date", "start", "end", "total", "overtime"];
-    records.forEach((e: any) => {
+  const exportDb = useCallback(async () => {
+    const exportData = records.map((e: any) => {
       const start = e.start.toDate();
-      const end = e.end != "" ? e.end.toDate() : "";
-      const total = e.end
+      const end = e.end ? e.end.toDate() : null;
+      const total = end
         ? (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
         : "-";
-      //date
-      e.date = String(moment(e.start.toDate()).format("DD/MM/YYYY"));
-      //start
-      e.start = e.start
-        ? e.start && moment(e.start.toDate()).format("hh:mm A")
-        : "-";
-      //end
-      e.end = e.end != "" ? moment(e.end.toDate()).format("hh:mm A") : "-";
+      const overtime = end && Number(total) > 10 ? Number(total) - 10 : "-";
 
-      e.total = total;
-
-      e.overtime = Number(total) > 10 ? Number(total) - 10 : "-";
-
-      delete e.id;
-      delete e.status;
-      delete e.email;
+      return {
+        name: e.name,
+        date: moment(start).format("DD/MM/YYYY"),
+        start: moment(start).format("hh:mm A"),
+        end: end ? moment(end).format("hh:mm A") : "-",
+        total,
+        overtime,
+      };
     });
-    const worksheet = XLSX.utils.json_to_sheet(records, {
-      header: myHeader,
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData, {
+      header: ["name", "date", "start", "end", "total", "overtime"],
     });
+
     const workbook = XLSX.utils.book_new();
-
-    const range = XLSX.utils.decode_range(String(worksheet["!ref"]));
-    range.e["c"] = myHeader.length - 1;
-    worksheet["!ref"] = XLSX.utils.encode_range(range);
-
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
-    // Buffer to store the generated Excel file
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
     });
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
-    });
 
+    const fileName = `Timesheet(${moment().format("DD/MM/YYYY")}).xlsx`;
     saveAs(
-      blob,
-      "Timesheet(" + String(moment().format("DD/MM/YYYY")) + ").xlsx"
+      new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      }),
+      fileName
     );
     window.location.reload();
-  };
+  }, [records]);
 
   const fetchRecords = async () => {
-    setLoading(true);
-    const RecordCollection = collection(db, "records");
-    const recordQuery = query(RecordCollection, orderBy("start", "desc"));
-    const querySnapshot = await getDocs(recordQuery);
-    setLoading(false);
-    const fetchedData: any = [];
-    querySnapshot.forEach((doc: any) => {
-      fetchedData.push({ id: doc.id, ...doc.data() });
-    });
-    setRecords(fetchedData);
+    try {
+      setLoading(true);
+      const RecordCollection = collection(db, "records");
+      let conditions: any[] = [orderBy("start", "desc")];
 
-    setRefreshCompleted(true);
-    setTimeout(() => {
-      setRefreshCompleted(false);
-    }, 1000);
+      // Add user filter if selected
+      if (selectedUser) {
+        conditions.unshift(where("name", "==", selectedUser));
+      }
+
+      // Add month filter if selected
+      if (selectedMonth) {
+        const startOfMonth = moment()
+          .month(Number(selectedMonth) - 1)
+          .startOf("month")
+          .toDate();
+        const endOfMonth = moment()
+          .month(Number(selectedMonth) - 1)
+          .endOf("month")
+          .toDate();
+
+        conditions.unshift(
+          where("start", ">=", Timestamp.fromDate(startOfMonth)),
+          where("start", "<=", Timestamp.fromDate(endOfMonth))
+        );
+      }
+
+      // Apply all conditions in a single query
+      const recordQuery = query(RecordCollection, ...conditions);
+      const querySnapshot = await getDocs(recordQuery);
+
+      const fetchedData: any = [];
+      querySnapshot.forEach((doc: any) => {
+        fetchedData.push({ id: doc.id, ...doc.data() });
+      });
+
+      setRecords(fetchedData);
+      setRefreshCompleted(true);
+      setTimeout(() => {
+        setRefreshCompleted(false);
+      }, 1000);
+    } catch (error) {
+      message.error("Error fetching records");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Add useEffect to trigger fetch when filters change
+  useEffect(() => {
+    fetchRecords();
+  }, [selectedUser, selectedMonth]);
 
   const deleteSelected = async () => {
     try {
@@ -169,71 +186,50 @@ export default function Records() {
     } catch (error) {
       setDeleteDialog(false);
       message.error("Errors Logged");
-      console.log(error);
       setLoading(false);
     }
   };
 
-  const updateTime = async () => {
+  const updateTime = useCallback(async () => {
     try {
-      const timestamp = Timestamp.fromDate(moment(time, "hh:mm").toDate());
-      let updates = {};
       setLoading(true);
-      if (timeType == "start") {
-        await updateDoc(doc(db, "records", selectedID), { start: timestamp });
-      } else if (timeType == "end") {
-        await updateDoc(doc(db, "records", selectedID), { end: timestamp });
-      }
-
+      const timestamp = Timestamp.fromDate(moment(time, "hh:mm").toDate());
       const recordRef = doc(db, "records", selectedID);
+
+      const updates: any = {
+        [timeType]: timestamp,
+      };
+
       const recordSnap = await getDoc(recordRef);
       if (recordSnap.exists()) {
         const record = recordSnap.data();
-        const start = record.start ? record.start.toDate() : null;
-        const end = record.end ? record.end.toDate() : null;
+        const start =
+          timeType === "start" ? timestamp.toDate() : record.start?.toDate();
+        const end =
+          timeType === "end" ? timestamp.toDate() : record.end?.toDate();
 
-        if (timeType === "start" && end) {
+        if (start && end) {
           const total = Number(
-            (
-              moment(end).diff(moment(timestamp.toDate()), "minutes") / 60
-            ).toFixed(2)
+            (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
           );
+          const overtime = total > 10 ? Number((total - 10).toFixed(2)) : null;
 
-          const overtime =
-            Number(total) > 10 ? Number((total - 10).toFixed(2)) : "";
-
-          updates = { ...updates, total, overtime };
-        } else if (timeType === "end" && start) {
-          const total = Number(
-            (
-              moment(timestamp.toDate()).diff(moment(start), "minutes") / 60
-            ).toFixed(2)
-          );
-
-          const overtime =
-            Number(total) > 10 ? Number((total - 10).toFixed(2)) : "";
-
-          updates = { ...updates, total, overtime };
+          if (overtime !== null) {
+            updates.overtime = overtime;
+          }
+          updates.total = total;
         }
       }
 
       await updateDoc(recordRef, updates);
-
-      // timeType == "start"
-      //   ? await updateDoc(doc(db, "records", selectedID), { start: timestamp })
-      //   : timeType == "end"
-      //   ? await updateDoc(doc(db, "records", selectedID), { end: timestamp })
-      //   : {};
-
       setLoading(false);
       setEditTimeDialog(false);
       setTime("");
     } catch (error) {
       setLoading(false);
       message.error("Errors Logged");
-      console.log(error);
     }
-  };
+  }, [selectedID, time, timeType]);
 
   const Deallocate = async () => {
     try {
@@ -245,44 +241,141 @@ export default function Records() {
             status: true,
           })
         : {};
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   // const months = Array.from({ length: 12 }, (i: any) => {
   //   return new Date(0, i).toLocaleString("en-US", { month: "long" });
   // });
 
+  // Memoize the record calculations
+  const processedRecords = useMemo(() => {
+    return records.map((e: any) => {
+      const start = e.start.toDate();
+      const end = e.end ? e.end.toDate() : null;
+      const total = end
+        ? (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
+        : "-";
+      const overtime =
+        end && Number(total) > 10 ? (Number(total) - 10).toFixed(2) : "-";
+
+      return {
+        ...e,
+        formattedDate: moment(start).format("DD/MM/YY"),
+        formattedStart: moment(start).format("hh:mm A"),
+        formattedEnd: end ? moment(end).format("hh:mm A") : "-",
+        total,
+        overtime,
+      };
+    });
+  }, [records]);
+
+  // Memoize handlers
+  const handleDeleteClick = useCallback((record: any) => {
+    setDeleteDialog(true);
+    setSelectedName(record.name);
+    setSelectedDate(moment(record.start.toDate()).format("DD/MM/YYYY"));
+    setSelectedID(record.id);
+  }, []);
+
+  const handleTimeClick = useCallback((record: any, type: "start" | "end") => {
+    setTimeType(type);
+    setEditTimeDialog(true);
+    if (type === "start") {
+      setTime(moment(record.start).format("HH:MM A"));
+    }
+    setSelectedID(record.id);
+  }, []);
+
+  // Update the dropdown onChange handlers to not clear other filters
+  const handleUserChange = (value: string) => {
+    setSelectedUser(value);
+  };
+
+  const handleMonthChange = (value: string) => {
+    setSelectedMonth(value);
+  };
+
+  const TableRow = memo(({ record, onDeleteClick, onTimeClick }: any) => {
+    return (
+      <tr className="active:bg-slate-800" style={{ cursor: "pointer" }}>
+        <td
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "0.45rem",
+            fontWeight: "600",
+            color: !record.end ? "lightgreen" : "",
+            padding: "1rem",
+          }}
+          onClick={() => onDeleteClick(record)}
+        >
+          {record.name.split(" ")[0]}
+        </td>
+        <td style={{ padding: "1rem" }} onClick={() => onDeleteClick(record)}>
+          {record.formattedDate}
+        </td>
+        <td
+          className="active:bg-slate-600"
+          style={{ padding: "1rem" }}
+          onClick={() => onTimeClick(record, "start")}
+        >
+          {record.formattedStart}
+        </td>
+        <td
+          className="active:bg-slate-600"
+          style={{ padding: "1rem" }}
+          onClick={() => onTimeClick(record, "end")}
+        >
+          {record.formattedEnd}
+        </td>
+        <td style={{ padding: "1rem" }} onClick={() => onDeleteClick(record)}>
+          {record.total}
+        </td>
+        <td style={{ padding: "1rem" }}>{record.overtime}</td>
+      </tr>
+    );
+  });
+
+  // Create memoized options for users dropdown
+  const userOptions = useMemo(() => {
+    return users.map((user: any) => ({
+      value: user.name,
+      label: user.name,
+    }));
+  }, [users]);
+
+  // Create memoized options for months dropdown
+  const monthOptions = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = new Date(0, i).toLocaleString("en-US", { month: "long" });
+      return {
+        value: String(i + 1),
+        label: month,
+      };
+    });
+  }, []);
+
   return (
-    <div style={{ padding: "", display: "flex", flexFlow: "column" }}>
+    <div style={{ height: "100svh", display: "flex", flexDirection: "column" }}>
+      {/* Fixed Header */}
       <div
-        className=""
         style={{
-          border: "",
           padding: "1.25rem",
           paddingBottom: "1rem",
-          position: "sticky",
-          top: 0,
-          zIndex: 1,
           background: "rgba(60 60 60/ 75%)",
-          // borderBottom: "1px solid rgba(100 100 100/ 40%)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
+          zIndex: 40,
         }}
       >
         <Back
           title={"Timesheet"}
           noblur
-          // subtitle={records.length}
           extra={
             <div
-              style={{
-                display: "flex",
-                gap: "0.5rem",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
+              style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
             >
               <button
                 onClick={exportDb}
@@ -306,211 +399,88 @@ export default function Records() {
         />
       </div>
 
+      {/* Fixed Dropdowns */}
       <div
         style={{
-          display: "flex",
           padding: "1rem",
-          gap: "1rem",
           background: "rgba(100 100 100/ 20%)",
+          display: "flex",
+          gap: "1rem",
+          zIndex: 30,
+          justifyContent: "center",
         }}
       >
-        <Menu title="Name" items={["", ""]} />
-        <SelectMenu title="Date" />
+        <div style={{ width: "200px" }}>
+          <CustomDropdown
+            value={selectedUser}
+            onChange={handleUserChange}
+            options={userOptions}
+            placeholder="Select User"
+          />
+        </div>
+        <div style={{ width: "200px" }}>
+          <CustomDropdown
+            value={selectedMonth}
+            onChange={handleMonthChange}
+            options={monthOptions}
+            placeholder="Select Month"
+          />
+        </div>
       </div>
 
-      <div
-        style={{
-          width: "auto",
-          border: "",
-          height: "",
-          padding: "",
-          display: "flex",
-          flexFlow: "column",
-        }}
-      >
+      {/* Table Container with fixed header and scrollable body */}
+      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
         {!loading ? (
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            style={{ display: "flex", flexFlow: "column", padding: "" }}
+            style={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "auto",
+            }}
           >
             <table
               style={{
-                width: "auto",
+                width: "100%",
                 fontSize: "0.8rem",
-                position: "sticky",
-
-                height: "",
+                borderCollapse: "collapse",
+                position: "relative",
               }}
             >
-              <thead style={{}}>
+              <thead>
                 <tr
                   style={{
-                    background: "rgba(100 100 100/ 40%)",
+                    background: "rgba(18 18 18/ 55%)",
                     position: "sticky",
                     top: 0,
+                    zIndex: 20,
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
                   }}
                 >
-                  <th>Name</th>
-                  <th>Date</th>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th>Total</th>
-                  <th style={{}}>OT</th>
+                  <th style={{ padding: "1rem" }}>Name</th>
+                  <th style={{ padding: "1rem" }}>Date</th>
+                  <th style={{ padding: "1rem" }}>Start</th>
+                  <th style={{ padding: "1rem" }}>End</th>
+                  <th style={{ padding: "1rem" }}>Total</th>
+                  <th style={{ padding: "1rem" }}>OT</th>
                 </tr>
               </thead>
               <tbody
                 style={{
                   textAlign: "center",
                   background: "rgba(100 100 100/ 10%)",
-                  overflowY: "scroll",
-                  height: "",
-                  border: "",
                 }}
               >
-                {records.map((e: any) => (
-                  <tr
-                    className="active:bg-slate-800"
+                {processedRecords.map((e: any) => (
+                  <TableRow
                     key={e.id}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "0.45rem",
-                        fontWeight: "600",
-                        color: !e.end ? "lightgreen" : "",
-                      }}
-                      onClick={() => {
-                        setDeleteDialog(true);
-                        setSelectedName(e.name);
-                        setSelectedDate(
-                          moment(e.start.toDate()).format("DD/MM/YYYY")
-                        );
-                        setSelectedID(e.id);
-                      }}
-                    >
-                      {/* {!e.end && (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Dot
-                            style={{ position: "absolute", scale: "2" }}
-                            className="animate-ping"
-                            color="lightgreen"
-                          />
-                          <Dot color="lightgreen" />
-                        </div>
-                      )} */}
-
-                      {e.name.split(" ")[0]}
-                    </td>
-
-                    {/* DATE */}
-                    <td
-                      onClick={() => {
-                        setDeleteDialog(true);
-                        setSelectedName(e.name);
-                        setSelectedDate(
-                          moment(e.start.toDate()).format("DD/MM/YYYY")
-                        );
-                        setSelectedID(e.id);
-                      }}
-                    >
-                      {moment(e.start.toDate()).format("DD/MM/YY")}
-                    </td>
-
-                    {/* START */}
-                    <td
-                      className="active:bg-slate-600"
-                      onClick={() => {
-                        setTimeType("start");
-                        setEditTimeDialog(true);
-                        // setSelectedTime(e.start.toDate());
-                        setTime(moment(e.start).format("HH:MM A"));
-                        setSelectedID(e.id);
-                        // setSelectedStart(e.start ? e.start : "");
-                        // setSelectedEnd(e.end ? e.end : "");
-                      }}
-                    >
-                      {e.start
-                        ? e.start && moment(e.start.toDate()).format("hh:mm A")
-                        : "-"}
-                    </td>
-
-                    {/* END */}
-                    <td
-                      className="active:bg-slate-600"
-                      onClick={() => {
-                        setTimeType("end");
-                        setEditTimeDialog(true);
-                        // setSelectedTime(e.end ? e.end.toDate() : "");
-                        setSelectedID(e.id);
-                        // setSelectedStart(e.start ? e.start : "");
-                        // setSelectedEnd(e.end ? e.end : "");
-                      }}
-                    >
-                      {e.end != ""
-                        ? moment(e.end.toDate()).format("hh:mm A")
-                        : "-"}
-                    </td>
-                    <td
-                      onClick={() => {
-                        setDeleteDialog(true);
-                        setSelectedName(e.name);
-                        setSelectedDate(
-                          moment(e.start.toDate()).format("DD/MM/YYYY")
-                        );
-                        setSelectedID(e.id);
-                      }}
-                    >
-                      {/* {e.end
-                        ? Number(moment(e.end.toDate()).format("hh")) -
-                          Number(moment(e.start.toDate()).format("hh"))
-                        : "-"} */}
-                      {e.end != ""
-                        ? (
-                            moment(e.end.toDate()).diff(
-                              moment(e.start.toDate()),
-                              "minutes"
-                            ) / 60
-                          ).toFixed(2)
-                        : "-"}
-                    </td>
-                    <td
-                    // onClick={() => {
-                    //   setDeleteDialog(true);
-                    //   setSelectedName(e.name);
-                    //   setSelectedDate(e.start.toDate());
-                    //   setSelectedID(e.id);
-                    // }}
-                    >
-                      {e.end != "" &&
-                      moment(e.end.toDate()).diff(
-                        moment(e.start.toDate()),
-                        "minutes"
-                      ) /
-                        60 >
-                        10
-                        ? Number(
-                            (
-                              moment(e.end.toDate()).diff(
-                                moment(e.start.toDate()),
-                                "minutes"
-                              ) /
-                                60 -
-                              10
-                            ).toFixed(2)
-                          )
-                        : "-"}
-                    </td>
-                  </tr>
+                    record={e}
+                    onDeleteClick={handleDeleteClick}
+                    onTimeClick={handleTimeClick}
+                  />
                 ))}
               </tbody>
             </table>
@@ -520,7 +490,7 @@ export default function Records() {
             style={{
               width: "100%",
               display: "flex",
-              height: "70svh",
+              height: "100%",
               justifyContent: "center",
               alignItems: "center",
             }}
@@ -534,6 +504,7 @@ export default function Records() {
           </div>
         )}
       </div>
+
       <DefaultDialog
         updating={loading}
         title={"Delete Record?"}

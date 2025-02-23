@@ -26,8 +26,9 @@ export default function SelectMenu(props: Props) {
           touchAction: "manipulation",
           WebkitTapHighlightColor: "transparent",
           cursor: "pointer",
+          ...props.style,
         }}
-        className="select-none"
+        className="select-none touch-manipulation"
       >
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <UserCircle color="crimson" width={"1.25rem"} />
@@ -48,10 +49,15 @@ export default function SelectMenu(props: Props) {
         <SelectValue placeholder="Role" />
       </SelectTrigger>
       <SelectContent
+        className="touch-manipulation"
         style={{
           touchAction: "manipulation",
           WebkitTapHighlightColor: "transparent",
+          userSelect: "none",
+          cursor: "pointer",
         }}
+        position="popper"
+        sideOffset={5}
       >
         <SelectGroup
           style={{
@@ -62,12 +68,14 @@ export default function SelectMenu(props: Props) {
           }}
         >
           <SelectItem
+            className="touch-manipulation"
             style={{
               display: "flex",
               justifyContent: "flex-start",
               touchAction: "manipulation",
               cursor: "pointer",
               userSelect: "none",
+              padding: "12px 16px",
             }}
             value="admin"
           >
@@ -75,12 +83,14 @@ export default function SelectMenu(props: Props) {
           </SelectItem>
 
           <SelectItem
+            className="touch-manipulation"
             style={{
               display: "flex",
               justifyContent: "flex-start",
               touchAction: "manipulation",
               cursor: "pointer",
               userSelect: "none",
+              padding: "12px 16px",
             }}
             value="profile"
           >

@@ -8,18 +8,30 @@ import {
 } from "@/components/ui/select";
 import { Plus, UserCircle } from "lucide-react";
 
-interface Props {
+interface MenuItem {
+  id: string;
+  value: string;
+}
+
+interface MenuProps {
   title?: string;
   value?: string;
   onChange?: any;
   placeholder?: string;
-  items?: any;
+  items: MenuItem[];
   addable?: boolean;
 }
 
-export default function Menu(props: Props) {
+export default function Menu({
+  title,
+  value,
+  onChange,
+  placeholder,
+  items,
+  addable,
+}: MenuProps) {
   return (
-    <Select defaultValue={props.value} onValueChange={props.onChange}>
+    <Select defaultValue={value} onValueChange={onChange}>
       <SelectTrigger
         style={{
           display: "flex",
@@ -40,11 +52,11 @@ export default function Menu(props: Props) {
               fontWeight: "600",
             }}
           >
-            {props.title}
+            {title}
           </p>
         </div>
 
-        <SelectValue placeholder={props.placeholder} />
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent style={{}}>
         <SelectGroup
@@ -54,16 +66,16 @@ export default function Menu(props: Props) {
             flexFlow: "column",
           }}
         >
-          {props.items.map((item: any) => (
+          {items.map((item) => (
             <SelectItem
-              key={item}
+              key={item.id}
               style={{ display: "flex", justifyContent: "flex-start" }}
-              value={item ? item : "empty"}
+              value={item.value}
             >
-              {item}
+              {item.value}
             </SelectItem>
           ))}
-          {props.addable && (
+          {addable && (
             <button style={{ justifyContent: "flex-start" }}>
               <Plus color="crimson" />
               Add
