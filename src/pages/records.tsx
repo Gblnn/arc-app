@@ -102,6 +102,9 @@ export default function Records() {
               <button className="wide-btn">
                 Hours <b style={{ color: "" }}>{totalSum}</b>
               </button>
+              {/* <button className="wide-btn">
+                Allocated <b style={{ color: "" }}>{}</b>
+              </button> */}
               <button className="wide-btn">
                 Overtime <b style={{ color: "lightgreen" }}>{totalOvertime}</b>
               </button>

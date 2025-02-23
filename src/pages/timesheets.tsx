@@ -84,12 +84,16 @@ export default function Records() {
 
   const exportDb = useCallback(async () => {
     const exportData = records.map((e: any) => {
+      const allocated_hours = e.allocated_hours;
       const start = e.start.toDate();
       const end = e.end ? e.end.toDate() : null;
       const total = end
         ? (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
         : "-";
-      const overtime = end && Number(total) > 10 ? Number(total) - 10 : "-";
+      const overtime =
+        end && Number(total) > allocated_hours
+          ? Number(total) - allocated_hours
+          : "-";
 
       return {
         name: e.name,
