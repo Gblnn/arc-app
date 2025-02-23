@@ -1,5 +1,4 @@
 import Back from "@/components/back";
-import Menu from "@/components/menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import Template1 from "@/invoice-templates/template-1";
 import { DownloadCloud } from "lucide-react";
@@ -74,15 +73,7 @@ export default function Invoice() {
           padding: "1rem",
           flexWrap: "wrap",
         }}
-      >
-        <Menu
-          title="Invoice Type"
-          placeholder="Invoice Type"
-          items={["Cash Invoice", "Tax Invoice"]}
-        />
-        <Menu title="Client" items={[""]} addable />
-        <input type="text" placeholder="Date (Leave Empty for Current Date)" />
-      </div>
+      ></div>
 
       <br />
 
