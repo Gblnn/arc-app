@@ -372,7 +372,6 @@ export default function Records() {
       >
         <Back
           title={"Timesheet"}
-          noblur
           extra={
             <div
               style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}

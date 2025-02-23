@@ -111,7 +111,7 @@ export default function Index() {
   };
 
   const Authenticate = () => {
-    access ? usenavigate("/record-list") : message.error("Clearance required");
+    access ? usenavigate("/index") : message.error("Clearance required");
   };
 
   return (

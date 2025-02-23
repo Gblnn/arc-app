@@ -1,15 +1,15 @@
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App.tsx";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
 import "./index.css";
 import "./WEB/css/clash-grotesk.css";
 import "./style.css";
 import { ThemeProvider } from "./components/theme-provider.tsx";
 
-createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <ThemeProvider defaultTheme="dark">
-    <BrowserRouter>
+    <React.StrictMode>
       <App />
-    </BrowserRouter>
+    </React.StrictMode>
   </ThemeProvider>
 );
