@@ -12,6 +12,7 @@ interface Props {
   title?: string;
   value?: any;
   onChange?: any;
+  style?: React.CSSProperties;
 }
 
 export default function SelectMenu(props: Props) {
@@ -22,8 +23,11 @@ export default function SelectMenu(props: Props) {
           display: "flex",
           justifyContent: "space-between",
           gap: "1rem",
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
+          cursor: "pointer",
         }}
-        className=""
+        className="select-none"
       >
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <UserCircle color="crimson" width={"1.25rem"} />
@@ -43,23 +47,41 @@ export default function SelectMenu(props: Props) {
 
         <SelectValue placeholder="Role" />
       </SelectTrigger>
-      <SelectContent style={{}}>
+      <SelectContent
+        style={{
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
+        }}
+      >
         <SelectGroup
           style={{
             display: "flex",
             justifyContent: "flex-start",
             flexFlow: "column",
+            touchAction: "manipulation",
           }}
         >
           <SelectItem
-            style={{ display: "flex", justifyContent: "flex-start" }}
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              touchAction: "manipulation",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
             value="admin"
           >
             Admin
           </SelectItem>
 
           <SelectItem
-            style={{ display: "flex", justifyContent: "flex-start" }}
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              touchAction: "manipulation",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
             value="profile"
           >
             Profile

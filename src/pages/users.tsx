@@ -237,6 +237,7 @@ export default function Users() {
               display: "flex",
               flexFlow: "column",
               gap: "0.5rem",
+              touchAction: "manipulation",
             }}
           >
             <Directive
@@ -245,7 +246,16 @@ export default function Users() {
               noArrow
               icon={<AtSign width={"1.24rem"} color="crimson" />}
             />
-            <SelectMenu value={role.toLowerCase()} onChange={setRole} />
+            <SelectMenu
+              value={role.toLowerCase()}
+              onChange={setRole}
+              style={{
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+                touchAction: "manipulation",
+                userSelect: "none",
+              }}
+            />
 
             {/* <div style={{ height: "10rem" }}></div> */}
           </div>
