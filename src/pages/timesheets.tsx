@@ -422,7 +422,7 @@ export default function Records() {
             value={selectedUser}
             onChange={handleUserChange}
             options={userOptions}
-            placeholder="Select User"
+            placeholder="Name"
           />
         </div>
         <div style={{ width: "200px" }}>
@@ -430,7 +430,7 @@ export default function Records() {
             value={selectedMonth}
             onChange={handleMonthChange}
             options={monthOptions}
-            placeholder="Select Month"
+            placeholder="Month"
           />
         </div>
       </div>

@@ -20,7 +20,7 @@ type DocumentType = "invoice" | "quotation";
 
 export default function DocumentGenerator() {
   const { toPDF, targetRef } = usePDF({
-    filename: "document.pdf",
+    filename: "document - " + moment().format("dd_mm_yyyy") + ".pdf",
     page: { margin: 5 },
   });
 
@@ -105,10 +105,6 @@ export default function DocumentGenerator() {
     gridTemplateColumns: "1fr",
     gap: "2rem",
     padding: "1rem",
-    "@media screen and (min-width: 1280px)": {
-      gridTemplateColumns: "400px 1fr",
-      padding: "2rem",
-    },
   } as const;
 
   const controlsPanelStyle = {
@@ -118,13 +114,6 @@ export default function DocumentGenerator() {
     background: "rgba(100 100 100/ 15%)",
     padding: "1.5rem",
     borderRadius: "0.5rem",
-    "@media screen and (min-width: 1280px)": {
-      position: "sticky",
-      top: "100px",
-      height: "fit-content",
-      maxHeight: "calc(100vh - 120px)",
-      overflowY: "auto",
-    },
   } as const;
 
   const headerStyle = {
@@ -165,9 +154,6 @@ export default function DocumentGenerator() {
     minWidth: "100%",
     display: "flex",
     justifyContent: "center",
-    "@media screen and (min-width: 1280px)": {
-      minWidth: "21cm",
-    },
   } as const;
 
   return (
@@ -175,7 +161,7 @@ export default function DocumentGenerator() {
       {/* Header */}
       <div style={headerStyle}>
         <Back
-          title="Document Generator"
+          title="Document Gen"
           extra={
             <button onClick={() => toPDF()}>
               <DownloadCloud color="dodgerblue" className="animate-pulse" />
@@ -185,9 +171,9 @@ export default function DocumentGenerator() {
       </div>
 
       {/* Main Content */}
-      <div style={mainContentStyle}>
+      <div style={mainContentStyle} className="document-generator-main">
         {/* Left Panel - Controls */}
-        <div style={controlsPanelStyle}>
+        <div style={controlsPanelStyle} className="document-generator-controls">
           {/* Replace Document Type Selector with Tabs */}
           <Tabs
             defaultValue="invoice"
@@ -387,7 +373,8 @@ export default function DocumentGenerator() {
                       onChange={(e) =>
                         updateItem(index, "quantity", Number(e.target.value))
                       }
-                      placeholder="Qty"
+                      placeholder="0"
+                      min="0"
                       className="invoice-input"
                     />
                     <input
@@ -396,7 +383,9 @@ export default function DocumentGenerator() {
                       onChange={(e) =>
                         updateItem(index, "amount", Number(e.target.value))
                       }
-                      placeholder="Amount"
+                      placeholder="0.000"
+                      min="0"
+                      step="0.001"
                       className="invoice-input"
                     />
                   </div>
@@ -455,7 +444,11 @@ export default function DocumentGenerator() {
 
         {/* Right Panel - Preview */}
         <ScrollArea style={{ width: "100%", overflow: "auto" }}>
-          <div ref={targetRef} style={previewContainerStyle}>
+          <div
+            ref={targetRef}
+            style={previewContainerStyle}
+            className="document-generator-preview"
+          >
             {documentType === "invoice" ? (
               <InvoiceTemplate
                 clientName={clientName}

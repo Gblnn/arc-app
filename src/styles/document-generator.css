@@ -1,0 +1,18 @@
+@media screen and (min-width: 1280px) {
+  .document-generator-main {
+    grid-template-columns: 400px 1fr !important;
+    padding: 2rem !important;
+  }
+
+  .document-generator-controls {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+
+  .document-generator-preview {
+    min-width: 21cm !important;
+  }
+}
