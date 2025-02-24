@@ -459,12 +459,12 @@ export default function Records() {
               <thead>
                 <tr
                   style={{
-                    background: "rgba(18 18 18/ 55%)",
+                    background: "rgb(18 18 18)",
                     position: "sticky",
                     top: 0,
                     zIndex: 20,
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
+                    // backdropFilter: "blur(16px)",
+                    // WebkitBackdropFilter: "blur(16px)",
                   }}
                 >
                   <th style={{ padding: "1rem" }}>Name</th>

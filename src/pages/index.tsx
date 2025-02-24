@@ -111,7 +111,7 @@ export default function Index() {
   };
 
   const Authenticate = () => {
-    access ? usenavigate("/index") : message.error("Clearance required");
+    access ? usenavigate("/index") : usenavigate("/");
   };
 
   return (
@@ -235,8 +235,8 @@ export default function Index() {
               />
 
               <Directive
-                to={"/invoice-gen"}
-                title={"Invoicer"}
+                to={"/document-generator"}
+                title={"Document Gen"}
                 icon={<FileText color="crimson" width={"1.25rem"} />}
               />
 
