@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import converter from "number-to-words";
 
 interface InvoiceItem {
@@ -406,9 +405,5 @@ export default function Template1(props: Props) {
     );
   });
 
-  return (
-    <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-      {pages}
-    </motion.div>
-  );
+  return <div>{pages}</div>;
 }
