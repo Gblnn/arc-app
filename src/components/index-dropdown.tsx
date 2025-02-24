@@ -136,17 +136,19 @@ export default function IndexDropDown(props: Props) {
                   >
                     {window.name}
                   </p>
-                  <p
-                    style={{
-                      fontSize: "0.7rem",
-                      background: "rgba(100 100 100/ 20%)",
-                      paddingLeft: "0.5rem",
-                      paddingRight: "0.5rem",
-                      borderRadius: "0.5rem",
-                    }}
-                  >
-                    <b>Allocated Hours</b> {props.allocated_hours}
-                  </p>
+                  {props.allocated_hours && (
+                    <p
+                      style={{
+                        fontSize: "0.7rem",
+                        background: "rgba(100 100 100/ 20%)",
+                        paddingLeft: "0.5rem",
+                        paddingRight: "0.5rem",
+                        borderRadius: "0.5rem",
+                      }}
+                    >
+                      <b>Allocated Hours</b> {props.allocated_hours}
+                    </p>
+                  )}
                 </div>
               </div>
             </DropdownMenuItem>
