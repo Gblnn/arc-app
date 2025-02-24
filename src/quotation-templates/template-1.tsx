@@ -242,7 +242,7 @@ const QuotationPage = ({
             <p style={{ fontWeight: "bold", marginBottom: "1rem" }}>
               Terms and Conditions:
             </p>
-            <ol style={{ listStyle: "disc", paddingLeft: "1.5rem" }}>
+            <ol style={{ listStyle: "none", paddingLeft: "1.5rem" }}>
               {props.terms.map((term, index) => (
                 <li key={index} style={{ marginBottom: "0.5rem" }}>
                   {term}
