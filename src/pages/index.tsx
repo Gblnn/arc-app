@@ -235,7 +235,7 @@ export default function Index() {
 
               <Directive
                 to={"/document-generator"}
-                title={"Document Gen"}
+                title={"Document"}
                 icon={<FileText color="crimson" width={"1.25rem"} />}
               />
 

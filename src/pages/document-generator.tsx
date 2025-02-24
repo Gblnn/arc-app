@@ -8,6 +8,7 @@ import { usePDF } from "react-to-pdf";
 import { useState } from "react";
 import CustomDropdown from "@/components/custom-dropdown";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { motion } from "framer-motion";
 
 interface DocumentItem {
   description: string;
@@ -157,11 +158,15 @@ export default function DocumentGenerator() {
   } as const;
 
   return (
-    <div style={{ display: "flex", flexFlow: "column", minHeight: "100vh" }}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      style={{ display: "flex", flexFlow: "column", minHeight: "100vh" }}
+    >
       {/* Header */}
       <div style={headerStyle}>
         <Back
-          title="Document Gen"
+          title="Document"
           extra={
             <button onClick={() => toPDF()}>
               <DownloadCloud color="dodgerblue" className="animate-pulse" />
@@ -479,6 +484,6 @@ export default function DocumentGenerator() {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
-    </div>
+    </motion.div>
   );
 }
