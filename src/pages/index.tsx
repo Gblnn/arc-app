@@ -130,7 +130,7 @@ export default function Index() {
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
           <Back
             title="Arc"
-            subtitle={"v1.2"}
+            subtitle={"v2"}
             icon={<img src="/arc-logo.png" style={{ width: "2rem" }} />}
             noback
             extra={
