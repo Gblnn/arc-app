@@ -9,21 +9,24 @@ import {
   where,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { CalendarDays, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
+
+const months = moment.months(); // Get an array of month names
 
 export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<any>([]);
   const [totalSum, setSum] = useState(0);
   const [totalOvertime, setOvertime] = useState(0);
+  const [selectedMonth, setSelectedMonth] = useState(moment().format("MMMM")); // Default to current month
 
   useEffect(() => {
     fetchRecords();
     getSum();
     // console.log(records);
-  }, []);
+  }, [selectedMonth]); // Fetch records when the selected month changes
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -31,7 +34,8 @@ export default function Records() {
     const recordQuery = query(
       RecordCollection,
       where("email", "==", window.name),
-      orderBy("start", "desc")
+      orderBy("start", "desc"),
+      where("start", "==", moment(selectedMonth).format("MMMM"))
     );
     const querySnapshot = await getDocs(recordQuery);
     setLoading(false);
@@ -72,6 +76,25 @@ export default function Records() {
       >
         {!loading ? (
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "1rem",
+              }}
+            >
+              {/* <CalendarDays color="crimson" />
+              <CustomDropdown
+                value={selectedMonth}
+                onChange={(month) => setSelectedMonth(month)}
+                options={months.map((month) => ({
+                  value: month,
+                  label: month,
+                }))}
+                placeholder="Select a month"
+              /> */}
+            </div>
             <p
               style={{
                 fontWeight: "500",
@@ -84,14 +107,13 @@ export default function Records() {
                 justifyContent: "center",
               }}
             >
-              <CalendarDays color="crimson" />
-              {moment().format("MMMM")}
+              {selectedMonth}{" "}
               <b style={{ color: "crimson", fontWeight: "800" }}>
                 {moment().format("YYYY")}
               </b>
             </p>
             <br />
-            <div
+            {/* <div
               style={{
                 border: "",
                 display: "flex",
@@ -102,13 +124,11 @@ export default function Records() {
               <button className="wide-btn">
                 Hours <b style={{ color: "" }}>{totalSum}</b>
               </button>
-              {/* <button className="wide-btn">
-                Allocated <b style={{ color: "" }}>{}</b>
-              </button> */}
+              
               <button className="wide-btn">
                 Overtime <b style={{ color: "lightgreen" }}>{totalOvertime}</b>
               </button>
-            </div>
+            </div> */}
             <br />
             <table style={{ width: "100%", fontSize: "0.9rem" }}>
               <thead style={{}}>
@@ -179,6 +199,7 @@ export default function Records() {
                 ))}
               </tbody>
             </table>
+            <br />
           </motion.div>
         ) : (
           <div
