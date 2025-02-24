@@ -148,52 +148,150 @@ const InvoicePage = ({
       </div>
 
       <div style={{ paddingLeft: "2rem", paddingRight: "2rem" }}>
-        <table style={{ width: "100%", border: "" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            border: "1px solid black",
+          }}
+        >
           <thead>
             <tr>
-              <td style={{ width: "5%" }}>S.no</td>
-              <td style={{ width: "60%" }}>Description</td>
-              <td>Unit</td>
-              <td>Qty</td>
-              <td>Amount</td>
+              <th
+                style={{
+                  border: "1px solid black",
+                  padding: "0.5rem",
+                  fontWeight: "normal",
+                  width: "8%",
+                }}
+              >
+                S No.
+              </th>
+              <th
+                style={{
+                  border: "1px solid black",
+                  padding: "0.5rem",
+                  fontWeight: "normal",
+                  width: "60%",
+                }}
+              >
+                Description
+              </th>
+              <th
+                style={{
+                  border: "1px solid black",
+                  padding: "0.5rem",
+                  fontWeight: "normal",
+                  width: "10%",
+                }}
+              >
+                Unit
+              </th>
+              <th
+                style={{
+                  border: "1px solid black",
+                  padding: "0.5rem",
+                  fontWeight: "normal",
+                  width: "10%",
+                }}
+              >
+                Qty
+              </th>
+              <th
+                style={{
+                  border: "1px solid black",
+                  padding: "0.5rem",
+                  fontWeight: "normal",
+                  width: "15%",
+                }}
+              >
+                Amount
+              </th>
             </tr>
           </thead>
           <tbody>
             {items.map((item, index) => (
               <tr key={startIndex + index}>
-                <td>{startIndex + index + 1}</td>
-                <td>{item.description}</td>
-                <td>{item.unit}</td>
-                <td>{item.quantity}</td>
-                <td>{item.amount * item.quantity}</td>
+                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                  {startIndex + index + 1}
+                </td>
+                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                  {item.description}
+                </td>
+                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                  {item.unit}
+                </td>
+                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                  {item.quantity}
+                </td>
+                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                  {item.amount.toFixed(3)}
+                </td>
               </tr>
             ))}
           </tbody>
           {isLastPage && (
             <tfoot>
               <tr>
-                <td colSpan={2} style={{ textAlign: "left" }}>
+                <td
+                  colSpan={2}
+                  style={{
+                    border: "1px solid black",
+                    padding: "0.5rem",
+                    textAlign: "left",
+                  }}
+                >
                   TOTAL
                 </td>
-                <td></td>
-                <td></td>
-                <td>{props.subtotal.toFixed(3)}</td>
+                <td
+                  style={{ border: "1px solid black", padding: "0.5rem" }}
+                ></td>
+                <td
+                  style={{ border: "1px solid black", padding: "0.5rem" }}
+                ></td>
+                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                  {props.subtotal.toFixed(3)}
+                </td>
               </tr>
               {props.isTaxInvoice && (
                 <tr>
-                  <td colSpan={2} style={{ textAlign: "left" }}>
+                  <td
+                    colSpan={2}
+                    style={{
+                      border: "1px solid black",
+                      padding: "0.5rem",
+                      textAlign: "left",
+                    }}
+                  >
                     {"VAT(5%)"}
                   </td>
-                  <td></td>
-                  <td></td>
-                  <td>{props.vatAmount.toFixed(3)}</td>
+                  <td
+                    style={{ border: "1px solid black", padding: "0.5rem" }}
+                  ></td>
+                  <td
+                    style={{ border: "1px solid black", padding: "0.5rem" }}
+                  ></td>
+                  <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                    {props.vatAmount.toFixed(3)}
+                  </td>
                 </tr>
               )}
               <tr>
-                <td colSpan={2}>NET PAYABLE</td>
-                <td></td>
-                <td></td>
-                <td>{props.netPayable.toFixed(3)}</td>
+                <td
+                  colSpan={2}
+                  style={{ border: "1px solid black", padding: "0.5rem" }}
+                >
+                  NET PAYABLE
+                </td>
+                <td
+                  style={{ border: "1px solid black", padding: "0.5rem" }}
+                ></td>
+                <td
+                  style={{ border: "1px solid black", padding: "0.5rem" }}
+                ></td>
+                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                  {props.netPayable.toFixed(3)}
+                </td>
               </tr>
             </tfoot>
           )}
