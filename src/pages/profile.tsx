@@ -83,6 +83,7 @@ export default function Profile() {
         }}
       >
         <Back
+          noblur
           noback={role == "profile"}
           title={role == "profile" ? "Arc" : "Profile"}
           subtitle={role == "profile" ? "v1.2" : ""}
