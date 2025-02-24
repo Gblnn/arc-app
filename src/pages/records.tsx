@@ -9,6 +9,7 @@ interface Record {
   id: string;
   start: { toDate: () => Date };
   end: { toDate: () => Date } | "";
+  allocated_hours: number;
 }
 
 export default function Records() {
@@ -27,8 +28,7 @@ export default function Records() {
       const recordQuery = query(
         RecordCollection,
         where("email", "==", window.name),
-        orderBy("start", "desc"),
-        where("start", "==", moment(selectedMonth).format("MMMM"))
+        orderBy("start", "desc")
       );
       const querySnapshot = await getDocs(recordQuery);
       const fetchedData = querySnapshot.docs.map((doc) => ({
@@ -50,8 +50,8 @@ export default function Records() {
     );
   };
 
-  const calculateOvertime = (hours: number) => {
-    return hours > 10 ? hours - 10 : 0;
+  const calculateOvertime = (hours: number, allocatedHours: number) => {
+    return hours > allocatedHours ? hours - allocatedHours : 0;
   };
 
   return (
@@ -80,7 +80,7 @@ export default function Records() {
               {moment().format("YYYY")}
             </b>
           </p>
-          <br />
+
           <br />
           <table style={{ width: "100%", fontSize: "0.9rem" }}>
             <thead>
@@ -105,6 +105,7 @@ export default function Records() {
                 const totalHours = endDate
                   ? calculateHours(startDate, endDate)
                   : 0;
+                const allocatedHours = record.allocated_hours;
 
                 return (
                   <tr key={record.id}>
@@ -112,7 +113,11 @@ export default function Records() {
                     <td>{moment(startDate).format("hh:mm A")}</td>
                     <td>{endDate ? moment(endDate).format("hh:mm A") : "-"}</td>
                     <td>{endDate ? totalHours : "-"}</td>
-                    <td>{endDate ? calculateOvertime(totalHours) : "-"}</td>
+                    <td>
+                      {endDate
+                        ? calculateOvertime(totalHours, allocatedHours)
+                        : "-"}
+                    </td>
                   </tr>
                 );
               })}

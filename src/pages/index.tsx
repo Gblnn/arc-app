@@ -97,14 +97,13 @@ export default function Index() {
         ? setAccess(true)
         : setAccess(false);
 
-      fetchedData[0].role == "admin" ? setAdmin(true) : setAdmin(false);
-
-      // Navigation
-      fetchedData[0].role == "profile"
-        ? usenavigate("/profile")
-        : fetchedData[0].role == "" &&
-          usenavigate("/") &&
-          message.error("Session timed out");
+      fetchedData[0].role == "admin" ? setAdmin(true) : setAdmin(false),
+        // Navigation
+        fetchedData[0].role == "profile"
+          ? usenavigate("/profile")
+          : fetchedData[0].role == "" &&
+            usenavigate("/") &&
+            message.error("Session timed out");
     } catch (error) {
       message.error(String(error));
     }
