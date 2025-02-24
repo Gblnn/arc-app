@@ -7,6 +7,7 @@ import moment from "moment";
 import { usePDF } from "react-to-pdf";
 import { useState } from "react";
 import CustomDropdown from "@/components/custom-dropdown";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DocumentItem {
   description: string;
@@ -57,12 +58,6 @@ export default function DocumentGenerator() {
     (sum, item) => sum + item.quantity * item.amount,
     0
   );
-
-  // Document type options
-  const documentTypeOptions = [
-    { value: "invoice", label: "Invoice" },
-    { value: "quotation", label: "Quotation" },
-  ];
 
   // Invoice type options
   const invoiceTypeOptions = [
@@ -175,21 +170,12 @@ export default function DocumentGenerator() {
     },
   } as const;
 
-  // Handle document type change
-  const handleDocumentTypeChange = (value: string) => {
-    setDocumentType(value as DocumentType);
-  };
-
   return (
     <div style={{ display: "flex", flexFlow: "column", minHeight: "100vh" }}>
       {/* Header */}
       <div style={headerStyle}>
         <Back
-          title={
-            documentType === "invoice"
-              ? "Invoice Generator"
-              : "Quotation Generator"
-          }
+          title="Document Generator"
           extra={
             <button onClick={() => toPDF()}>
               <DownloadCloud color="dodgerblue" className="animate-pulse" />
@@ -202,18 +188,18 @@ export default function DocumentGenerator() {
       <div style={mainContentStyle}>
         {/* Left Panel - Controls */}
         <div style={controlsPanelStyle}>
-          {/* Document Type Selector */}
-          <div>
-            <label className="text-sm opacity-70 mb-2 block">
-              Document Type
-            </label>
-            <CustomDropdown
-              value={documentType}
-              onChange={handleDocumentTypeChange}
-              options={documentTypeOptions}
-              placeholder="Select Document Type"
-            />
-          </div>
+          {/* Replace Document Type Selector with Tabs */}
+          <Tabs
+            defaultValue="invoice"
+            value={documentType}
+            onValueChange={(value) => setDocumentType(value as DocumentType)}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="invoice">Invoice</TabsTrigger>
+              <TabsTrigger value="quotation">Quotation</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           {/* Invoice Type (only for invoice) */}
           {documentType === "invoice" && (
