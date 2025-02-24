@@ -1,50 +1,49 @@
 import Back from "@/components/back";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import Template1 from "@/invoice-templates/template-1";
+import Template1 from "@/quotation-templates/template-1";
 import { DownloadCloud, Plus, Trash2 } from "lucide-react";
 import moment from "moment";
 import { usePDF } from "react-to-pdf";
 import { useState } from "react";
-import CustomDropdown from "@/components/custom-dropdown";
 
-interface InvoiceItem {
+interface QuotationItem {
   description: string;
   unit: string;
   quantity: number;
   amount: number;
 }
 
-export default function Invoice() {
+export default function Quotation() {
   const { toPDF, targetRef } = usePDF({
-    filename: "invoice.pdf",
+    filename: "quotation.pdf",
     page: { margin: 5 },
   });
 
-  // State variables for invoice details
+  // State variables for quotation details
   const [clientName, setClientName] = useState("");
   const [clientAddress, setClientAddress] = useState("");
   const [refNo, setRefNo] = useState("");
-  const [invoiceNo, setInvoiceNo] = useState("");
+  const [quotationNo, setQuotationNo] = useState("");
   const [date, setDate] = useState(moment().format("DD.MM.YYYY"));
-  const [items, setItems] = useState<InvoiceItem[]>([
+  const [validityPeriod, setValidityPeriod] = useState(
+    moment().add(30, "days").format("DD.MM.YYYY")
+  );
+  const [contactNo, setContactNo] = useState("");
+  const [items, setItems] = useState<QuotationItem[]>([
     { description: "", unit: "", quantity: 0, amount: 0 },
   ]);
-  const [isTaxInvoice, setIsTaxInvoice] = useState(true);
-  const [vatinNo, setVatinNo] = useState("");
-  const [contactNo, setContactNo] = useState("");
+  const [terms, setTerms] = useState<string[]>([
+    "Payment Terms: 100% advance payment",
+    "Delivery: Ex-stock",
+    "Validity: 30 days from the date of quotation",
+  ]);
 
-  // Calculate total amount
-  const totalAmount = items.reduce(
-    (sum, item) => sum + item.quantity * item.amount,
-    0
-  );
-
-  // Add new item to invoice
+  // Add new item to quotation
   const addItem = () => {
     setItems([...items, { description: "", unit: "", quantity: 0, amount: 0 }]);
   };
 
-  // Remove item from invoice
+  // Remove item from quotation
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
   };
@@ -52,7 +51,7 @@ export default function Invoice() {
   // Update item details
   const updateItem = (
     index: number,
-    field: keyof InvoiceItem,
+    field: keyof QuotationItem,
     value: string | number
   ) => {
     const newItems = [...items];
@@ -60,10 +59,22 @@ export default function Invoice() {
     setItems(newItems);
   };
 
-  const invoiceTypeOptions = [
-    { value: "tax", label: "Tax Invoice" },
-    { value: "cash", label: "Cash Invoice" },
-  ];
+  // Add new term
+  const addTerm = () => {
+    setTerms([...terms, ""]);
+  };
+
+  // Update term
+  const updateTerm = (index: number, value: string) => {
+    const newTerms = [...terms];
+    newTerms[index] = value;
+    setTerms(newTerms);
+  };
+
+  // Remove term
+  const removeTerm = (index: number) => {
+    setTerms(terms.filter((_, i) => i !== index));
+  };
 
   const mainContentStyle = {
     display: "grid",
@@ -100,7 +111,7 @@ export default function Invoice() {
     },
   } as const;
 
-  const addItemButtonStyle = {
+  const addButtonStyle = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -140,7 +151,7 @@ export default function Invoice() {
         }}
       >
         <Back
-          title={"Invoice Generator"}
+          title={"Quotation Generator"}
           extra={
             <button onClick={() => toPDF()}>
               <DownloadCloud color="dodgerblue" className="animate-pulse" />
@@ -151,21 +162,8 @@ export default function Invoice() {
 
       {/* Main Content */}
       <div style={mainContentStyle}>
-        {/* Left Panel - Invoice Controls */}
+        {/* Left Panel - Quotation Controls */}
         <div style={controlsPanelStyle}>
-          {/* Invoice Type */}
-          <div>
-            <label className="text-sm opacity-70 mb-2 block">
-              Invoice Type
-            </label>
-            <CustomDropdown
-              value={isTaxInvoice ? "tax" : "cash"}
-              onChange={(value) => setIsTaxInvoice(value === "tax")}
-              options={invoiceTypeOptions}
-              placeholder="Select Invoice Type"
-            />
-          </div>
-
           {/* Client Details */}
           <div>
             <label className="text-sm opacity-70 mb-2 block">
@@ -194,18 +192,18 @@ export default function Invoice() {
               />
               <input
                 type="text"
-                value={vatinNo}
-                onChange={(e) => setVatinNo(e.target.value)}
-                placeholder="VATIN Number"
+                value={contactNo}
+                onChange={(e) => setContactNo(e.target.value)}
+                placeholder="Contact Number"
                 className="invoice-input"
               />
             </div>
           </div>
 
-          {/* Invoice Details */}
+          {/* Quotation Details */}
           <div>
             <label className="text-sm opacity-70 mb-2 block">
-              Invoice Details
+              Quotation Details
             </label>
             <div
               style={{
@@ -223,9 +221,9 @@ export default function Invoice() {
               />
               <input
                 type="text"
-                value={invoiceNo}
-                onChange={(e) => setInvoiceNo(e.target.value)}
-                placeholder="Invoice Number"
+                value={quotationNo}
+                onChange={(e) => setQuotationNo(e.target.value)}
+                placeholder="Quotation Number"
                 className="invoice-input"
               />
               <input
@@ -237,19 +235,23 @@ export default function Invoice() {
                 className="invoice-input"
               />
               <input
-                type="text"
-                value={contactNo}
-                onChange={(e) => setContactNo(e.target.value)}
-                placeholder="Contact Number"
+                type="date"
+                value={moment(validityPeriod, "DD.MM.YYYY").format(
+                  "YYYY-MM-DD"
+                )}
+                onChange={(e) =>
+                  setValidityPeriod(moment(e.target.value).format("DD.MM.YYYY"))
+                }
+                placeholder="Valid Until"
                 className="invoice-input"
               />
             </div>
           </div>
 
-          {/* Invoice Items */}
+          {/* Quotation Items */}
           <div>
             <label className="text-sm opacity-70 mb-2 block">
-              Invoice Items
+              Quotation Items
             </label>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
@@ -327,26 +329,63 @@ export default function Invoice() {
                   </div>
                 </div>
               ))}
-              <button onClick={addItem} style={addItemButtonStyle}>
+              <button onClick={addItem} style={addButtonStyle}>
                 <Plus size={16} /> Add Item
+              </button>
+            </div>
+          </div>
+
+          {/* Terms and Conditions */}
+          <div>
+            <label className="text-sm opacity-70 mb-2 block">
+              Terms and Conditions
+            </label>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              {terms.map((term, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={term}
+                    onChange={(e) => updateTerm(index, e.target.value)}
+                    placeholder="Enter term"
+                    className="invoice-input"
+                  />
+                  <button
+                    onClick={() => removeTerm(index)}
+                    style={removeButtonStyle}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              <button onClick={addTerm} style={addButtonStyle}>
+                <Plus size={16} /> Add Term
               </button>
             </div>
           </div>
         </div>
 
-        {/* Right Panel - Invoice Preview */}
+        {/* Right Panel - Quotation Preview */}
         <ScrollArea style={{ width: "100%", overflow: "auto" }}>
           <div ref={targetRef} style={previewContainerStyle}>
             <Template1
               clientName={clientName}
               clientAddress={clientAddress}
               refNo={refNo}
-              invoiceNo={invoiceNo}
+              quotationNo={quotationNo}
               date={date}
+              validityPeriod={validityPeriod}
               items={items}
-              amount={totalAmount}
-              isTaxInvoice={isTaxInvoice}
-              vatinNo={vatinNo}
+              terms={terms}
               contactNo={contactNo}
             />
           </div>

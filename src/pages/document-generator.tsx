@@ -1,37 +1,56 @@
 import Back from "@/components/back";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import Template1 from "@/invoice-templates/template-1";
+import InvoiceTemplate from "@/invoice-templates/template-1";
+import QuotationTemplate from "@/quotation-templates/template-1";
 import { DownloadCloud, Plus, Trash2 } from "lucide-react";
 import moment from "moment";
 import { usePDF } from "react-to-pdf";
 import { useState } from "react";
 import CustomDropdown from "@/components/custom-dropdown";
 
-interface InvoiceItem {
+interface DocumentItem {
   description: string;
   unit: string;
   quantity: number;
   amount: number;
 }
 
-export default function Invoice() {
+type DocumentType = "invoice" | "quotation";
+
+export default function DocumentGenerator() {
   const { toPDF, targetRef } = usePDF({
-    filename: "invoice.pdf",
+    filename: "document.pdf",
     page: { margin: 5 },
   });
 
-  // State variables for invoice details
+  // Document type state
+  const [documentType, setDocumentType] = useState<DocumentType>("invoice");
+
+  // Common state variables
   const [clientName, setClientName] = useState("");
   const [clientAddress, setClientAddress] = useState("");
   const [refNo, setRefNo] = useState("");
-  const [invoiceNo, setInvoiceNo] = useState("");
   const [date, setDate] = useState(moment().format("DD.MM.YYYY"));
-  const [items, setItems] = useState<InvoiceItem[]>([
+  const [contactNo, setContactNo] = useState("");
+  const [items, setItems] = useState<DocumentItem[]>([
     { description: "", unit: "", quantity: 0, amount: 0 },
   ]);
+
+  // Invoice-specific state
+  const [invoiceNo, setInvoiceNo] = useState("");
   const [isTaxInvoice, setIsTaxInvoice] = useState(true);
   const [vatinNo, setVatinNo] = useState("");
-  const [contactNo, setContactNo] = useState("");
+
+  // Quotation-specific state
+  const [quotationNo, setQuotationNo] = useState("");
+  const [validityPeriod, setValidityPeriod] = useState(
+    moment().add(30, "days").format("DD.MM.YYYY")
+  );
+  const [terms, setTerms] = useState<string[]>([
+    "Payment Terms: 100% advance payment",
+    "Delivery: Ex-stock",
+    "Validity: 30 days from the date of quotation",
+  ]);
 
   // Calculate total amount
   const totalAmount = items.reduce(
@@ -39,20 +58,45 @@ export default function Invoice() {
     0
   );
 
-  // Add new item to invoice
+  // Document type options
+  const documentTypeOptions = [
+    { value: "invoice", label: "Invoice" },
+    { value: "quotation", label: "Quotation" },
+  ];
+
+  // Invoice type options
+  const invoiceTypeOptions = [
+    { value: "tax", label: "Tax Invoice" },
+    { value: "cash", label: "Cash Invoice" },
+  ];
+
+  // Handlers for terms
+  const addTerm = () => {
+    setTerms([...terms, ""]);
+  };
+
+  const updateTerm = (index: number, value: string) => {
+    const newTerms = [...terms];
+    newTerms[index] = value;
+    setTerms(newTerms);
+  };
+
+  const removeTerm = (index: number) => {
+    setTerms(terms.filter((_, i) => i !== index));
+  };
+
+  // Item handlers
   const addItem = () => {
     setItems([...items, { description: "", unit: "", quantity: 0, amount: 0 }]);
   };
 
-  // Remove item from invoice
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  // Update item details
   const updateItem = (
     index: number,
-    field: keyof InvoiceItem,
+    field: keyof DocumentItem,
     value: string | number
   ) => {
     const newItems = [...items];
@@ -60,11 +104,7 @@ export default function Invoice() {
     setItems(newItems);
   };
 
-  const invoiceTypeOptions = [
-    { value: "tax", label: "Tax Invoice" },
-    { value: "cash", label: "Cash Invoice" },
-  ];
-
+  // Styles
   const mainContentStyle = {
     display: "grid",
     gridTemplateColumns: "1fr",
@@ -92,6 +132,16 @@ export default function Invoice() {
     },
   } as const;
 
+  const headerStyle = {
+    width: "100%",
+    padding: "1.25rem",
+    position: "sticky" as const,
+    top: 0,
+    zIndex: 1,
+    background: "rgba(60 60 60/ 75%)",
+    backdropFilter: "blur(16px)",
+  };
+
   const removeButtonStyle = {
     opacity: 0.6,
     transition: "opacity 0.2s",
@@ -100,7 +150,7 @@ export default function Invoice() {
     },
   } as const;
 
-  const addItemButtonStyle = {
+  const addButtonStyle = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -125,22 +175,21 @@ export default function Invoice() {
     },
   } as const;
 
+  // Handle document type change
+  const handleDocumentTypeChange = (value: string) => {
+    setDocumentType(value as DocumentType);
+  };
+
   return (
     <div style={{ display: "flex", flexFlow: "column", minHeight: "100vh" }}>
       {/* Header */}
-      <div
-        style={{
-          width: "100%",
-          padding: "1.25rem",
-          position: "sticky",
-          top: 0,
-          zIndex: 1,
-          background: "rgba(60 60 60/ 75%)",
-          backdropFilter: "blur(16px)",
-        }}
-      >
+      <div style={headerStyle}>
         <Back
-          title={"Invoice Generator"}
+          title={
+            documentType === "invoice"
+              ? "Invoice Generator"
+              : "Quotation Generator"
+          }
           extra={
             <button onClick={() => toPDF()}>
               <DownloadCloud color="dodgerblue" className="animate-pulse" />
@@ -151,20 +200,35 @@ export default function Invoice() {
 
       {/* Main Content */}
       <div style={mainContentStyle}>
-        {/* Left Panel - Invoice Controls */}
+        {/* Left Panel - Controls */}
         <div style={controlsPanelStyle}>
-          {/* Invoice Type */}
+          {/* Document Type Selector */}
           <div>
             <label className="text-sm opacity-70 mb-2 block">
-              Invoice Type
+              Document Type
             </label>
             <CustomDropdown
-              value={isTaxInvoice ? "tax" : "cash"}
-              onChange={(value) => setIsTaxInvoice(value === "tax")}
-              options={invoiceTypeOptions}
-              placeholder="Select Invoice Type"
+              value={documentType}
+              onChange={handleDocumentTypeChange}
+              options={documentTypeOptions}
+              placeholder="Select Document Type"
             />
           </div>
+
+          {/* Invoice Type (only for invoice) */}
+          {documentType === "invoice" && (
+            <div>
+              <label className="text-sm opacity-70 mb-2 block">
+                Invoice Type
+              </label>
+              <CustomDropdown
+                value={isTaxInvoice ? "tax" : "cash"}
+                onChange={(value) => setIsTaxInvoice(value === "tax")}
+                options={invoiceTypeOptions}
+                placeholder="Select Invoice Type"
+              />
+            </div>
+          )}
 
           {/* Client Details */}
           <div>
@@ -192,20 +256,31 @@ export default function Invoice() {
                 placeholder="Client Address"
                 className="invoice-input"
               />
+              {documentType === "invoice" && (
+                <input
+                  type="text"
+                  value={vatinNo}
+                  onChange={(e) => setVatinNo(e.target.value)}
+                  placeholder="VATIN Number"
+                  className="invoice-input"
+                />
+              )}
               <input
                 type="text"
-                value={vatinNo}
-                onChange={(e) => setVatinNo(e.target.value)}
-                placeholder="VATIN Number"
+                value={contactNo}
+                onChange={(e) => setContactNo(e.target.value)}
+                placeholder="Contact Number"
                 className="invoice-input"
               />
             </div>
           </div>
 
-          {/* Invoice Details */}
+          {/* Document Details */}
           <div>
             <label className="text-sm opacity-70 mb-2 block">
-              Invoice Details
+              {documentType === "invoice"
+                ? "Invoice Details"
+                : "Quotation Details"}
             </label>
             <div
               style={{
@@ -223,9 +298,15 @@ export default function Invoice() {
               />
               <input
                 type="text"
-                value={invoiceNo}
-                onChange={(e) => setInvoiceNo(e.target.value)}
-                placeholder="Invoice Number"
+                value={documentType === "invoice" ? invoiceNo : quotationNo}
+                onChange={(e) =>
+                  documentType === "invoice"
+                    ? setInvoiceNo(e.target.value)
+                    : setQuotationNo(e.target.value)
+                }
+                placeholder={`${
+                  documentType === "invoice" ? "Invoice" : "Quotation"
+                } Number`}
                 className="invoice-input"
               />
               <input
@@ -236,20 +317,28 @@ export default function Invoice() {
                 }
                 className="invoice-input"
               />
-              <input
-                type="text"
-                value={contactNo}
-                onChange={(e) => setContactNo(e.target.value)}
-                placeholder="Contact Number"
-                className="invoice-input"
-              />
+              {documentType === "quotation" && (
+                <input
+                  type="date"
+                  value={moment(validityPeriod, "DD.MM.YYYY").format(
+                    "YYYY-MM-DD"
+                  )}
+                  onChange={(e) =>
+                    setValidityPeriod(
+                      moment(e.target.value).format("DD.MM.YYYY")
+                    )
+                  }
+                  placeholder="Valid Until"
+                  className="invoice-input"
+                />
+              )}
             </div>
           </div>
 
-          {/* Invoice Items */}
+          {/* Items Section */}
           <div>
             <label className="text-sm opacity-70 mb-2 block">
-              Invoice Items
+              {documentType === "invoice" ? "Invoice Items" : "Quotation Items"}
             </label>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
@@ -327,28 +416,86 @@ export default function Invoice() {
                   </div>
                 </div>
               ))}
-              <button onClick={addItem} style={addItemButtonStyle}>
+              <button onClick={addItem} style={addButtonStyle}>
                 <Plus size={16} /> Add Item
               </button>
             </div>
           </div>
+
+          {/* Terms and Conditions (only for quotation) */}
+          {documentType === "quotation" && (
+            <div>
+              <label className="text-sm opacity-70 mb-2 block">
+                Terms and Conditions
+              </label>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
+                {terms.map((term, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      gap: "0.5rem",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={term}
+                      onChange={(e) => updateTerm(index, e.target.value)}
+                      placeholder="Enter term"
+                      className="invoice-input"
+                    />
+                    <button
+                      onClick={() => removeTerm(index)}
+                      style={removeButtonStyle}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+                <button onClick={addTerm} style={addButtonStyle}>
+                  <Plus size={16} /> Add Term
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Right Panel - Invoice Preview */}
+        {/* Right Panel - Preview */}
         <ScrollArea style={{ width: "100%", overflow: "auto" }}>
           <div ref={targetRef} style={previewContainerStyle}>
-            <Template1
-              clientName={clientName}
-              clientAddress={clientAddress}
-              refNo={refNo}
-              invoiceNo={invoiceNo}
-              date={date}
-              items={items}
-              amount={totalAmount}
-              isTaxInvoice={isTaxInvoice}
-              vatinNo={vatinNo}
-              contactNo={contactNo}
-            />
+            {documentType === "invoice" ? (
+              <InvoiceTemplate
+                clientName={clientName}
+                clientAddress={clientAddress}
+                refNo={refNo}
+                invoiceNo={invoiceNo}
+                date={date}
+                items={items}
+                amount={totalAmount}
+                isTaxInvoice={isTaxInvoice}
+                vatinNo={vatinNo}
+                contactNo={contactNo}
+              />
+            ) : (
+              <QuotationTemplate
+                clientName={clientName}
+                clientAddress={clientAddress}
+                refNo={refNo}
+                quotationNo={quotationNo}
+                date={date}
+                validityPeriod={validityPeriod}
+                items={items}
+                terms={terms}
+                contactNo={contactNo}
+              />
+            )}
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>

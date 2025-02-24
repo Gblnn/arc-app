@@ -8,6 +8,7 @@ import Profile from "./pages/profile";
 import Timesheets from "./pages/timesheets";
 import UserReset from "./pages/user-reset";
 import Users from "./pages/users";
+import DocumentGenerator from "./pages/document-generator";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/users" element={<Users />} />
         <Route path="profile/*" element={<Profile />} />
         <Route path="/invoice-gen" element={<Invoice />} />
+        <Route path="/document-generator" element={<DocumentGenerator />} />
       </Routes>
     </Router>
   );
