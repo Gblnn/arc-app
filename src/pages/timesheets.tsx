@@ -304,47 +304,75 @@ export default function Records() {
     setSelectedMonth(value);
   };
 
-  const TableRow = memo(({ record, onDeleteClick, onTimeClick }: any) => {
-    return (
-      <tr className="active:bg-slate-800" style={{ cursor: "pointer" }}>
-        <td
+  const TableRow = memo(
+    ({ record, onDeleteClick, onTimeClick, isAlternate }: any) => {
+      return (
+        <tr
           style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "0.45rem",
-            fontWeight: "600",
-            color: !record.end ? "lightgreen" : "",
-            padding: "1rem",
+            cursor: "pointer",
+            background: isAlternate
+              ? "rgba(40, 40, 50, 0.3)"
+              : "rgba(30, 30, 40, 0.2)",
           }}
-          onClick={() => onDeleteClick(record)}
         >
-          {record.name.split(" ")[0]}
-        </td>
-        <td style={{ padding: "1rem" }} onClick={() => onDeleteClick(record)}>
-          {record.formattedDate}
-        </td>
-        <td
-          className="active:bg-slate-600"
-          style={{ padding: "1rem" }}
-          onClick={() => onTimeClick(record, "start")}
-        >
-          {record.formattedStart}
-        </td>
-        <td
-          className="active:bg-slate-600"
-          style={{ padding: "1rem" }}
-          onClick={() => onTimeClick(record, "end")}
-        >
-          {record.formattedEnd}
-        </td>
-        <td style={{ padding: "1rem" }} onClick={() => onDeleteClick(record)}>
-          {record.total}
-        </td>
-        <td style={{ padding: "1rem" }}>{record.formattedOvertime}</td>
-      </tr>
-    );
-  });
+          <td
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              gap: "0.45rem",
+              fontWeight: "600",
+              color: !record.end ? "rgb(132, 204, 22)" : "white",
+              padding: "0.75rem",
+              paddingLeft: "1.5rem",
+              borderLeft: !record.end
+                ? "3px solid rgb(132, 204, 22)"
+                : "3px solid transparent",
+            }}
+            onClick={() => onDeleteClick(record)}
+          >
+            {record.name.split(" ")[0]}
+          </td>
+          <td
+            style={{ padding: "0.75rem" }}
+            onClick={() => onDeleteClick(record)}
+          >
+            {record.formattedDate}
+          </td>
+          <td
+            style={{
+              padding: "0.75rem",
+            }}
+            onClick={() => onTimeClick(record, "start")}
+          >
+            {record.formattedStart}
+          </td>
+          <td
+            style={{
+              padding: "0.75rem",
+            }}
+            onClick={() => onTimeClick(record, "end")}
+          >
+            {record.formattedEnd}
+          </td>
+          <td
+            style={{ padding: "0.75rem" }}
+            onClick={() => onDeleteClick(record)}
+          >
+            {record.total}
+          </td>
+          <td
+            style={{
+              padding: "0.75rem",
+              color: record.formattedOvertime !== "-" ? "rgb(239, 68, 68)" : "",
+            }}
+          >
+            {record.formattedOvertime}
+          </td>
+        </tr>
+      );
+    }
+  );
 
   // Create memoized options for users dropdown
   const userOptions = useMemo(() => {
@@ -372,9 +400,10 @@ export default function Records() {
         style={{
           padding: "1.25rem",
           paddingBottom: "1rem",
-          background: "rgba(60 60 60/ 75%)",
+          background: "rgba(30, 30, 40, 0.85)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
           zIndex: 40,
         }}
       >
@@ -382,19 +411,26 @@ export default function Records() {
           title={"Timesheet"}
           extra={
             <div
-              style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+              style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
             >
               <button
                 onClick={exportDb}
                 style={{
                   backdropFilter: "none",
-                  paddingLeft: "1rem",
-                  paddingRight: "1rem",
+                  padding: "0.5rem 0.75rem",
                   fontSize: "0.8rem",
-                  height: "2.75rem",
+                  height: "2.5rem",
+                  background: "rgba(50, 180, 50, 0.15)",
+                  borderRadius: "0.375rem",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
                 }}
+                className="hover:bg-opacity-30"
               >
                 <FileDown color="lightgreen" width={"1.25rem"} />
+                <span className="hidden sm:inline">Export</span>
               </button>
               <RefreshButton
                 fetchingData={loading}
@@ -410,27 +446,30 @@ export default function Records() {
       <div
         style={{
           padding: "1rem",
-          background: "rgba(100 100 100/ 20%)",
+          background: "rgba(40, 40, 50, 0.5)",
           display: "flex",
           gap: "1rem",
           zIndex: 30,
-          justifyContent: "center",
+          justifyContent: "stretch",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
         }}
       >
-        <div style={{ width: "200px" }}>
+        <div style={{ flex: 1 }}>
+          <label className="text-xs text-gray-400 mb-1 block">Employee</label>
           <CustomDropdown
             value={selectedUser}
             onChange={handleUserChange}
             options={userOptions}
-            placeholder="Name"
+            placeholder="Select Name"
           />
         </div>
-        <div style={{ width: "200px" }}>
+        <div style={{ flex: 1 }}>
+          <label className="text-xs text-gray-400 mb-1 block">Period</label>
           <CustomDropdown
             value={selectedMonth}
             onChange={handleMonthChange}
             options={monthOptions}
-            placeholder="Month"
+            placeholder="Select Month"
           />
         </div>
       </div>
@@ -451,42 +490,51 @@ export default function Records() {
             <table
               style={{
                 width: "100%",
-                fontSize: "0.8rem",
-                borderCollapse: "collapse",
+                fontSize: "0.85rem",
+                borderCollapse: "separate",
+                borderSpacing: "0",
                 position: "relative",
               }}
             >
               <thead>
                 <tr
                   style={{
-                    background: "rgb(18 18 18)",
+                    background: "rgba(25, 25, 35, 0.95)",
                     position: "sticky",
                     top: 0,
                     zIndex: 20,
-                    // backdropFilter: "blur(16px)",
-                    // WebkitBackdropFilter: "blur(16px)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
                   }}
                 >
-                  <th style={{ padding: "1rem" }}>Name</th>
-                  <th style={{ padding: "1rem" }}>Date</th>
-                  <th style={{ padding: "1rem" }}>Start</th>
-                  <th style={{ padding: "1rem" }}>End</th>
-                  <th style={{ padding: "1rem" }}>Total</th>
-                  <th style={{ padding: "1rem" }}>OT</th>
+                  <th
+                    style={{
+                      padding: "0.75rem",
+                      textAlign: "left",
+                      paddingLeft: "1.5rem",
+                    }}
+                  >
+                    Name
+                  </th>
+                  <th style={{ padding: "0.75rem" }}>Date</th>
+                  <th style={{ padding: "0.75rem" }}>Start</th>
+                  <th style={{ padding: "0.75rem" }}>End</th>
+                  <th style={{ padding: "0.75rem" }}>Total</th>
+                  <th style={{ padding: "0.75rem" }}>OT</th>
                 </tr>
               </thead>
               <tbody
                 style={{
                   textAlign: "center",
-                  background: "rgba(100 100 100/ 10%)",
+                  background: "transparent",
                 }}
               >
-                {processedRecords.map((e: any) => (
+                {processedRecords.map((e: any, index: number) => (
                   <TableRow
                     key={e.id}
                     record={e}
                     onDeleteClick={handleDeleteClick}
                     onTimeClick={handleTimeClick}
+                    isAlternate={index % 2 === 1}
                   />
                 ))}
               </tbody>
@@ -500,14 +548,17 @@ export default function Records() {
               height: "100%",
               justifyContent: "center",
               alignItems: "center",
+              flexDirection: "column",
+              gap: "1rem",
             }}
           >
             <LoaderCircle
               color="crimson"
-              height={"3rem"}
-              width={"3rem"}
+              height={"2.5rem"}
+              width={"2.5rem"}
               className="animate-spin"
             />
+            <p className="text-gray-400 text-sm">Loading timesheet data...</p>
           </div>
         )}
       </div>

@@ -18,6 +18,7 @@ interface Props {
   isTaxInvoice: boolean;
   vatinNo: string;
   contactNo: string;
+  unitTitle: string;
 }
 
 interface PageProps {
@@ -37,6 +38,7 @@ interface PageProps {
   subtotal: number;
   vatAmount: number;
   netPayable: number;
+  unitTitle: string;
 }
 
 const InvoicePage = ({
@@ -184,7 +186,7 @@ const InvoicePage = ({
                   width: "10%",
                 }}
               >
-                Unit
+                {(props.unitTitle || "Qty").toUpperCase()}
               </th>
               <th
                 style={{
@@ -194,7 +196,7 @@ const InvoicePage = ({
                   width: "10%",
                 }}
               >
-                Qty
+                Rate
               </th>
               <th
                 style={{
@@ -221,10 +223,10 @@ const InvoicePage = ({
                   {item.unit}
                 </td>
                 <td style={{ border: "1px solid black", padding: "0.5rem" }}>
-                  {item.quantity}
+                  {item.amount.toFixed(3)}
                 </td>
                 <td style={{ border: "1px solid black", padding: "0.5rem" }}>
-                  {item.amount.toFixed(3)}
+                  {(Number(item.unit) * item.amount).toFixed(3)}
                 </td>
               </tr>
             ))}
@@ -310,11 +312,29 @@ const InvoicePage = ({
             <p style={{ textTransform: "capitalize" }}>
               <b>
                 Riyal Omani{" "}
-                {converter.toWords(String(Math.floor(props.netPayable)))} Only
+                {(() => {
+                  const wholePart = Math.floor(props.netPayable);
+                  const decimalPart = Math.round(
+                    (props.netPayable - wholePart) * 1000
+                  );
+
+                  let result = converter.toWords(String(wholePart));
+
+                  if (decimalPart > 0) {
+                    result += ` and ${converter.toWords(
+                      String(decimalPart)
+                    )} baiza`;
+                  }
+
+                  return result;
+                })()}{" "}
+                Only
               </b>
             </p>
             <p>
-              <b>Contact : {props.contactNo || "92849282"}</b>
+              <b style={{ fontSize: "0.9rem" }}>
+                Contact : {props.contactNo || "92849282"}
+              </b>
             </p>
           </div>
           <div
@@ -372,7 +392,7 @@ const InvoicePage = ({
 export default function Template1(props: Props) {
   // Calculate totals
   const subtotal = props.items.reduce(
-    (sum, item) => sum + item.quantity * item.amount,
+    (sum, item) => sum + Number(item.unit) * item.amount,
     0
   );
   const vatAmount = props.isTaxInvoice ? subtotal * 0.05 : 0;

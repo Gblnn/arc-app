@@ -1,3 +1,5 @@
+import converter from "number-to-words";
+
 interface QuotationItem {
   description: string;
   unit: string;
@@ -15,6 +17,7 @@ interface Props {
   validityPeriod: string;
   terms: string[];
   contactNo: string;
+  unitTitle: string;
 }
 
 interface PageProps extends Props {
@@ -150,7 +153,7 @@ const QuotationPage = ({
                   border: "1px solid black",
                   padding: "0.5rem",
                   fontWeight: "normal",
-                  width: "50%",
+                  width: "60%",
                 }}
               >
                 Description
@@ -163,7 +166,7 @@ const QuotationPage = ({
                   width: "10%",
                 }}
               >
-                Unit
+                {(props.unitTitle || "Qty").toUpperCase()}
               </th>
               <th
                 style={{
@@ -173,7 +176,7 @@ const QuotationPage = ({
                   width: "10%",
                 }}
               >
-                Qty
+                Rate
               </th>
               <th
                 style={{
@@ -200,10 +203,10 @@ const QuotationPage = ({
                   {item.unit}
                 </td>
                 <td style={{ border: "1px solid black", padding: "0.5rem" }}>
-                  {item.quantity}
+                  {item.amount.toFixed(3)}
                 </td>
                 <td style={{ border: "1px solid black", padding: "0.5rem" }}>
-                  {item.amount.toFixed(3)}
+                  {(Number(item.unit) * item.amount).toFixed(3)}
                 </td>
               </tr>
             ))}
@@ -238,6 +241,38 @@ const QuotationPage = ({
 
       {isLastPage && (
         <>
+          <div
+            style={{
+              display: "flex",
+              paddingTop: "1rem",
+              paddingLeft: "2.5rem",
+              paddingRight: "2.5rem",
+            }}
+          >
+            <p style={{ textTransform: "capitalize" }}>
+              <b>
+                Riyal Omani{" "}
+                {(() => {
+                  const wholePart = Math.floor(props.subtotal);
+                  const decimalPart = Math.round(
+                    (props.subtotal - wholePart) * 1000
+                  );
+
+                  let result = converter.toWords(String(wholePart));
+
+                  if (decimalPart > 0) {
+                    result += ` and ${converter.toWords(
+                      String(decimalPart)
+                    )} baiza`;
+                  }
+
+                  return result;
+                })()}{" "}
+                Only
+              </b>
+            </p>
+          </div>
+
           <div style={{ padding: "2rem", fontSize: "0.9rem" }}>
             <p style={{ fontWeight: "bold", marginBottom: "1rem" }}>
               Terms and Conditions:
@@ -254,14 +289,16 @@ const QuotationPage = ({
           <div
             style={{
               display: "flex",
-              paddingTop: "1rem",
+              paddingTop: "0.5rem",
               paddingLeft: "2.5rem",
               paddingRight: "2.5rem",
               justifyContent: "flex-end",
             }}
           >
             <p>
-              <b>Contact : {props.contactNo || "92849282"}</b>
+              <b style={{ fontSize: "0.9rem" }}>
+                Contact : {props.contactNo || "92849282"}
+              </b>
             </p>
           </div>
 
@@ -320,7 +357,7 @@ const QuotationPage = ({
 export default function Template1(props: Props) {
   // Calculate totals
   const subtotal = props.items.reduce(
-    (sum, item) => sum + item.quantity * item.amount,
+    (sum, item) => sum + Number(item.unit) * item.amount,
     0
   );
 
