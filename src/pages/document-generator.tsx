@@ -906,7 +906,7 @@ export default function DocumentGenerator() {
             {/* Zoom controls */}
             <div className="flex items-center justify-between px-2 mb-2">
               <div className="text-sm text-gray-400">Preview</div>
-              <div
+              {/* <div
                 style={{
                   border: "",
                   display: "flex",
@@ -934,7 +934,7 @@ export default function DocumentGenerator() {
                 >
                   <span className="text-xl font-bold">+</span>
                 </button>
-              </div>
+              </div> */}
             </div>
 
             {/* ScrollArea remains the same */}
