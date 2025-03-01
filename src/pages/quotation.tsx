@@ -37,7 +37,7 @@ export default function Quotation() {
     "Delivery: Ex-stock",
     "Validity: 30 days from the date of quotation",
   ]);
-  const [unitTitle, setUnitTitle] = useState("Qty");
+  const [unitTitle] = useState("Qty");
 
   // Add new item to quotation
   const addItem = () => {
