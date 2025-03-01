@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Records from "./records";
 import Work from "./work";
+import { clearAuthData } from "@/utils/auth-storage";
 
 export default function Profile() {
   const [addUserDialog, setAddUserDialog] = useState(false);
@@ -267,11 +268,10 @@ export default function Profile() {
           window.location.reload();
         }}
         onOk={() => {
+          clearAuthData();
           signOut(auth);
-          usenavigate("/");
+          window.location.href = "/";
           window.name = "";
-          console.log(window.name);
-          window.location.reload();
         }}
       />
 

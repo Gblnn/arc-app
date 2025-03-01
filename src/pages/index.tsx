@@ -4,6 +4,7 @@ import Directive from "@/components/directive";
 import IndexDropDown from "@/components/index-dropdown";
 import InputDialog from "@/components/input-dialog";
 import { auth, db } from "@/firebase";
+import { clearAuthData } from "@/utils/auth-storage";
 import { LoadingOutlined } from "@ant-design/icons";
 import { message } from "antd";
 import { signOut } from "firebase/auth";
@@ -28,14 +29,16 @@ export default function Index() {
   const [logoutPrompt, setLogoutPrompt] = useState(false);
   const usenavigate = useNavigate();
   const [issue, setIssue] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [access, setAccess] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [allocated_hours, setAllocatedHours] = useState(0);
 
   useEffect(() => {
-    verifyAccess();
-    fetchUsers();
+    // Skip clearance check and directly fetch user data
+    fetchUserData();
   }, []);
 
   //   const serviceId = "service_fixajl8";
@@ -58,21 +61,42 @@ export default function Index() {
   //     setBugDialog(false);
   //   };
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    const RecordCollection = collection(db, "users");
-    const recordQuery = query(
-      RecordCollection,
-      where("email", "==", window.name)
-    );
-    const querySnapshot = await getDocs(recordQuery);
-    setLoading(false);
-    const fetchedData: any = [];
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
 
-    querySnapshot.forEach((doc: any) => {
-      fetchedData.push({ id: doc.id, ...doc.data() });
-    });
-    setName(fetchedData[0].name);
+      // Get the current user's email from window.name
+      const email = window.name;
+
+      if (!email) {
+        // If no email is set, redirect to login
+        usenavigate("/");
+        return;
+      }
+
+      // Fetch user data from Firestore
+      const userCollection = collection(db, "users");
+      const userQuery = query(userCollection, where("email", "==", email));
+      const querySnapshot = await getDocs(userQuery);
+
+      if (querySnapshot.empty) {
+        // If no user data found, redirect to login
+        usenavigate("/");
+        return;
+      }
+
+      // Process user data
+      const userData = querySnapshot.docs[0].data();
+      setName(userData.name || "");
+      setRole(userData.role || "");
+      setAllocatedHours(userData.allocated_hours || 0);
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setLoading(false);
+      usenavigate("/");
+    }
   };
 
   const verifyAccess = async () => {
@@ -390,14 +414,24 @@ export default function Index() {
           open={logoutPrompt}
           onCancel={() => {
             setLogoutPrompt(false);
-            window.location.reload();
           }}
-          onOk={() => {
-            signOut(auth);
-            usenavigate("/");
-            window.name = "";
-            console.log(window.name);
-            window.location.reload();
+          onOk={async () => {
+            try {
+              // First clear the auth data
+              await clearAuthData();
+
+              // Then sign out from Firebase
+              await signOut(auth);
+
+              // Clear window.name
+              window.name = "";
+
+              // Force a full page reload to the root URL
+              window.location.href = "/";
+            } catch (error) {
+              console.error("Logout error:", error);
+              message.error("Logout failed. Please try again.");
+            }
           }}
         />
       </div>

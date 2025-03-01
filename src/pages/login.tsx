@@ -5,12 +5,14 @@ import {
   browserSessionPersistence,
   setPersistence,
   signInWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { ChevronRight, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { saveAuthData, getAuthData, clearAuthData } from "@/utils/auth-storage";
 
 export default function Login() {
   const usenavigate = useNavigate();
@@ -42,18 +44,87 @@ export default function Login() {
     setLoading(false);
   };
 
-  const handleLoginIn = async () => {
+  const saveAuthToLocalStorage = (email: string, password: string) => {
+    localStorage.setItem(
+      "arcAuth",
+      JSON.stringify({
+        email,
+        password,
+        timestamp: new Date().getTime(),
+      })
+    );
+  };
+
+  const checkSavedAuth = async () => {
+    try {
+      const authData = await getAuthData();
+
+      if (authData) {
+        const { email, password, timestamp, passwordVersion } = authData;
+
+        const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+        if (new Date().getTime() - timestamp < thirtyDaysInMs) {
+          setEmail(email);
+          setPassword(password);
+
+          handleLogin(email, password, passwordVersion);
+        } else {
+          await clearAuthData();
+        }
+      }
+    } catch (error) {
+      console.error("Error checking saved auth:", error);
+      await clearAuthData();
+    }
+  };
+
+  useEffect(() => {
+    checkSavedAuth();
+  }, []);
+
+  const handleLogin = async (
+    emailToUse = email,
+    passwordToUse = password,
+    passwordVersion = 1
+  ) => {
     try {
       setLoading(true);
-      await signInWithEmailAndPassword(auth, email, password);
+
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        emailToUse,
+        passwordToUse
+      );
+
+      const currentUser = userCredential.user;
+      const metadata = currentUser.metadata;
+      const lastSignInTime = metadata.lastSignInTime;
+
+      const newPasswordVersion = passwordVersion + 1;
+
+      await saveAuthData(emailToUse, passwordToUse, newPasswordVersion);
+
       AuthenticateRole();
-      // console.log(auth.currentUser);
     } catch (err: any) {
       setLoading(false);
-      const errorMessage = err.message;
-      console.log(err.message);
-      message.error(errorMessage);
+
+      if (emailToUse !== email || passwordToUse !== password) {
+        await clearAuthData();
+      }
+
+      if (err.code === "auth/wrong-password") {
+        message.error("Wrong Password");
+      } else if (err.code === "auth/user-not-found") {
+        message.error("User not found");
+      } else {
+        message.error(err.message);
+      }
     }
+  };
+
+  const handleLogout = async () => {
+    await clearAuthData();
+    await signOut(auth);
   };
 
   return (
@@ -176,11 +247,6 @@ export default function Login() {
                     alignItems: "center",
                   }}
                 >
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <Checkbox />
-                    <p style={{ fontSize: "0.75rem" }}>Stay logged in</p>
-                  </div>
-
                   <Link
                     style={{
                       fontSize: "0.8rem",
@@ -197,7 +263,7 @@ export default function Login() {
 
               <p />
               <button
-                onClick={handleLoginIn}
+                onClick={() => handleLogin()}
                 className={loading ? "disabled" : ""}
                 style={{
                   background: "crimson",
@@ -229,26 +295,11 @@ export default function Login() {
                 width: "100%",
               }}
             >
-              {/* <Button onClick={handleDevKey} variant={"ghost"}>
-                <KeyRound color="dodgerblue" width={"1.25rem"} />
-                Developer Key
-              </Button> */}
               <p style={{ opacity: 0.5, fontSize: "0.65rem", border: "" }}>
                 If you do not have an account you can request for one. You will
                 be granted access to create an account once your request is
                 processed.
               </p>
-              {/* <Link
-                style={{
-                  fontSize: "0.8rem",
-                  color: "indianred",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                }}
-                to={"/request-access"}
-              >
-                Request Access
-              </Link> */}
             </div>
           </div>
         </div>
