@@ -235,15 +235,15 @@ export default function DocumentGenerator() {
   // } as const;
 
   // Add zoom controls for the preview
-  const [previewScale, setPreviewScale] = useState(1);
+  // const [previewScale, setPreviewScale] = useState(1);
 
   // Add a function to handle zoom
-  const handleZoom = (zoomIn: boolean) => {
-    setPreviewScale((prev) => {
-      const newScale = zoomIn ? prev + 0.1 : prev - 0.1;
-      return Math.max(0.5, Math.min(1.5, newScale)); // Limit scale between 0.5 and 1.5
-    });
-  };
+  // const handleZoom = (zoomIn: boolean) => {
+  //   setPreviewScale((prev) => {
+  //     const newScale = zoomIn ? prev + 0.1 : prev - 0.1;
+  //     return Math.max(0.5, Math.min(1.5, newScale)); // Limit scale between 0.5 and 1.5
+  //   });
+  // };
 
   // Add function to fetch clients
   const fetchClients = async () => {
@@ -959,7 +959,7 @@ export default function DocumentGenerator() {
                   display: "flex",
                   justifyContent: "center",
                   padding: "1rem",
-                  transform: `scale(${previewScale})`,
+                  // transform: `scale(${previewScale})`,
                   transformOrigin: "top center",
                   transition: "transform 0.2s ease",
                 }}
