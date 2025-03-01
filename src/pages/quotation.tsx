@@ -37,6 +37,7 @@ export default function Quotation() {
     "Delivery: Ex-stock",
     "Validity: 30 days from the date of quotation",
   ]);
+  const [unitTitle, setUnitTitle] = useState("Qty");
 
   // Add new item to quotation
   const addItem = () => {
@@ -387,6 +388,7 @@ export default function Quotation() {
               items={items}
               terms={terms}
               contactNo={contactNo}
+              unitTitle={unitTitle}
             />
           </div>
           <ScrollBar orientation="horizontal" />

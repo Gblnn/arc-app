@@ -338,6 +338,7 @@ export default function Invoice() {
         <ScrollArea style={{ width: "100%", overflow: "auto" }}>
           <div ref={targetRef} style={previewContainerStyle}>
             <Template1
+              unitTitle="Qty"
               clientName={clientName}
               clientAddress={clientAddress}
               refNo={refNo}
