@@ -76,7 +76,6 @@ const responsiveStyles = `
 export default function DocumentGenerator() {
   const { toPDF, targetRef } = usePDF({
     filename: "document - " + moment().format("DD_MM_YYYY") + ".pdf",
-    page: { margin: 5 },
   });
 
   // Document type state
@@ -123,6 +122,9 @@ export default function DocumentGenerator() {
   );
   const [openDocumentSelect, setOpenDocumentSelect] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+
+  // Add state for letterhead selection
+  const [letterhead, setLetterhead] = useState("ARC"); // Default to ARC Engineering
 
   useEffect(() => {
     console.log(selectedClient, selectedDocument);
@@ -456,6 +458,21 @@ export default function DocumentGenerator() {
                 <TabsTrigger value="quotation">Quotation</TabsTrigger>
               </TabsList>
             </Tabs>
+
+            <div>
+              <label className="text-sm opacity-70 mb-2 block">
+                Select Letterhead
+              </label>
+              <CustomDropdown
+                value={letterhead}
+                onChange={(value) => setLetterhead(value)}
+                options={[
+                  { value: "ARC", label: "ARC Engineering" },
+                  { value: "Unique", label: "Unique Solutions" },
+                ]}
+                placeholder="Select Letterhead"
+              />
+            </div>
 
             {/* Invoice Type (only for invoice) */}
             {documentType === "invoice" && (
@@ -978,6 +995,7 @@ export default function DocumentGenerator() {
                     vatinNo={vatinNo}
                     contactNo={contactNo}
                     unitTitle={unitTitle}
+                    letterhead={letterhead}
                   />
                 ) : (
                   <QuotationTemplate
@@ -991,6 +1009,7 @@ export default function DocumentGenerator() {
                     terms={terms}
                     contactNo={contactNo}
                     unitTitle={unitTitle}
+                    letterhead={letterhead}
                   />
                 )}
               </div>

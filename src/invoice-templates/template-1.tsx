@@ -19,6 +19,7 @@ interface Props {
   vatinNo: string;
   contactNo: string;
   unitTitle: string;
+  letterhead: string;
 }
 
 interface PageProps {
@@ -39,6 +40,7 @@ interface PageProps {
   vatAmount: number;
   netPayable: number;
   unitTitle: string;
+  letterhead: string;
 }
 
 const InvoicePage = ({
@@ -65,7 +67,25 @@ const InvoicePage = ({
     <div style={{ border: "" }}>
       <div
         style={{
-          display: "flex",
+          display: props.letterhead === "ARC" ? "none" : "flex",
+          borderTop: "20px solid #122029",
+
+          justifyContent: "end",
+        }}
+      >
+        <img
+          src="/unique_logo.png"
+          style={{
+            width: "10rem",
+            border: "",
+            margin: "2rem",
+            marginTop: "1rem",
+          }}
+        />
+      </div>
+      <div
+        style={{
+          display: props.letterhead === "ARC" ? "flex" : "none",
           justifyContent: "center",
           gap: "1rem",
           padding: "1rem",
@@ -73,12 +93,18 @@ const InvoicePage = ({
         }}
       >
         <img
-          src="/letter-head-logo.jpg.png"
+          src={"/letter-head-logo.jpg.png"}
           style={{ width: "5.5rem", height: "5rem" }}
         />
         <img src="/letter-head-header.jpg" />
       </div>
-      <hr style={{ color: "crimson", border: "4px solid" }} />
+      <hr
+        style={{
+          color: "crimson",
+          border: "4px solid",
+          display: props.letterhead == "ARC" ? "block" : "none",
+        }}
+      />
 
       <div
         style={{
@@ -108,7 +134,13 @@ const InvoicePage = ({
             {props.isTaxInvoice ? "TAX INVOICE" : "CASH INVOICE"}
           </b>
         </p>
-        {props.isTaxInvoice && <p>VATINOM110026180X</p>}
+        {props.isTaxInvoice && (
+          <p>
+            {props.letterhead == "ARC"
+              ? "VATINOM110026180X"
+              : "VATINOM110021451X"}{" "}
+          </p>
+        )}
       </div>
 
       <div
@@ -367,7 +399,7 @@ const InvoicePage = ({
       <div
         style={{
           borderTop: "5px solid crimson",
-          display: "flex",
+          display: props.letterhead == "ARC" ? "flex" : "none",
           justifyContent: "center",
           alignItems: "center",
           fontSize: "1rem",
@@ -384,6 +416,34 @@ const InvoicePage = ({
           <br />
           GSM : +968 92822305, +968 92849282 | Email : marketing@arcen.net
         </p>
+      </div>
+
+      <div
+        style={{
+          display: props.letterhead == "ARC" ? "none" : "flex",
+          fontSize: "0.9rem",
+          fontWeight: "500",
+          flexFlow: "column",
+        }}
+      >
+        <p style={{ paddingLeft: "1rem", paddingBottom: "0.25rem" }}>
+          CR No : 1068664 P.O Box 432, P.C : 311, Sawary Center, Sohar,
+          Sultanate of Oman
+        </p>
+        <div
+          style={{
+            background: "#122029",
+            color: "white",
+            padding: "0.5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            paddingLeft: "1.5rem",
+            paddingRight: "1.5rem",
+          }}
+        >
+          <p>info@uniquesolutions.services</p>
+          <p>VATIN:OM110021451X</p>
+        </div>
       </div>
     </div>
   </div>

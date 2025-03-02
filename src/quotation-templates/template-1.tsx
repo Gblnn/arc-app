@@ -18,6 +18,7 @@ interface Props {
   terms: string[];
   contactNo: string;
   unitTitle: string;
+  letterhead: string;
 }
 
 interface PageProps extends Props {
@@ -60,7 +61,7 @@ const QuotationPage = ({
         }}
       >
         <img
-          src="/letter-head-logo.jpg.png"
+          src={"/letter-head-logo.jpg.png"}
           style={{ width: "5.5rem", height: "5rem" }}
         />
         <img src="/letter-head-header.jpg" />
