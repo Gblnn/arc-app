@@ -18,7 +18,7 @@ interface Props {
   terms: string[];
   contactNo: string;
   unitTitle: string;
-  letterhead: string;
+  letterhead?: string;
 }
 
 interface PageProps extends Props {

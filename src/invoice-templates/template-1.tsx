@@ -19,7 +19,7 @@ interface Props {
   vatinNo: string;
   contactNo: string;
   unitTitle: string;
-  letterhead: string;
+  letterhead?: string;
 }
 
 interface PageProps {
@@ -40,7 +40,7 @@ interface PageProps {
   vatAmount: number;
   netPayable: number;
   unitTitle: string;
-  letterhead: string;
+  letterhead?: string;
 }
 
 const InvoicePage = ({
