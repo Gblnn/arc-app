@@ -1,4 +1,3 @@
-import { Checkbox } from "@/components/ui/checkbox";
 import { auth, db } from "@/firebase";
 import { message } from "antd";
 import {
@@ -98,6 +97,7 @@ export default function Login() {
           }}
         >
           <div
+            className="md:w-1/2"
             style={{
               display: "flex",
               justifyContent: "center",
@@ -105,7 +105,6 @@ export default function Login() {
               flexFlow: "column",
               border: "",
               borderRadius: "1rem",
-              width: "32ch",
             }}
           >
             <div
@@ -120,20 +119,26 @@ export default function Login() {
                 marginTop: "2rem",
               }}
             >
-              <p
-                style={{
-                  top: 0,
-                  left: 0,
-                  fontSize: "2rem",
-                  fontWeight: "600",
-                  border: "",
-                  width: "100%",
-                  paddingLeft: "0.5rem",
-                  marginTop: "",
-                }}
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
               >
-                LOGIN
-              </p>
+                <p
+                  style={{
+                    top: 0,
+                    left: 0,
+                    fontSize: "2rem",
+                    fontWeight: "600",
+                    border: "",
+                    width: "",
+                    paddingLeft: "0.5rem",
+                    marginTop: "",
+                  }}
+                >
+                  ARC
+                </p>
+                <p>v2.1</p>
+              </div>
+
               <br />
 
               <input
@@ -176,10 +181,10 @@ export default function Login() {
                     alignItems: "center",
                   }}
                 >
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                  {/* <div style={{ display: "flex", gap: "0.5rem" }}>
                     <Checkbox />
                     <p style={{ fontSize: "0.75rem" }}>Stay logged in</p>
-                  </div>
+                  </div> */}
 
                   <Link
                     style={{

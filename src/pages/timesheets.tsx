@@ -105,6 +105,25 @@ export default function Records() {
       };
     });
 
+    // Calculate total hours and overtime
+    const totalHours = exportData.reduce((sum: any, record: any) => {
+      return sum + (record.total !== "-" ? Number(record.total) : 0);
+    }, 0);
+
+    const totalOT = exportData.reduce((sum: any, record: any) => {
+      return sum + (record.overtime !== "-" ? Number(record.overtime) : 0);
+    }, 0);
+
+    // Append totals to the export data
+    exportData.push({
+      name: "Total",
+      date: "",
+      start: "",
+      end: "",
+      total: totalHours.toFixed(2),
+      overtime: totalOT.toFixed(2),
+    });
+
     const worksheet = XLSX.utils.json_to_sheet(exportData, {
       header: ["name", "date", "start", "end", "total", "overtime"],
     });
@@ -393,6 +412,18 @@ export default function Records() {
     });
   }, []);
 
+  // Calculate total hours and overtime
+  const totalHours = processedRecords.reduce((sum: any, record: any) => {
+    return sum + (record.total !== "-" ? Number(record.total) : 0);
+  }, 0);
+
+  const totalOT = processedRecords.reduce((sum: any, record: any) => {
+    return (
+      sum +
+      (record.formattedOvertime !== "-" ? Number(record.formattedOvertime) : 0)
+    );
+  }, 0);
+
   return (
     <div style={{ height: "100svh", display: "flex", flexDirection: "column" }}>
       {/* Fixed Header */}
@@ -537,6 +568,21 @@ export default function Records() {
                     isAlternate={index % 2 === 1}
                   />
                 ))}
+                <tr style={{ background: "rgba(100 100 100/ 50%)" }}>
+                  <td
+                    colSpan={0}
+                    style={{ textAlign: "left", fontWeight: "bold" }}
+                  >
+                    Total Hours
+                  </td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td style={{ fontWeight: "bold" }}>
+                    {totalHours.toFixed(2)}
+                  </td>
+                  <td style={{ fontWeight: "bold" }}>{totalOT.toFixed(2)}</td>
+                </tr>
               </tbody>
             </table>
           </motion.div>
