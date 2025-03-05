@@ -30,6 +30,26 @@ export default function Profile() {
   const usenavigate = useNavigate();
   const [allocated_hours, setAllocatedHours] = useState(0);
 
+  // State for online status
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    // Function to update online status
+    const updateOnlineStatus = () => {
+      setIsOnline(navigator.onLine);
+    };
+
+    // Event listeners for online and offline events
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
+
+    // Cleanup event listeners on component unmount
+    return () => {
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
+    };
+  }, []);
+
   useEffect(() => {
     fetchRecords();
   }, []);
@@ -100,6 +120,7 @@ export default function Profile() {
                 v2.0
               </button> */}
               <IndexDropDown
+                isOnline={isOnline}
                 allocated_hours={allocated_hours}
                 name={name ? name : ""}
                 onLogout={() => setLogoutPrompt(true)}
@@ -108,6 +129,39 @@ export default function Profile() {
           }
         />
       </div>
+
+      {/* Display message if offline */}
+      {!isOnline && (
+        <div
+          style={{
+            position: "absolute",
+            background: "",
+            top: 0,
+
+            display: "flex",
+            color: "white",
+            justifyContent: "center",
+            marginTop: "10rem",
+
+            gap: "0.5rem",
+            width: "100%",
+          }}
+        >
+          {/* <div
+            style={{
+              background: "rgba(100 100 100/ 20%)",
+              display: "flex",
+              gap: "0.5rem",
+              paddingLeft: "0.5rem",
+              paddingRight: "0.5rem",
+              borderRadius: "0.5rem",
+            }}
+          >
+            <RadioTower color="crimson" width={"0.9rem"} />
+            No Internet
+          </div> */}
+        </div>
+      )}
       <motion.div
         style={{
           padding: "1.25rem",
@@ -183,7 +237,7 @@ export default function Profile() {
               </div> */}
             {path == "work" ? (
               <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
-                <Work allocated_hours={allocated_hours} />
+                <Work isOnline={isOnline} allocated_hours={allocated_hours} />
               </motion.div>
             ) : (
               path == "records" && <Records />

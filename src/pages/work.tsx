@@ -1,5 +1,4 @@
 import { db } from "@/firebase";
-import { message } from "antd";
 import {
   addDoc,
   collection,
@@ -22,6 +21,7 @@ import { useEffect, useState } from "react";
 
 interface Props {
   allocated_hours?: any;
+  isOnline?: boolean;
 }
 
 export default function Work(props: Props) {
@@ -31,6 +31,7 @@ export default function Work(props: Props) {
   const [sessionId, setSessionId] = useState("");
   const [sessionStart, setSessionStart] = useState<any>();
   const [sessionTime, setSessionTime] = useState("");
+  const [timedout, setTimedout] = useState(true);
 
   useEffect(() => {
     setInterval(() => {
@@ -74,7 +75,6 @@ export default function Work(props: Props) {
       setName(fetchedData[0].name);
     } catch (error) {
       setUpdating(false);
-      message.error(String(error));
     }
   };
 
@@ -158,6 +158,10 @@ export default function Work(props: Props) {
     // Set lastEndTime immediately after ending the session
     setUpdating(false);
     setStatus(false);
+
+    setTimeout(() => {
+      setTimedout(false);
+    }, 2000);
   };
 
   const ResumeWork = async () => {};
@@ -249,7 +253,8 @@ export default function Work(props: Props) {
           <div>
             <button
               onClick={() => {
-                updating ? {} : status ? endWork() : StartWork();
+                props.isOnline &&
+                  (updating ? "" : status ? endWork() : StartWork());
               }}
               style={{
                 flexFlow: "column",
@@ -260,7 +265,10 @@ export default function Work(props: Props) {
                 borderRadius: "50%",
                 fontSize: "3rem",
                 lineHeight: "2.5rem",
-                background: !status ? "crimson" : "rgba(100 100 100/ 25%)",
+                background:
+                  !status && props.isOnline
+                    ? "crimson"
+                    : "rgba(100 100 100/ 25%)",
               }}
             >
               {updating ? (
@@ -269,45 +277,52 @@ export default function Work(props: Props) {
                   width={"3rem"}
                   height={"3rem"}
                 />
+              ) : !props.isOnline ? (
+                "Offline"
               ) : status ? (
                 "End"
               ) : (
                 "Start"
               )}
-              <p
-                style={{
-                  position: "absolute",
-                  marginTop: "5rem",
-                  fontSize: "0.75rem",
-                  opacity: "0.75",
-                }}
-              >
-                {status ? "" : "New"} Session
-              </p>
+              {props.isOnline && (
+                <p
+                  style={{
+                    position: "absolute",
+                    marginTop: "5rem",
+                    fontSize: "0.75rem",
+                    opacity: "0.75",
+                  }}
+                >
+                  {status ? "" : "New"} Session
+                </p>
+              )}
             </button>
           </div>
         </div>
 
         {/* Resume Button */}
-        {!status && (
-          <button
-            onClick={ResumeWork}
-            style={{
-              position: "absolute",
-              marginTop: "21rem",
-              padding: "0.5rem 1rem",
-              background: "none",
-              color: "crimson",
-              fontWeight: "800",
-              borderRadius: "0.375rem",
-              fontSize: "0.9rem",
-              cursor: "pointer",
-            }}
-          >
-            <History />
-            Resume Last Session
-          </button>
-        )}
+        {!status &&
+          (!timedout ? (
+            <button
+              onClick={ResumeWork}
+              style={{
+                position: "absolute",
+                marginTop: "21rem",
+                padding: "0.5rem 1rem",
+                background: "none",
+                color: "crimson",
+                fontWeight: "800",
+                borderRadius: "0.375rem",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+              }}
+            >
+              <History />
+              Resume Last Session
+            </button>
+          ) : (
+            ""
+          ))}
       </div>
     </>
   );

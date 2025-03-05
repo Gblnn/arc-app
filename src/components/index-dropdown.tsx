@@ -1,5 +1,11 @@
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import { LoaderCircle, LogOut, RefreshCcw, User } from "lucide-react";
+import {
+  LoaderCircle,
+  LogOut,
+  RadioTower,
+  RefreshCcw,
+  User,
+} from "lucide-react";
 import LazyLoader from "./lazy-loader";
 import {
   DropdownMenu,
@@ -20,6 +26,7 @@ interface Props {
   onProfile?: any;
   name?: any;
   allocated_hours?: any;
+  isOnline?: boolean;
 }
 
 export default function IndexDropDown(props: Props) {
@@ -27,6 +34,7 @@ export default function IndexDropDown(props: Props) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
+          disabled={!props.isOnline}
           className={props.className}
           style={{
             outline: "none",
@@ -40,6 +48,8 @@ export default function IndexDropDown(props: Props) {
         >
           {props.name ? (
             <LazyLoader background="rgba(100 100 100/ 0%)" name={props.name} />
+          ) : !props.isOnline ? (
+            <RadioTower style={{ opacity: 0.5 }} />
           ) : (
             <LoaderCircle
               className="animate-spin"
