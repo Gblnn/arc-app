@@ -54,19 +54,21 @@ export default function Profile() {
   }, []);
 
   // Check if the service worker is already registered
-  // useEffect(() => {
-  //   const checkServiceWorkerRegistration = async () => {
-  //     if ("serviceWorker" in navigator) {
-  //       const registrations = await navigator.serviceWorker.getRegistrations();
-  //       const isRegistered = registrations.some(
-  //         (registration) => registration.active && registration.scope === "/"
-  //       );
-  //       setServiceWorkerRegistered(isRegistered);
-  //     }
-  //   };
+  useEffect(() => {
+    const checkServiceWorkerRegistration = async () => {
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        console.log(registrations);
+        const isRegistered = registrations.some(
+          (registration) => registration.active
+        );
+        setServiceWorkerRegistered(isRegistered);
+        console.log("status : " + isRegistered);
+      }
+    };
 
-  //   checkServiceWorkerRegistration();
-  // }, []);
+    checkServiceWorkerRegistration();
+  }, []);
 
   const registerServiceWorker = () => {
     try {
