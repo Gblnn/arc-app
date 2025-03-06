@@ -53,6 +53,21 @@ export default function Profile() {
     };
   }, []);
 
+  // Check if the service worker is already registered
+  useEffect(() => {
+    const checkServiceWorkerRegistration = async () => {
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        const isRegistered = registrations.some(
+          (registration) => registration.active && registration.scope === "/"
+        );
+        setServiceWorkerRegistered(isRegistered);
+      }
+    };
+
+    checkServiceWorkerRegistration();
+  }, []);
+
   const registerServiceWorker = () => {
     try {
       navigator.serviceWorker
@@ -62,8 +77,8 @@ export default function Profile() {
             "Service Worker registered with scope:",
             registration.scope
           );
+          setServiceWorkerRegistered(true);
         });
-      setServiceWorkerRegistered(true);
     } catch (error) {
       console.error("Service Worker registration failed:", error);
       setServiceWorkerRegistered(false);
@@ -109,8 +124,6 @@ export default function Profile() {
     setAllocatedHours(fetchedData[0].allocated_hours);
   };
 
-  // Register the service worker
-
   const requestPermission = async () => {
     try {
       const permission = await getToken(messaging, {
@@ -119,8 +132,7 @@ export default function Profile() {
       });
       console.log("FCM token:", permission);
       message.info("Token : " + permission);
-      //Store the token
-      //Send to your backend for later message sending
+      // Store the token or send it to your backend for later message sending
     } catch (error) {
       console.error("Unable to get permission to notify.", error);
       message.error("Unable to get permission to notify.");
@@ -154,9 +166,6 @@ export default function Profile() {
           }
           extra={
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              {/* <button style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
-                v2.0
-              </button> */}
               <button
                 style={{ width: "3rem", background: "none" }}
                 onClick={
@@ -185,12 +194,10 @@ export default function Profile() {
             position: "absolute",
             background: "",
             top: 0,
-
             display: "flex",
             color: "white",
             justifyContent: "center",
             marginTop: "10rem",
-
             gap: "0.5rem",
             width: "100%",
           }}
@@ -213,8 +220,6 @@ export default function Profile() {
       <motion.div
         style={{
           padding: "1.25rem",
-          // background:
-          //   "linear-gradient(rgba(18 18 80/ 65%), rgba(100 100 100/ 0%))",
           height: "100svh",
         }}
         initial={{ opacity: 0 }}
@@ -236,86 +241,14 @@ export default function Profile() {
             <LoadingOutlined style={{ color: "crimson", scale: "3" }} />
           </div>
         ) : (
-          <motion.div
-          // initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-          >
-            {/* <div
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  border: "",
-                  width: "fit-content",
-                  alignItems: "center",
-                }}
-              >
-                <LazyLoader
-                  gradient
-                  block
-                  name={name}
-                  width="5rem"
-                  height="5rem"
-                  fontSize="2rem"
-                />
-                <div style={{ border: "" }}>
-                  <p
-                    style={{
-                      fontWeight: "600",
-                      fontSize: "1.5rem",
-                      lineHeight: "1.25rem",
-                    }}
-                  >
-                    {name}
-                  </p>
-                  <p style={{ fontSize: "0.8rem", lineHeight: "2rem" }}>
-                    {window.name}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: "0.65rem",
-                      background: "white",
-                      width: "fit-content",
-                      paddingLeft: "0.35rem",
-                      paddingRight: "0.35rem",
-                      borderRadius: "0.5rem",
-                      color: "black",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {role}
-                  </p>
-                </div>
-              </div> */}
+          <motion.div>
             {path == "work" ? (
-              <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
+              <motion.div>
                 <Work isOnline={isOnline} allocated_hours={allocated_hours} />
               </motion.div>
             ) : (
               path == "records" && <Records />
             )}
-
-            {/* <div
-              style={{
-                border: "",
-                display: "flex",
-                flexWrap: "wrap",
-                height: "65svh",
-                gap: "0.75rem",
-                justifyContent: "",
-              }}
-            >
-              <SquareDirective
-                title="Civil ID"
-                icon={<CreditCard color="dodgerblue" width={"2rem"} />}
-              />
-              <SquareDirective
-                title="License"
-                icon={<Car color="violet" width={"2rem"} />}
-              />
-              <SquareDirective
-                title="Passport"
-                icon={<Book color="goldenrod" width={"2rem"} />}
-              />
-            </div> */}
           </motion.div>
         )}
       </motion.div>
