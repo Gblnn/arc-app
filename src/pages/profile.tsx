@@ -14,7 +14,14 @@ import {
 } from "firebase/firestore";
 import { getToken } from "firebase/messaging";
 import { motion } from "framer-motion";
-import { BellDot, GitPullRequest, List, Truck, UserPlus } from "lucide-react";
+import {
+  BellDot,
+  GitPullRequest,
+  List,
+  Ticket,
+  Truck,
+  UserPlus,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Records from "./records";
@@ -32,6 +39,8 @@ export default function Profile() {
   const usenavigate = useNavigate();
   const [allocated_hours, setAllocatedHours] = useState(0);
   const [serviceWorkerRegistered, setServiceWorkerRegistered] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [fcmtoken, setFcmtoken] = useState("");
 
   // State for online status
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -134,10 +143,14 @@ export default function Profile() {
       });
       console.log("FCM token:", permission);
       message.info("Token : " + permission);
+      setPermissionGranted(true);
+      setFcmtoken(permission);
       // Store the token or send it to your backend for later message sending
     } catch (error) {
       console.error("Unable to get permission to notify.", error);
       message.error("Unable to get permission to notify.");
+      setPermissionGranted(false);
+      setFcmtoken("");
     }
   };
 
@@ -190,7 +203,7 @@ export default function Profile() {
       </div>
 
       {/* Display message if offline */}
-      {!isOnline && (
+      {permissionGranted && (
         <div
           style={{
             position: "absolute",
@@ -204,7 +217,7 @@ export default function Profile() {
             width: "100%",
           }}
         >
-          {/* <div
+          <div
             style={{
               background: "rgba(100 100 100/ 20%)",
               display: "flex",
@@ -214,9 +227,9 @@ export default function Profile() {
               borderRadius: "0.5rem",
             }}
           >
-            <RadioTower color="crimson" width={"0.9rem"} />
-            No Internet
-          </div> */}
+            <Ticket color="crimson" width={"0.9rem"} />
+            {fcmtoken}
+          </div>
         </div>
       )}
       <motion.div
