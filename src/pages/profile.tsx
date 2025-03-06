@@ -4,6 +4,7 @@ import IndexDropDown from "@/components/index-dropdown";
 import InputDialog from "@/components/input-dialog";
 import { auth, db, messaging } from "@/firebase";
 import { LoadingOutlined } from "@ant-design/icons";
+import { message } from "antd";
 import { signOut } from "firebase/auth";
 import {
   collection,
@@ -14,19 +15,11 @@ import {
 } from "firebase/firestore";
 import { getToken } from "firebase/messaging";
 import { motion } from "framer-motion";
-import {
-  BellDot,
-  GitPullRequest,
-  List,
-  Ticket,
-  Truck,
-  UserPlus,
-} from "lucide-react";
+import { BellDot, GitPullRequest, List, Truck, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Records from "./records";
 import Work from "./work";
-import { message } from "antd";
 
 export default function Profile() {
   const [addUserDialog, setAddUserDialog] = useState(false);
