@@ -1,14 +1,14 @@
 // netlify/functions/checkOvertime.js
-const { db } = require("./firebase"); // Adjust the path to your Firebase setup
-const { getDocs, collection, query, where } = require("firebase/firestore");
-const admin = require("firebase-admin");
-const serviceAccount = require("./path/to/your/serviceAccountKey.json"); // Path to your Firebase service account key
+import { db } from "../../src/firebase"; // Adjust the path to your Firebase setup
+import { getDocs, collection, query, where } from "firebase/firestore";
+import admin from "firebase-admin";
+import serviceAccount from "./path/to/your/serviceAccountKey.json"; // Path to your Firebase service account key
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-exports.handler = async (event, context) => {
+export const handler = async (event, context) => {
   try {
     // Fetch active records
     const recordsCollection = collection(db, "records");
