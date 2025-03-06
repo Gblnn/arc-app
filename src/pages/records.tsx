@@ -64,7 +64,7 @@ export default function Records() {
       }}
     >
       {!loading ? (
-        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
+        <motion.div>
           <p
             style={{
               fontWeight: "500",

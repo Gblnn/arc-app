@@ -2,7 +2,7 @@ import Back from "@/components/back";
 import DefaultDialog from "@/components/default-dialog";
 import IndexDropDown from "@/components/index-dropdown";
 import InputDialog from "@/components/input-dialog";
-import { auth, db } from "@/firebase";
+import { auth, db, messaging } from "@/firebase";
 import { LoadingOutlined } from "@ant-design/icons";
 import { signOut } from "firebase/auth";
 import {
@@ -12,8 +12,9 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { getToken } from "firebase/messaging";
 import { motion } from "framer-motion";
-import { List, Truck, UserPlus } from "lucide-react";
+import { BellDot, GitPullRequest, List, Truck, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Records from "./records";
@@ -29,6 +30,7 @@ export default function Profile() {
   const [endDialog, setEndDialog] = useState(false);
   const usenavigate = useNavigate();
   const [allocated_hours, setAllocatedHours] = useState(0);
+  const [serviceWorkerRegistered, setServiceWorkerRegistered] = useState(false);
 
   // State for online status
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -49,6 +51,23 @@ export default function Profile() {
       window.removeEventListener("offline", updateOnlineStatus);
     };
   }, []);
+
+  const registerServiceWorker = () => {
+    try {
+      navigator.serviceWorker
+        .register("/firebase-messaging-sw.js")
+        .then((registration) => {
+          console.log(
+            "Service Worker registered with scope:",
+            registration.scope
+          );
+        });
+      setServiceWorkerRegistered(true);
+    } catch (error) {
+      console.error("Service Worker registration failed:", error);
+      setServiceWorkerRegistered(false);
+    }
+  };
 
   useEffect(() => {
     fetchRecords();
@@ -89,6 +108,22 @@ export default function Profile() {
     setAllocatedHours(fetchedData[0].allocated_hours);
   };
 
+  // Register the service worker
+
+  const requestPermission = async () => {
+    try {
+      const permission = await getToken(messaging, {
+        vapidKey:
+          "BB0O0d0wXALIezu4MLPsg7cEnFJtUu1S9j5yEbloH5q8xkiWnoU8f4wAZcJVAeqgTY1z1kax1NmZcNMvsZHkQis",
+      });
+      console.log("FCM token:", permission);
+      //Store the token
+      //Send to your backend for later message sending
+    } catch (error) {
+      console.error("Unable to get permission to notify.", error);
+    }
+  };
+
   return (
     <div>
       <div
@@ -119,6 +154,16 @@ export default function Profile() {
               {/* <button style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
                 v2.0
               </button> */}
+              <button
+                style={{ width: "3rem", background: "none" }}
+                onClick={
+                  serviceWorkerRegistered
+                    ? requestPermission
+                    : registerServiceWorker
+                }
+              >
+                {serviceWorkerRegistered ? <BellDot /> : <GitPullRequest />}
+              </button>
               <IndexDropDown
                 isOnline={isOnline}
                 allocated_hours={allocated_hours}
@@ -188,7 +233,9 @@ export default function Profile() {
             <LoadingOutlined style={{ color: "crimson", scale: "3" }} />
           </div>
         ) : (
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
+          <motion.div
+          // initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+          >
             {/* <div
                 style={{
                   display: "flex",

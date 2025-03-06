@@ -34,7 +34,7 @@ export default function IndexDropDown(props: Props) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          disabled={!props.isOnline}
+          // disabled={props.isOnline}
           className={props.className}
           style={{
             outline: "none",

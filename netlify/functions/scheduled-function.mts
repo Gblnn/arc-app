@@ -1,9 +1,8 @@
-import { db } from "../../src/firebase"; // Adjust the path to your Firebase setup
-import { getDocs, collection, query, where } from "firebase/firestore";
+import type { Config } from "@netlify/functions";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import admin from "firebase-admin";
 
-// Initialize Firebase Admin SDK
-admin.initializeApp(); // Use default credentials from environment variables
+import { db } from "../../src/firebase";
 
 // Define the Notification type
 interface Notification {
@@ -11,8 +10,7 @@ interface Notification {
   message: string;
 }
 
-// Define the handler for the scheduled function
-export default async (event: any) => {
+export default async (req: Request) => {
   try {
     // Fetch active records
     const recordsCollection = collection(db, "records");
@@ -59,16 +57,12 @@ export default async (event: any) => {
       statusCode: 200,
       body: JSON.stringify({ message: "Overtime check completed." }),
     };
-  } catch (error) {
-    console.error("Error checking overtime:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Failed to check overtime." }),
-    };
-  }
+  } catch (error) {}
+
+  const { next_run } = await req.json();
+  console.log("Received event Next invocation at:", next_run);
 };
 
-// Schedule the function to run every hour
-export const config = {
-  schedule: "@hourly", // Schedule the function to run every minute
+export const config: Config = {
+  schedule: "* * * * * ",
 };

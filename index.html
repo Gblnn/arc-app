@@ -3,17 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content="ARC Engineering LLC Dashboard" />
-    <script src="https://js.pusher.com/beams/1.0/push-notifications-cdn.js"></script>
-    <script>
-      const beamsClient = new PusherPushNotifications.Client({
-        instanceId: '1b9e10d5-593b-4f5a-83a1-b1aa11fea4e7',
-      });
-    
-      beamsClient.start()
-        .then(() => beamsClient.addDeviceInterest('hello'))
-        .then(() => console.log('Successfully registered and subscribed!'))
-        .catch(console.error);
-    </script>
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="icon" type="image/svg+xml" href="/arc-logo.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
