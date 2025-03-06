@@ -1,14 +1,18 @@
-// netlify/functions/checkOvertime.js
 import { db } from "../../src/firebase"; // Adjust the path to your Firebase setup
 import { getDocs, collection, query, where } from "firebase/firestore";
 import admin from "firebase-admin";
-import serviceAccount from "./path/to/your/serviceAccountKey.json"; // Path to your Firebase service account key
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// Initialize Firebase Admin SDK
+admin.initializeApp(); // Use default credentials from environment variables
 
-export const handler = async (event, context) => {
+// Define the Notification type
+interface Notification {
+  userId: string; // Assuming userId is a string (e.g., email or FCM token)
+  message: string;
+}
+
+// Define the handler for the scheduled function
+export default async (event: any) => {
   try {
     // Fetch active records
     const recordsCollection = collection(db, "records");
@@ -18,7 +22,7 @@ export const handler = async (event, context) => {
     );
     const querySnapshot = await getDocs(activeRecordsQuery);
 
-    const notifications = [];
+    const notifications: Notification[] = []; // Define the notifications array
 
     querySnapshot.forEach((doc) => {
       const record = doc.data();
@@ -38,7 +42,7 @@ export const handler = async (event, context) => {
     });
 
     // Send notifications (you can use a service like Firebase Cloud Messaging)
-    notifications.forEach(async (notification) => {
+    for (const notification of notifications) {
       const message = {
         notification: {
           title: "Overtime Alert",
@@ -49,7 +53,7 @@ export const handler = async (event, context) => {
 
       // Send a notification
       await admin.messaging().send(message);
-    });
+    }
 
     return {
       statusCode: 200,
@@ -62,4 +66,9 @@ export const handler = async (event, context) => {
       body: JSON.stringify({ error: "Failed to check overtime." }),
     };
   }
+};
+
+// Schedule the function to run every hour
+export const config = {
+  schedule: "@hourly", // Schedule the function to run every hour
 };
