@@ -212,24 +212,12 @@ export default function Profile() {
             display: "flex",
             color: "white",
             justifyContent: "center",
-            marginTop: "10rem",
+            marginTop: "9rem",
             gap: "0.5rem",
             width: "100%",
           }}
         >
-          <div
-            style={{
-              background: "rgba(100 100 100/ 20%)",
-              display: "flex",
-              gap: "0.5rem",
-              paddingLeft: "0.5rem",
-              paddingRight: "0.5rem",
-              borderRadius: "0.5rem",
-            }}
-          >
-            <Ticket color="crimson" width={"0.9rem"} />
-            {fcmtoken}
-          </div>
+          <input style={{ width: "75%" }} type="text" value={fcmtoken} />
         </div>
       )}
       <motion.div
