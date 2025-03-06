@@ -1,0 +1,4 @@
+[[functions]]
+  directory = "netlify/functions"
+  # Schedule the function to run every hour
+  schedule = "0 * * * *" # This cron expression means every hour
