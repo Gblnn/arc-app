@@ -70,5 +70,5 @@ export default async (event: any) => {
 
 // Schedule the function to run every hour
 export const config = {
-  schedule: "* * * * *", // Schedule the function to run every minute
+  schedule: "@hourly", // Schedule the function to run every minute
 };
