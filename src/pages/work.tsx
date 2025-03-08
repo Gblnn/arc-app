@@ -154,6 +154,7 @@ export default function Work(props: Props) {
   }, []);
 
   const StartWork = async () => {
+    triggerFeedback();
     try {
       setUpdating(true);
       let locationData: Location | null = null;
@@ -186,6 +187,7 @@ export default function Work(props: Props) {
   };
 
   const endWork = async () => {
+    triggerFeedback();
     try {
       setUpdating(true);
       const endTime = new Date();
@@ -261,6 +263,20 @@ export default function Work(props: Props) {
       }
     };
   }, [pressTimer]);
+
+  const triggerFeedback = () => {
+    // Check if Web Haptics API (iOS 17+ Safari) is available
+    if ("Haptics" in window) {
+      const haptics = new (window as any).Haptics();
+      haptics.impact({ style: "medium" }).catch(console.error);
+    }
+    // Check if Vibration API (Android) is available
+    else if ("vibrate" in navigator) {
+      navigator.vibrate(200);
+    } else {
+      console.log("Haptic feedback not supported on this device");
+    }
+  };
 
   return (
     <>
