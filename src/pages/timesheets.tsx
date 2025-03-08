@@ -347,7 +347,7 @@ export default function Records() {
       }
     }, [location]);
 
-    if (!location) return "Not available";
+    if (!location) return " - ";
 
     const coords = `${location.latitude.toFixed(
       6
