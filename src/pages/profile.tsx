@@ -32,8 +32,8 @@ export default function Profile() {
   const usenavigate = useNavigate();
   const [allocated_hours, setAllocatedHours] = useState(0);
   const [serviceWorkerRegistered, setServiceWorkerRegistered] = useState(false);
-  const [permissionGranted, setPermissionGranted] = useState(false);
-  const [fcmtoken, setFcmtoken] = useState("");
+  // const [permissionGranted, setPermissionGranted] = useState(false);
+  // const [fcmtoken, setFcmtoken] = useState("");
 
   // State for online status
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -136,14 +136,14 @@ export default function Profile() {
       });
       console.log("FCM token:", permission);
       message.info("Token Generated");
-      setPermissionGranted(true);
-      setFcmtoken(permission);
+      // setPermissionGranted(true);
+      // setFcmtoken(permission);
       // Store the token or send it to your backend for later message sending
     } catch (error) {
       console.error("Unable to get permission to notify.", error);
       message.error("Unable to get permission to notify.");
-      setPermissionGranted(false);
-      setFcmtoken("");
+      // setPermissionGranted(false);
+      // setFcmtoken("");
     }
   };
 
