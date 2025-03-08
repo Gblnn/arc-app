@@ -302,11 +302,23 @@ export default function Work(props: Props) {
           }}
         >
           <div
-            style={{ position: "relative", width: "14rem", height: "14rem" }}
+            style={{
+              position: "relative",
+              width: "14rem",
+              height: "14rem",
+              border: "",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
             {/* Progress Circle */}
             <div
-              style={{ position: "absolute", width: "100%", height: "100%" }}
+              style={{
+                position: "absolute",
+                width: "95%",
+                height: "95%",
+              }}
             >
               <CircularProgressbar
                 value={pressProgress}
@@ -331,6 +343,7 @@ export default function Work(props: Props) {
               onTouchStart={handlePressStart}
               onTouchEnd={handlePressEnd}
               style={{
+                position: "absolute",
                 width: "100%",
                 height: "100%",
                 display: "flex",
