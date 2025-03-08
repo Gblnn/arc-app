@@ -323,6 +323,64 @@ export default function Records() {
     setSelectedMonth(value);
   };
 
+  const getAddressFromCoords = async (lat: number, lon: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+      );
+      const data = await response.json();
+      return data.display_name;
+    } catch (error) {
+      console.error("Error fetching address:", error);
+      return null;
+    }
+  };
+
+  const formatLocation = (location: any) => {
+    const [address, setAddress] = useState<string | null>(null);
+
+    useEffect(() => {
+      if (location) {
+        getAddressFromCoords(location.latitude, location.longitude).then(
+          (addr) => setAddress(addr)
+        );
+      }
+    }, [location]);
+
+    if (!location) return "Not available";
+
+    const coords = `${location.latitude.toFixed(
+      6
+    )}, ${location.longitude.toFixed(6)}`;
+    const mapsUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+
+    return (
+      <a
+        href={mapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          color: "#3b82f6",
+          textDecoration: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.25rem",
+          flexDirection: "column",
+        }}
+        className="hover:underline"
+        title={address || coords}
+      >
+        <span>{coords}</span>
+        {address && (
+          <span style={{ fontSize: "0.8em", color: "#94a3b8" }}>
+            {address.split(",").slice(0, 2).join(",")}
+          </span>
+        )}
+      </a>
+    );
+  };
+
   const TableRow = memo(
     ({ record, onDeleteClick, onTimeClick, isAlternate }: any) => {
       return (
@@ -387,6 +445,28 @@ export default function Records() {
             }}
           >
             {record.formattedOvertime}
+          </td>
+          <td
+            style={{ padding: "0.75rem" }}
+            title={
+              record.startLocation
+                ? `Accuracy: ${record.startLocation.accuracy}m`
+                : ""
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            {formatLocation(record.startLocation)}
+          </td>
+          <td
+            style={{ padding: "0.75rem" }}
+            title={
+              record.endLocation
+                ? `Accuracy: ${record.endLocation.accuracy}m`
+                : ""
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            {formatLocation(record.endLocation)}
           </td>
         </tr>
       );
@@ -551,6 +631,8 @@ export default function Records() {
                   <th style={{ padding: "0.75rem" }}>End</th>
                   <th style={{ padding: "0.75rem" }}>Total</th>
                   <th style={{ padding: "0.75rem" }}>OT</th>
+                  <th style={{ padding: "0.75rem" }}>Start Location</th>
+                  <th style={{ padding: "0.75rem" }}>End Location</th>
                 </tr>
               </thead>
               <tbody
@@ -582,6 +664,8 @@ export default function Records() {
                     {totalHours.toFixed(2)}
                   </td>
                   <td style={{ fontWeight: "bold" }}>{totalOT.toFixed(2)}</td>
+                  <td></td>
+                  <td></td>
                 </tr>
               </tbody>
             </table>

@@ -60,12 +60,12 @@ export default function Profile() {
     const checkServiceWorkerRegistration = async () => {
       if ("serviceWorker" in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
-        console.log(registrations);
+        // console.log(registrations);
         const isRegistered = registrations.some(
           (registration) => registration.active
         );
         setServiceWorkerRegistered(isRegistered);
-        console.log("status : " + isRegistered);
+        // console.log("status : " + isRegistered);
       }
     };
 
@@ -135,7 +135,7 @@ export default function Profile() {
           "BB0O0d0wXALIezu4MLPsg7cEnFJtUu1S9j5yEbloH5q8xkiWnoU8f4wAZcJVAeqgTY1z1kax1NmZcNMvsZHkQis",
       });
       console.log("FCM token:", permission);
-      message.info("Token : " + permission);
+      message.info("Token Generated");
       setPermissionGranted(true);
       setFcmtoken(permission);
       // Store the token or send it to your backend for later message sending
@@ -174,8 +174,15 @@ export default function Profile() {
           }
           extra={
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button
-                style={{ width: "3rem", background: "none" }}
+              <div
+                style={{
+                  width: "3rem",
+                  background: "none",
+                  border: "",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 onClick={
                   serviceWorkerRegistered
                     ? requestPermission
@@ -183,7 +190,7 @@ export default function Profile() {
                 }
               >
                 {serviceWorkerRegistered ? <BellDot /> : <GitPullRequest />}
-              </button>
+              </div>
               <IndexDropDown
                 isOnline={isOnline}
                 allocated_hours={allocated_hours}
@@ -195,8 +202,7 @@ export default function Profile() {
         />
       </div>
 
-      {/* Display message if offline */}
-      {permissionGranted && (
+      {/* {permissionGranted && (
         <div
           style={{
             position: "absolute",
@@ -212,7 +218,8 @@ export default function Profile() {
         >
           <input style={{ width: "75%" }} type="text" value={fcmtoken} />
         </div>
-      )}
+      )} */}
+
       <motion.div
         style={{
           padding: "1.25rem",

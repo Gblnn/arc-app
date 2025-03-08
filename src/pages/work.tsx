@@ -1,4 +1,5 @@
 import { db } from "@/firebase";
+import { message } from "antd";
 import {
   addDoc,
   collection,
@@ -10,9 +11,9 @@ import {
   where,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { History, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import moment from "moment";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
@@ -26,6 +27,35 @@ interface Props {
   isOnline?: boolean;
 }
 
+interface Location {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+}
+
+const getLocation = (): Promise<Location> => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        });
+      },
+      (error) => {
+        reject(error);
+      },
+      { enableHighAccuracy: true }
+    );
+  });
+};
+
 export default function Work(props: Props) {
   const [status, setStatus] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -33,7 +63,6 @@ export default function Work(props: Props) {
   const [sessionId, setSessionId] = useState("");
   const [sessionStart, setSessionStart] = useState<any>();
   const [sessionTime, setSessionTime] = useState("");
-  const [timedout, setTimedout] = useState(true);
 
   // Add new state for long press
   const [pressProgress, setPressProgress] = useState(0);
@@ -49,15 +78,15 @@ export default function Work(props: Props) {
     onSnapshot(query(collection(db, "records")), (snapshot: any) => {
       snapshot.docChanges().forEach((change: any) => {
         if (change.type === "added") {
-          verifyAccess();
+          // verifyAccess();
           verifyStatus();
         }
         if (change.type === "modified") {
-          verifyAccess();
+          // verifyAccess();
           verifyStatus();
         }
         if (change.type === "removed") {
-          verifyAccess();
+          // verifyAccess();
           verifyStatus();
         }
       });
@@ -78,8 +107,16 @@ export default function Work(props: Props) {
         fetchedData.push({ id: doc.id, ...doc.data() });
       });
       setUpdating(false);
-      setName(fetchedData[0].name);
+
+      // Add check for data existence
+      if (fetchedData.length > 0) {
+        setName(fetchedData[0].name);
+        console.log(fetchedData[0].name);
+      } else {
+        console.log("No user found for email:", window.name);
+      }
     } catch (error) {
+      console.error("Error in verifyAccess:", error);
       setUpdating(false);
     }
   };
@@ -108,27 +145,26 @@ export default function Work(props: Props) {
   };
 
   useEffect(() => {
+    if (!window.name) {
+      console.log("No email found in window.name");
+      return;
+    }
     verifyAccess();
     verifyStatus();
   }, []);
 
   const StartWork = async () => {
-    // const now = new Date();
-    // if (lastEndTime && moment(now).diff(moment(lastEndTime), "minutes") <= 10) {
-    //   // Resume the last session
-    //   setUpdating(true);
-    //   await updateDoc(doc(db, "records", sessionId), {
-    //     end: "", // Clear the end time to resume
-    //     status: true,
-    //   });
-    //   setStatus(true);
-    //   setUpdating(false);
-    //   return;
-    // }
-
-    // If not resuming, create a new session
     try {
       setUpdating(true);
+      let locationData: Location | null = null;
+
+      try {
+        locationData = await getLocation();
+      } catch (error: any) {
+        message.error(error.message);
+        console.log("Location access failed:", error);
+      }
+
       await addDoc(collection(db, "records"), {
         name: name,
         start: new Date(),
@@ -138,6 +174,7 @@ export default function Work(props: Props) {
         total: "",
         overtime: "",
         allocated_hours: Number(props.allocated_hours),
+        startLocation: locationData || null,
       });
       verifyStatus();
       setStatus(true);
@@ -149,28 +186,37 @@ export default function Work(props: Props) {
   };
 
   const endWork = async () => {
-    setUpdating(true);
-    const endTime = new Date();
-    await updateDoc(doc(db, "records", sessionId), {
-      end: endTime,
-      status: false,
-      total: moment(endTime).diff(moment(sessionStart.toDate()), "hours"),
-      overtime:
-        moment(endTime).diff(moment(sessionStart.toDate()), "hours") > 10
-          ? moment(endTime).diff(moment(sessionStart.toDate()), "hours") - 10
-          : 0,
-    });
+    try {
+      setUpdating(true);
+      const endTime = new Date();
+      let locationData: Location | null = null;
 
-    // Set lastEndTime immediately after ending the session
-    setUpdating(false);
-    setStatus(false);
+      try {
+        locationData = await getLocation();
+      } catch (error) {
+        console.log("Location access failed:", error);
+      }
 
-    setTimeout(() => {
-      setTimedout(false);
-    }, 2000);
+      await updateDoc(doc(db, "records", sessionId), {
+        end: endTime,
+        status: false,
+        total: moment(endTime).diff(moment(sessionStart.toDate()), "hours"),
+        overtime:
+          moment(endTime).diff(moment(sessionStart.toDate()), "hours") > 10
+            ? moment(endTime).diff(moment(sessionStart.toDate()), "hours") - 10
+            : 0,
+        endLocation: locationData || null,
+      });
+
+      setUpdating(false);
+      setStatus(false);
+    } catch (error) {
+      console.log(error);
+      setUpdating(false);
+    }
   };
 
-  const ResumeWork = async () => {};
+  // const ResumeWork = async () => {};
 
   const handlePressStart = useCallback(() => {
     if (!props.isOnline || updating) return;
@@ -397,7 +443,7 @@ export default function Work(props: Props) {
         </div>
 
         {/* Resume Button */}
-        {!status &&
+        {/* {!status &&
           (!timedout ? (
             <button
               onClick={ResumeWork}
@@ -418,7 +464,7 @@ export default function Work(props: Props) {
             </button>
           ) : (
             ""
-          ))}
+          ))} */}
       </div>
     </>
   );
