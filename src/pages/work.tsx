@@ -12,7 +12,9 @@ import {
 import { motion } from "framer-motion";
 import { History, LoaderCircle } from "lucide-react";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 // interface Props {
 //   status?: boolean;
@@ -32,6 +34,10 @@ export default function Work(props: Props) {
   const [sessionStart, setSessionStart] = useState<any>();
   const [sessionTime, setSessionTime] = useState("");
   const [timedout, setTimedout] = useState(true);
+
+  // Add new state for long press
+  const [pressProgress, setPressProgress] = useState(0);
+  const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setInterval(() => {
@@ -166,6 +172,50 @@ export default function Work(props: Props) {
 
   const ResumeWork = async () => {};
 
+  const handlePressStart = useCallback(() => {
+    if (!props.isOnline || updating) return;
+
+    let startTime = Date.now();
+    const duration = 2000; // 2 seconds
+
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = (elapsed / duration) * 100;
+
+      if (progress >= 100) {
+        clearInterval(timer);
+        setPressProgress(0);
+        // Execute the action
+        if (status) {
+          endWork();
+        } else {
+          StartWork();
+        }
+      } else {
+        setPressProgress(progress);
+      }
+    }, 10);
+
+    setPressTimer(timer);
+  }, [props.isOnline, updating, status]);
+
+  const handlePressEnd = useCallback(() => {
+    if (pressTimer) {
+      clearInterval(pressTimer);
+      setPressTimer(null);
+    }
+    setPressProgress(0);
+  }, [pressTimer]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pressTimer) {
+        clearInterval(pressTimer);
+      }
+    };
+  }, [pressTimer]);
+
   return (
     <>
       <div
@@ -248,27 +298,56 @@ export default function Work(props: Props) {
               : "4px solid rgba(100 100 100/ 30%)",
             borderRadius: "50%",
             padding: "0.5rem",
+            position: "relative",
           }}
         >
-          <div>
+          <div
+            style={{ position: "relative", width: "14rem", height: "14rem" }}
+          >
+            {/* Progress Circle */}
+            <div
+              style={{ position: "absolute", width: "100%", height: "100%" }}
+            >
+              <CircularProgressbar
+                value={pressProgress}
+                styles={{
+                  path: {
+                    stroke: status ? "#991b1b" : "#dc2626",
+                    strokeLinecap: "round",
+                    transition: "stroke-dashoffset 0.1s ease",
+                  },
+                  trail: {
+                    stroke: "rgba(255, 255, 255, 0.1)",
+                  },
+                }}
+              />
+            </div>
+
+            {/* Button */}
             <button
-              onClick={() => {
-                props.isOnline &&
-                  (updating ? "" : status ? endWork() : StartWork());
-              }}
+              onMouseDown={handlePressStart}
+              onMouseUp={handlePressEnd}
+              onMouseLeave={handlePressEnd}
+              onTouchStart={handlePressStart}
+              onTouchEnd={handlePressEnd}
               style={{
-                flexFlow: "column",
+                width: "100%",
+                height: "100%",
                 display: "flex",
-                width: "14rem",
-                height: "14rem",
-                padding: "4rem",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
                 borderRadius: "50%",
                 fontSize: "3rem",
-                lineHeight: "2.5rem",
+
                 background:
                   !status && props.isOnline
-                    ? "crimson"
+                    ? "rgba(220 20 60/ 50%)"
                     : "rgba(100 100 100/ 25%)",
+                cursor: props.isOnline && !updating ? "pointer" : "default",
+                userSelect: "none",
+                border: "",
+                color: "white",
               }}
             >
               {updating ? (
@@ -284,18 +363,22 @@ export default function Work(props: Props) {
               ) : (
                 "Start"
               )}
-              {props.isOnline && (
-                <p
-                  style={{
-                    position: "absolute",
-                    marginTop: "5rem",
-                    fontSize: "0.75rem",
-                    opacity: "0.75",
-                  }}
-                >
-                  {status ? "" : "New"} Session
-                </p>
-              )}
+              <p
+                style={{
+                  marginTop: "5rem",
+                  position: "absolute",
+                  fontSize: "0.75rem",
+                  opacity: "0.75",
+                }}
+              >
+                {pressProgress > 0 && !status
+                  ? "Press and Hold"
+                  : pressProgress > 0 && status
+                  ? "Press and Hold"
+                  : status
+                  ? "End Session"
+                  : "Start Session"}
+              </p>
             </button>
           </div>
         </div>
