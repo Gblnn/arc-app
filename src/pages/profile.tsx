@@ -225,8 +225,8 @@ export default function Profile() {
           padding: "1.25rem",
           height: "100svh",
         }}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
+        // initial={{ opacity: 0 }}
+        // whileInView={{ opacity: 1 }}
       >
         <div style={{ height: "3.5rem" }}></div>
         <br />
