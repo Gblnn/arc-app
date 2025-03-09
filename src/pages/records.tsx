@@ -1,5 +1,12 @@
 import { db } from "@/firebase";
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import {
+  Timestamp,
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 import { motion } from "framer-motion";
 import { LoaderCircle } from "lucide-react";
 import moment from "moment";
@@ -15,21 +22,27 @@ interface Record {
 export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<Record[]>([]);
-  const [selectedMonth] = useState(moment().format("MMMM")); // Default to current month
 
   useEffect(() => {
     fetchRecords();
-  }, [selectedMonth]); // Fetch records when the selected month changes
+  }, []);
 
   const fetchRecords = async () => {
     setLoading(true);
     try {
+      // Get start and end of current month
+      const startOfMonth = moment().startOf("month").toDate();
+      const endOfMonth = moment().endOf("month").toDate();
+
       const RecordCollection = collection(db, "records");
       const recordQuery = query(
         RecordCollection,
         where("email", "==", window.name),
+        where("start", ">=", Timestamp.fromDate(startOfMonth)),
+        where("start", "<=", Timestamp.fromDate(endOfMonth)),
         orderBy("start", "desc")
       );
+
       const querySnapshot = await getDocs(recordQuery);
       const fetchedData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -54,6 +67,19 @@ export default function Records() {
     return hours > allocatedHours ? hours - allocatedHours : 0;
   };
 
+  // Calculate total hours and overtime
+  const totalHours = records.reduce((sum, record) => {
+    if (!record.end) return sum;
+    const hours = calculateHours(record.start.toDate(), record.end.toDate());
+    return sum + hours;
+  }, 0);
+
+  const totalOvertime = records.reduce((sum, record) => {
+    if (!record.end) return sum;
+    const hours = calculateHours(record.start.toDate(), record.end.toDate());
+    return sum + calculateOvertime(hours, record.allocated_hours);
+  }, 0);
+
   return (
     <div
       style={{
@@ -75,7 +101,7 @@ export default function Records() {
               justifyContent: "center",
             }}
           >
-            {selectedMonth}{" "}
+            {moment().format("MMMM")}{" "}
             <b style={{ color: "crimson", fontWeight: "800" }}>
               {moment().format("YYYY")}
             </b>
@@ -121,8 +147,26 @@ export default function Records() {
                   </tr>
                 );
               })}
+              {/* Add totals row */}
+              <tr
+                style={{
+                  background: "rgba(100 100 100/ 30%)",
+                  fontWeight: "bold",
+                }}
+              >
+                <td colSpan={1}>Total</td>
+                <td></td>
+                <td></td>
+                <td>{totalHours}</td>
+                <td>{totalOvertime}</td>
+              </tr>
             </tbody>
           </table>
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
           <br />
         </motion.div>
       ) : (
