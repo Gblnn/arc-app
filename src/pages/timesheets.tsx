@@ -328,10 +328,6 @@ export default function Records() {
     setSelectedMonth(value);
   };
 
-  // Add delay between requests to respect rate limits
-  const delay = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
-
   const getAddressFromCoords = async (lat: number, lon: number) => {
     try {
       // Check cache first
