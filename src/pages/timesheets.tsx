@@ -31,6 +31,11 @@ import {
 import moment from "moment";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
+// Add cache outside component to persist between renders
+const addressCache = new Map<string, string>();
+let lastRequestTime = 0;
+const MIN_REQUEST_DELAY = 1500; // 1.5 seconds between requests
+
 export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<any>([]);
@@ -323,12 +328,44 @@ export default function Records() {
     setSelectedMonth(value);
   };
 
+  // Add delay between requests to respect rate limits
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
   const getAddressFromCoords = async (lat: number, lon: number) => {
     try {
+      // Check cache first
+      const cacheKey = `${lat},${lon}`;
+      if (addressCache.has(cacheKey)) {
+        return addressCache.get(cacheKey);
+      }
+
+      // Respect rate limiting
+      const now = Date.now();
+      const timeSinceLastRequest = now - lastRequestTime;
+      if (timeSinceLastRequest < MIN_REQUEST_DELAY) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, MIN_REQUEST_DELAY - timeSinceLastRequest)
+        );
+      }
+
+      console.log(`Fetching address for: ${lat}, ${lon}`);
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      lastRequestTime = Date.now();
       const data = await response.json();
+
+      // Cache the result
+      if (data.display_name) {
+        addressCache.set(cacheKey, data.display_name);
+      }
+
       return data.display_name;
     } catch (error) {
       console.error("Error fetching address:", error);
@@ -336,18 +373,39 @@ export default function Records() {
     }
   };
 
-  const formatLocation = (location: any) => {
+  // Create a new LocationDisplay component with better error handling
+  const LocationDisplay = memo(({ location }: { location: any }) => {
     const [address, setAddress] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchAddress = useCallback(async () => {
+      if (!location) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const addr = await getAddressFromCoords(
+          location.latitude,
+          location.longitude
+        );
+        setAddress(addr);
+      } catch (err) {
+        console.error("Error in fetchAddress:", err);
+        setError("Failed to fetch address");
+      } finally {
+        setIsLoading(false);
+      }
+    }, [location?.latitude, location?.longitude]);
 
     useEffect(() => {
       if (location) {
-        getAddressFromCoords(location.latitude, location.longitude).then(
-          (addr) => setAddress(addr)
-        );
+        fetchAddress();
       }
-    }, [location]);
+    }, [fetchAddress]);
 
-    if (!location) return " - ";
+    if (!location) return <span>-</span>;
 
     const coords = `${location.latitude.toFixed(
       6
@@ -372,15 +430,27 @@ export default function Records() {
         title={address || coords}
       >
         <span>{coords}</span>
-        {address && (
+        {isLoading && (
+          <span style={{ fontSize: "0.8em", color: "#94a3b8" }}>
+            Loading...
+          </span>
+        )}
+        {error && (
+          <span style={{ fontSize: "0.8em", color: "#ef4444" }}>{error}</span>
+        )}
+        {!isLoading && !error && address && (
           <span style={{ fontSize: "0.8em", color: "#94a3b8" }}>
             {address.split(",").slice(0, 2).join(",")}
           </span>
         )}
       </a>
     );
-  };
+  });
 
+  // Add display name for debugging
+  LocationDisplay.displayName = "LocationDisplay";
+
+  // Update the TableRow component to use LocationDisplay
   const TableRow = memo(
     ({ record, onDeleteClick, onTimeClick, isAlternate }: any) => {
       return (
@@ -455,7 +525,7 @@ export default function Records() {
             }
             onClick={(e) => e.stopPropagation()}
           >
-            {formatLocation(record.startLocation)}
+            <LocationDisplay location={record.startLocation} />
           </td>
           <td
             style={{ padding: "0.75rem" }}
@@ -466,7 +536,7 @@ export default function Records() {
             }
             onClick={(e) => e.stopPropagation()}
           >
-            {formatLocation(record.endLocation)}
+            <LocationDisplay location={record.endLocation} />
           </td>
         </tr>
       );

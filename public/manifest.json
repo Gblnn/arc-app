@@ -21,8 +21,8 @@
     "lang":"en-US",
     "name":"Arc",
     "short_name":"Arc",
-    "start_url":"http://localhost:5173",
-    "scope":"http://localhost:5173",
+    "start_url":"https://arc-app.netlify.app",
+    "scope":"https://arc-app.netlify.app",
     "description":"Maintain personal records and get notified about important dates",
     "screenshots": [    
    {
