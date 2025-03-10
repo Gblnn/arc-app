@@ -62,17 +62,33 @@ export default function Work(props: Props) {
   const [name, setName] = useState("");
   const [sessionId, setSessionId] = useState("");
   const [sessionStart, setSessionStart] = useState<any>();
-  const [sessionTime, setSessionTime] = useState("");
+  const [elapsedTime, setElapsedTime] = useState("00:00:00");
 
   // Add new state for long press
   const [pressProgress, setPressProgress] = useState(0);
   const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setInterval(() => {
-      setSessionTime(moment().format("hh:mm:ss"));
-    });
-  }, []);
+    let timer: NodeJS.Timeout;
+
+    if (status && sessionStart) {
+      timer = setInterval(() => {
+        const duration = moment.duration(
+          moment().diff(moment(sessionStart.toDate()))
+        );
+        const hours = String(Math.floor(duration.asHours())).padStart(2, "0");
+        const minutes = String(duration.minutes()).padStart(2, "0");
+        const seconds = String(duration.seconds()).padStart(2, "0");
+        setElapsedTime(`${hours}:${minutes}:${seconds}`);
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [status, sessionStart]);
 
   useEffect(() => {
     onSnapshot(query(collection(db, "records")), (snapshot: any) => {
@@ -308,19 +324,12 @@ export default function Work(props: Props) {
                 lineHeight: "2.5rem",
               }}
             >
-              {sessionTime}
+              {elapsedTime}
 
-              {/* {moment(moment().diff(moment(sessionStart.toDate()))).format(
-                "hh:mm:ss"
-              )} */}
-
-              {/* <p style={{ fontSize: "0.8rem", opacity: "0.5" }}>
-                <b>Session ID </b> : {sessionId}
-              </p> */}
               <p style={{ fontSize: "0.8rem", opacity: "0.5" }}>
                 <b>Session Start </b> :{" "}
                 {sessionStart &&
-                  moment(sessionStart.toDate()).format("hh:mm:ss")}
+                  moment(sessionStart.toDate()).format("hh:mm:ss A")}
               </p>
             </motion.div>
 
