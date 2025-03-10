@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/firebase";
 import { message } from "antd";
 import {
-  browserSessionPersistence,
+  browserLocalPersistence,
   setPersistence,
   signInWithEmailAndPassword,
 } from "firebase/auth";
@@ -13,45 +13,28 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
-
-  const { userRole } = useAuth();
+  const { userRole, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already authenticated
   useEffect(() => {
-    if (userRole === "admin") {
-      navigate("/index");
-    } else if (userRole === "profile") {
-      navigate("/profile");
+    // Skip login if we already have auth data
+    if (!isLoading && userRole) {
+      if (userRole === "admin") {
+        navigate("/index");
+      } else if (userRole === "profile") {
+        navigate("/profile");
+      }
     }
-  }, [userRole, navigate]);
-
-  // const AuthenticateRole = async () => {
-  //   message.loading("Authenticating");
-  //   const RecordCollection = collection(db, "users");
-  //   const recordQuery = query(
-  //     RecordCollection,
-  //     where("email", "==", auth.currentUser?.email)
-  //   );
-  //   const querySnapshot = await getDocs(recordQuery);
-  //   const fetchedData: any = [];
-  //   querySnapshot.forEach((doc: any) => {
-  //     fetchedData.push({ id: doc.id, ...doc.data() });
-  //   });
-  //   console.log(fetchedData[0].role, fetchedData[0].email);
-  //   window.name = fetchedData[0].email;
-  //   window.location.reload();
-  //   setLoading(false);
-  // };
+  }, [userRole, isLoading, navigate]);
 
   const handleLogin = async () => {
     try {
       setLoading(true);
       message.loading({ content: "Authenticating...", key: "login" });
 
-      await setPersistence(auth, browserSessionPersistence);
+      await setPersistence(auth, browserLocalPersistence);
       await signInWithEmailAndPassword(auth, email, password);
 
       message.success({ content: "Login successful", key: "login" });
@@ -62,6 +45,25 @@ export default function Login() {
       message.error({ content: err.message, key: "login" });
     }
   };
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <LoaderCircle className="animate-spin" />
+      </div>
+    );
+  }
+
+  // Only show login form if not already authenticated
+  if (userRole) return null;
 
   return (
     <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
@@ -144,7 +146,7 @@ export default function Login() {
                 >
                   ARC
                 </p>
-                <p>v2.1</p>
+                <p>v2.3</p>
               </div>
 
               <br />

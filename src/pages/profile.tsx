@@ -164,7 +164,7 @@ export default function Profile() {
           noblur
           noback={role == "profile"}
           title={role == "profile" ? "Arc" : "Profile"}
-          subtitle={role == "profile" ? "v2.1" : ""}
+          subtitle={role == "profile" ? "v2.3" : ""}
           icon={
             role == "profile" ? (
               <img style={{ width: "2rem" }} src="arc-logo.png" />
