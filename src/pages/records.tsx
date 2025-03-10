@@ -58,13 +58,39 @@ export default function Records() {
   };
 
   const calculateHours = (start: Date, end: Date) => {
-    return Math.round(
-      moment.duration(moment(end).diff(moment(start))).get("hours")
-    );
+    // Get raw hours
+    const rawHours = moment.duration(moment(end).diff(moment(start))).asHours();
+
+    // Get decimal part
+    const decimalPart = rawHours % 1;
+    const wholePart = Math.floor(rawHours);
+
+    // Round based on threshold
+    if (decimalPart < 0.3) {
+      return wholePart; // Round down
+    } else if (decimalPart >= 0.7) {
+      return wholePart + 1; // Round up
+    } else {
+      return wholePart + 0.5; // Round to half
+    }
   };
 
   const calculateOvertime = (hours: number, allocatedHours: number) => {
-    return hours > allocatedHours ? hours - allocatedHours : 0;
+    if (hours <= allocatedHours) return 0;
+
+    const overtimeHours = hours - allocatedHours;
+    // Get decimal part
+    const decimalPart = overtimeHours % 1;
+    const wholePart = Math.floor(overtimeHours);
+
+    // Round based on threshold
+    if (decimalPart < 0.3) {
+      return wholePart; // Round down
+    } else if (decimalPart >= 0.7) {
+      return wholePart + 1; // Round up
+    } else {
+      return wholePart + 0.5; // Round to half
+    }
   };
 
   // Calculate total hours and overtime

@@ -58,7 +58,7 @@ const InvoicePage = ({
       background: "white",
       color: "black",
       padding: "",
-      fontSize: "1.1rem",
+      fontSize: "0.9rem",
       width: "21cm",
       height: "29.7cm",
       pageBreakAfter: "always",
@@ -129,7 +129,7 @@ const InvoicePage = ({
           flexFlow: "column",
         }}
       >
-        <p style={{ color: "black" }}>
+        <p style={{ color: "black", fontSize: "1rem" }}>
           <b style={{}}>
             {props.isTaxInvoice ? "TAX INVOICE" : "CASH INVOICE"}
           </b>
@@ -154,7 +154,9 @@ const InvoicePage = ({
           flexFlow: "",
         }}
       >
-        <div style={{ display: "flex", flexFlow: "column", fontSize: "1rem" }}>
+        <div
+          style={{ display: "flex", flexFlow: "column", fontSize: "0.9rem" }}
+        >
           <p>TO</p>
           <p>
             <b>{props.clientName}</b>
@@ -165,14 +167,14 @@ const InvoicePage = ({
           <p>
             <b>SULTANATE OF OMAN</b>
           </p>
-          {props.vatinNo && (
+          {props.vatinNo && props.isTaxInvoice && (
             <p>
               <b>VATIN : {props.vatinNo}</b>
             </p>
           )}
         </div>
 
-        <div style={{ fontSize: "1rem", marginRight: "2rem" }}>
+        <div style={{ fontSize: "0.9rem", marginRight: "2rem" }}>
           <p>
             <b>ARC#{props.refNo}</b>
           </p>
@@ -267,7 +269,7 @@ const InvoicePage = ({
             <tfoot>
               <tr>
                 <td
-                  colSpan={2}
+                  colSpan={4}
                   style={{
                     border: "1px solid black",
                     padding: "0.5rem",
@@ -276,12 +278,7 @@ const InvoicePage = ({
                 >
                   TOTAL
                 </td>
-                <td
-                  style={{ border: "1px solid black", padding: "0.5rem" }}
-                ></td>
-                <td
-                  style={{ border: "1px solid black", padding: "0.5rem" }}
-                ></td>
+
                 <td style={{ border: "1px solid black", padding: "0.5rem" }}>
                   {props.subtotal.toFixed(3)}
                 </td>
@@ -289,7 +286,7 @@ const InvoicePage = ({
               {props.isTaxInvoice && (
                 <tr>
                   <td
-                    colSpan={2}
+                    colSpan={4}
                     style={{
                       border: "1px solid black",
                       padding: "0.5rem",
@@ -298,12 +295,7 @@ const InvoicePage = ({
                   >
                     {"VAT(5%)"}
                   </td>
-                  <td
-                    style={{ border: "1px solid black", padding: "0.5rem" }}
-                  ></td>
-                  <td
-                    style={{ border: "1px solid black", padding: "0.5rem" }}
-                  ></td>
+
                   <td style={{ border: "1px solid black", padding: "0.5rem" }}>
                     {props.vatAmount.toFixed(3)}
                   </td>
@@ -311,17 +303,12 @@ const InvoicePage = ({
               )}
               <tr>
                 <td
-                  colSpan={2}
+                  colSpan={4}
                   style={{ border: "1px solid black", padding: "0.5rem" }}
                 >
                   NET PAYABLE
                 </td>
-                <td
-                  style={{ border: "1px solid black", padding: "0.5rem" }}
-                ></td>
-                <td
-                  style={{ border: "1px solid black", padding: "0.5rem" }}
-                ></td>
+
                 <td style={{ border: "1px solid black", padding: "0.5rem" }}>
                   {props.netPayable.toFixed(3)}
                 </td>
@@ -373,7 +360,7 @@ const InvoicePage = ({
             style={{
               display: "flex",
               justifyContent: "space-between",
-              fontSize: "1rem",
+              fontSize: "0.9rem",
               padding: "3rem",
             }}
           >
