@@ -1,57 +1,65 @@
-import { auth, db } from "@/firebase";
+import { useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/firebase";
 import { message } from "antd";
 import {
   browserSessionPersistence,
   setPersistence,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { collection, getDocs, query, where } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { ChevronRight, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const usenavigate = useNavigate();
+  const navigate = useNavigate();
+
+  const { userRole } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  setPersistence(auth, browserSessionPersistence);
-
+  // Redirect if already authenticated
   useEffect(() => {
-    window.name != "" && usenavigate("/index");
-  }, []);
+    if (userRole === "admin") {
+      navigate("/index");
+    } else if (userRole === "profile") {
+      navigate("/profile");
+    }
+  }, [userRole, navigate]);
 
-  const AuthenticateRole = async () => {
-    message.loading("Authenticating");
-    const RecordCollection = collection(db, "users");
-    const recordQuery = query(
-      RecordCollection,
-      where("email", "==", auth.currentUser?.email)
-    );
-    const querySnapshot = await getDocs(recordQuery);
-    const fetchedData: any = [];
-    querySnapshot.forEach((doc: any) => {
-      fetchedData.push({ id: doc.id, ...doc.data() });
-    });
-    console.log(fetchedData[0].role, fetchedData[0].email);
-    window.name = fetchedData[0].email;
-    window.location.reload();
-    setLoading(false);
-  };
+  // const AuthenticateRole = async () => {
+  //   message.loading("Authenticating");
+  //   const RecordCollection = collection(db, "users");
+  //   const recordQuery = query(
+  //     RecordCollection,
+  //     where("email", "==", auth.currentUser?.email)
+  //   );
+  //   const querySnapshot = await getDocs(recordQuery);
+  //   const fetchedData: any = [];
+  //   querySnapshot.forEach((doc: any) => {
+  //     fetchedData.push({ id: doc.id, ...doc.data() });
+  //   });
+  //   console.log(fetchedData[0].role, fetchedData[0].email);
+  //   window.name = fetchedData[0].email;
+  //   window.location.reload();
+  //   setLoading(false);
+  // };
 
-  const handleLoginIn = async () => {
+  const handleLogin = async () => {
     try {
       setLoading(true);
+      message.loading({ content: "Authenticating...", key: "login" });
+
+      await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
-      AuthenticateRole();
-      // console.log(auth.currentUser);
+
+      message.success({ content: "Login successful", key: "login" });
+
+      // AuthContext will handle role fetching and navigation
     } catch (err: any) {
       setLoading(false);
-      const errorMessage = err.message;
-      console.log(err.message);
-      message.error(errorMessage);
+      message.error({ content: err.message, key: "login" });
     }
   };
 
@@ -202,7 +210,7 @@ export default function Login() {
 
               <p />
               <button
-                onClick={handleLoginIn}
+                onClick={handleLogin}
                 className={loading ? "disabled" : ""}
                 style={{
                   background: "crimson",

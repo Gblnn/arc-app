@@ -32,9 +32,36 @@ import moment from "moment";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 // Add cache outside component to persist between renders
-const addressCache = new Map<string, string>();
-let lastRequestTime = 0;
-const MIN_REQUEST_DELAY = 1500; // 1.5 seconds between requests
+// 1.5 seconds between requests
+
+// Add interfaces for location data
+interface Location {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  address?: string;
+}
+
+// Outside component, reset these
+const requestQueue: Array<() => Promise<void>> = [];
+let isProcessingQueue = false;
+let pendingAddresses = new Set<string>(); // Use Set to track unique requests
+
+const processQueue = async () => {
+  if (isProcessingQueue) return;
+  isProcessingQueue = true;
+
+  while (requestQueue.length > 0) {
+    const request = requestQueue.shift();
+    if (request) {
+      await request();
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  }
+
+  isProcessingQueue = false;
+  pendingAddresses.clear(); // Clear the set when done
+};
 
 export default function Records() {
   const [loading, setLoading] = useState(false);
@@ -328,125 +355,193 @@ export default function Records() {
     setSelectedMonth(value);
   };
 
-  const getAddressFromCoords = async (lat: number, lon: number) => {
-    try {
-      // Check cache first
-      const cacheKey = `${lat},${lon}`;
-      if (addressCache.has(cacheKey)) {
-        return addressCache.get(cacheKey);
-      }
+  const getAddressFromCoords = async (
+    location: Location,
+    recordId: string,
+    locationType: "startLocation" | "endLocation"
+  ) => {
+    // If address is already cached in the location object, return it
+    if (location.address) {
+      return location.address;
+    }
 
-      // Respect rate limiting
-      const now = Date.now();
-      const timeSinceLastRequest = now - lastRequestTime;
-      if (timeSinceLastRequest < MIN_REQUEST_DELAY) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, MIN_REQUEST_DELAY - timeSinceLastRequest)
-        );
-      }
+    // Create unique key for this request
+    const requestKey = `${recordId}-${locationType}`;
 
-      console.log(`Fetching address for: ${lat}, ${lon}`);
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      lastRequestTime = Date.now();
-      const data = await response.json();
-
-      // Cache the result
-      if (data.display_name) {
-        addressCache.set(cacheKey, data.display_name);
-      }
-
-      return data.display_name;
-    } catch (error) {
-      console.error("Error fetching address:", error);
+    // If this location is already being processed, don't add it again
+    if (pendingAddresses.has(requestKey)) {
       return null;
     }
+
+    const performRequest = async () => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}&zoom=18`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const address = data.display_name;
+
+        // Update Firestore with the cached address
+        const recordRef = doc(db, "records", recordId);
+        await updateDoc(recordRef, {
+          [`${locationType}.address`]: address,
+        });
+
+        pendingAddresses.delete(requestKey);
+
+        // Update progress notification
+        if (pendingAddresses.size > 0) {
+          message.loading({
+            content: `Caching addresses... (${requestQueue.length} remaining)`,
+            key: "address-caching-progress",
+            duration: 0,
+          });
+        } else {
+          // Show completion message when all requests are done
+          // const totalProcessed = requestQueue.length + 1;
+          message.success({
+            content: `Caching Complete`,
+            key: "address-caching-progress",
+            duration: 2,
+          });
+        }
+
+        return address;
+      } catch (error) {
+        console.error("Error fetching address:", error);
+        pendingAddresses.delete(requestKey);
+        return null;
+      }
+    };
+
+    // Add request to queue if it's not already there
+    pendingAddresses.add(requestKey);
+
+    if (pendingAddresses.size === 1) {
+      // Show initial loading message only for the first request
+      message.loading({
+        content: "Caching addresses...",
+        key: "address-caching-progress",
+        duration: 0,
+      });
+    }
+
+    requestQueue.push(performRequest);
+    processQueue(); // Start processing if not already running
+
+    return new Promise((resolve) => {
+      const checkResult = setInterval(() => {
+        if (location.address) {
+          clearInterval(checkResult);
+          resolve(location.address);
+        }
+      }, 100);
+    });
   };
 
   // Create a new LocationDisplay component with better error handling
-  const LocationDisplay = memo(({ location }: { location: any }) => {
-    const [address, setAddress] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const LocationDisplay = memo(
+    ({
+      location,
+      recordId,
+      locationType,
+    }: {
+      location: Location | undefined;
+      recordId: string;
+      locationType: "startLocation" | "endLocation";
+    }) => {
+      const [address, setAddress] = useState<string | null>(null);
+      const [isLoading, setIsLoading] = useState(false);
+      const [error, setError] = useState<string | null>(null);
 
-    const fetchAddress = useCallback(async () => {
-      if (!location) return;
+      useEffect(() => {
+        let isMounted = true;
 
-      setIsLoading(true);
-      setError(null);
+        const fetchAddress = async () => {
+          if (!location) return;
 
-      try {
-        const addr = await getAddressFromCoords(
-          location.latitude,
-          location.longitude
-        );
-        setAddress(addr);
-      } catch (err) {
-        console.error("Error in fetchAddress:", err);
-        setError("Failed to fetch address");
-      } finally {
-        setIsLoading(false);
-      }
-    }, [location?.latitude, location?.longitude]);
+          setIsLoading(true);
+          setError(null);
 
-    useEffect(() => {
-      if (location) {
+          try {
+            const addr = await getAddressFromCoords(
+              location,
+              recordId,
+              locationType
+            );
+            if (isMounted) {
+              setAddress(addr as string);
+            }
+          } catch (err) {
+            if (isMounted) {
+              setError("Failed to fetch address");
+            }
+          } finally {
+            if (isMounted) {
+              setIsLoading(false);
+            }
+          }
+        };
+
         fetchAddress();
-      }
-    }, [fetchAddress]);
 
-    if (!location) return <span>-</span>;
+        return () => {
+          isMounted = false;
+        };
+      }, [location, recordId, locationType]);
 
-    const coords = `${location.latitude.toFixed(
-      6
-    )}, ${location.longitude.toFixed(6)}`;
-    const mapsUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+      if (!location) return <span>-</span>;
 
-    return (
-      <a
-        href={mapsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          color: "#3b82f6",
-          textDecoration: "none",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.25rem",
-          flexDirection: "column",
-        }}
-        className="hover:underline"
-        title={address || coords}
-      >
-        <span>{coords}</span>
-        {isLoading && (
-          <span style={{ fontSize: "0.8em", color: "#94a3b8" }}>
-            Loading...
-          </span>
-        )}
-        {error && (
-          <span style={{ fontSize: "0.8em", color: "#ef4444" }}>{error}</span>
-        )}
-        {!isLoading && !error && address && (
-          <span style={{ fontSize: "0.8em", color: "#94a3b8" }}>
-            {address.split(",").slice(0, 2).join(",")}
-          </span>
-        )}
-      </a>
-    );
-  });
+      const coords = `${location.latitude.toFixed(
+        6
+      )}, ${location.longitude.toFixed(6)}`;
+      const mapsUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+
+      return (
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            color: "#3b82f6",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.25rem",
+            flexDirection: "column",
+          }}
+          className="hover:underline"
+          title={address || coords}
+        >
+          <span>{coords}</span>
+          {isLoading && (
+            <span style={{ fontSize: "0.8em", color: "#94a3b8" }}>
+              Loading...
+            </span>
+          )}
+          {error && (
+            <span style={{ fontSize: "0.8em", color: "#ef4444" }}>{error}</span>
+          )}
+          {!isLoading && !error && address && (
+            <span style={{ fontSize: "0.8em", color: "#94a3b8" }}>
+              {address.split(",").slice(0, 2).join(",")}
+            </span>
+          )}
+        </a>
+      );
+    }
+  );
 
   // Add display name for debugging
   LocationDisplay.displayName = "LocationDisplay";
 
-  // Update the TableRow component to use LocationDisplay
+  // Update the TableRow component to pass recordId to LocationDisplay
   const TableRow = memo(
     ({ record, onDeleteClick, onTimeClick, isAlternate }: any) => {
       return (
@@ -521,7 +616,11 @@ export default function Records() {
             }
             onClick={(e) => e.stopPropagation()}
           >
-            <LocationDisplay location={record.startLocation} />
+            <LocationDisplay
+              location={record.startLocation}
+              recordId={record.id}
+              locationType="startLocation"
+            />
           </td>
           <td
             style={{ padding: "0.75rem" }}
@@ -532,7 +631,11 @@ export default function Records() {
             }
             onClick={(e) => e.stopPropagation()}
           >
-            <LocationDisplay location={record.endLocation} />
+            <LocationDisplay
+              location={record.endLocation}
+              recordId={record.id}
+              locationType="endLocation"
+            />
           </td>
         </tr>
       );
