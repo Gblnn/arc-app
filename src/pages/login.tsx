@@ -1,11 +1,8 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { auth } from "@/firebase";
+import { auth, db } from "@/firebase";
 import { message } from "antd";
-import {
-  browserLocalPersistence,
-  setPersistence,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { ChevronRight, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -13,54 +10,91 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { userRole, isLoading } = useAuth();
+  const { userRole } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Simple and fast cache check
   useEffect(() => {
-    // Skip login if we already have auth data
-    if (!isLoading && userRole) {
-      if (userRole === "admin") {
-        navigate("/index");
-      } else if (userRole === "profile") {
-        navigate("/profile");
-      }
+    const role = localStorage.getItem("userRole");
+    if (role === '"admin"') {
+      navigate("/index");
+    } else if (role === '"profile"') {
+      navigate("/profile");
     }
-  }, [userRole, isLoading, navigate]);
+  }, [navigate]);
 
   const handleLogin = async () => {
     try {
       setLoading(true);
       message.loading({ content: "Authenticating...", key: "login" });
 
-      await setPersistence(auth, browserLocalPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
+      // Authenticate with Firebase
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-      message.success({ content: "Login successful", key: "login" });
+      // Fetch and cache user data
+      const userQuery = query(
+        collection(db, "users"),
+        where("email", "==", email)
+      );
+      const querySnapshot = await getDocs(userQuery);
+      const userData = querySnapshot.docs[0]?.data();
 
-      // AuthContext will handle role fetching and navigation
+      if (userData?.role) {
+        // Cache user data
+        localStorage.setItem("userRole", JSON.stringify(userData.role));
+        localStorage.setItem("userEmail", JSON.stringify(email));
+        localStorage.setItem("userName", JSON.stringify(userData.name));
+        localStorage.setItem(
+          "allocatedHours",
+          JSON.stringify(userData.allocated_hours)
+        );
+        localStorage.setItem(
+          "authUser",
+          JSON.stringify({
+            email,
+            uid: userCredential.user.uid,
+          })
+        );
+        window.name = email;
+
+        message.success({ content: "Login successful", key: "login" });
+
+        // Navigate based on role
+        if (userData.role === "admin") {
+          navigate("/index");
+        } else if (userData.role === "profile") {
+          navigate("/profile");
+        }
+      } else {
+        throw new Error("No role found for user");
+      }
     } catch (err: any) {
       setLoading(false);
       message.error({ content: err.message, key: "login" });
     }
   };
 
-  // Show loading state while checking auth
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <LoaderCircle className="animate-spin" />
-      </div>
-    );
-  }
+  // Show loading while checking cache
+  // if (isLoading) {
+  //   return (
+  //     <div
+  //       style={{
+  //         height: "100vh",
+  //         display: "flex",
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //       }}
+  //     >
+  //       <LoaderCircle className="animate-spin" />
+  //     </div>
+  //   );
+  // }
 
   // Only show login form if not already authenticated
   if (userRole) return null;

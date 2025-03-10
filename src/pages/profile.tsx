@@ -2,10 +2,10 @@ import Back from "@/components/back";
 import DefaultDialog from "@/components/default-dialog";
 import IndexDropDown from "@/components/index-dropdown";
 import InputDialog from "@/components/input-dialog";
-import { auth, db, messaging } from "@/firebase";
+import { useAuth } from "@/contexts/AuthContext";
+import { db, messaging } from "@/firebase";
 import { LoadingOutlined } from "@ant-design/icons";
 import { message } from "antd";
-import { signOut } from "firebase/auth";
 import {
   collection,
   getDocs,
@@ -17,7 +17,6 @@ import { getToken } from "firebase/messaging";
 import { motion } from "framer-motion";
 import { BellDot, GitPullRequest, List, Truck, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Records from "./records";
 import Work from "./work";
 
@@ -25,15 +24,22 @@ export default function Profile() {
   const [addUserDialog, setAddUserDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
-  const [role, setRole] = useState("");
   const [logoutPrompt, setLogoutPrompt] = useState(false);
   const [path, setPath] = useState("work");
   const [endDialog, setEndDialog] = useState(false);
-  const usenavigate = useNavigate();
-  const [allocated_hours, setAllocatedHours] = useState(0);
+
+  const [allocatedHours, setAllocatedHours] = useState(0);
   const [serviceWorkerRegistered, setServiceWorkerRegistered] = useState(false);
   // const [permissionGranted, setPermissionGranted] = useState(false);
   // const [fcmtoken, setFcmtoken] = useState("");
+
+  const {
+    logout,
+    userEmail,
+    userRole,
+    userName,
+    allocatedHours: cachedHours,
+  } = useAuth();
 
   // State for online status
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -89,9 +95,48 @@ export default function Profile() {
     }
   };
 
+  const fetchRecords = async () => {
+    try {
+      setLoading(true);
+      // Use cached values first
+      if (userName && cachedHours) {
+        setName(userName);
+        setAllocatedHours(cachedHours);
+        setLoading(false);
+        return;
+      }
+
+      // Only fetch from Firestore if we don't have cached values
+      if (userEmail && isOnline) {
+        const RecordCollection = collection(db, "users");
+        const recordQuery = query(
+          RecordCollection,
+          where("email", "==", userEmail)
+        );
+        const querySnapshot = await getDocs(recordQuery);
+        const fetchedData: any = [];
+
+        querySnapshot.forEach((doc: any) => {
+          fetchedData.push({ id: doc.id, ...doc.data() });
+        });
+
+        if (fetchedData.length > 0) {
+          setName(fetchedData[0].name);
+          setAllocatedHours(fetchedData[0].allocated_hours);
+        }
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching records:", error);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchRecords();
-  }, []);
+    if (userEmail) {
+      isOnline && fetchRecords();
+    }
+  }, [userEmail]);
 
   useEffect(() => {
     onSnapshot(query(collection(db, "records")), (snapshot: any) => {
@@ -108,25 +153,6 @@ export default function Profile() {
       });
     });
   }, []);
-
-  const fetchRecords = async () => {
-    setLoading(true);
-    const RecordCollection = collection(db, "users");
-    const recordQuery = query(
-      RecordCollection,
-      where("email", "==", window.name)
-    );
-    const querySnapshot = await getDocs(recordQuery);
-    setLoading(false);
-    const fetchedData: any = [];
-
-    querySnapshot.forEach((doc: any) => {
-      fetchedData.push({ id: doc.id, ...doc.data() });
-    });
-    setName(fetchedData[0].name);
-    setRole(fetchedData[0].role);
-    setAllocatedHours(fetchedData[0].allocated_hours);
-  };
 
   const requestPermission = async () => {
     try {
@@ -147,6 +173,14 @@ export default function Profile() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      message.error(String(error));
+    }
+  };
+
   return (
     <div>
       <div
@@ -162,11 +196,11 @@ export default function Profile() {
       >
         <Back
           noblur
-          noback={role == "profile"}
-          title={role == "profile" ? "Arc" : "Profile"}
-          subtitle={role == "profile" ? "v2.3" : ""}
+          noback={userRole === "profile"}
+          title={userRole === "profile" ? "Arc" : "Profile"}
+          subtitle={userRole === "profile" ? "v2.3" : ""}
           icon={
-            role == "profile" ? (
+            userRole === "profile" ? (
               <img style={{ width: "2rem" }} src="arc-logo.png" />
             ) : (
               ""
@@ -193,7 +227,7 @@ export default function Profile() {
               </div>
               <IndexDropDown
                 isOnline={isOnline}
-                allocated_hours={allocated_hours}
+                allocated_hours={allocatedHours}
                 name={name ? name : ""}
                 onLogout={() => setLogoutPrompt(true)}
               />
@@ -203,22 +237,22 @@ export default function Profile() {
       </div>
 
       {/* {permissionGranted && (
-        <div
-          style={{
-            position: "absolute",
-            background: "",
-            top: 0,
-            display: "flex",
-            color: "white",
-            justifyContent: "center",
-            marginTop: "9rem",
-            gap: "0.5rem",
-            width: "100%",
-          }}
-        >
-          <input style={{ width: "75%" }} type="text" value={fcmtoken} />
-        </div>
-      )} */}
+      <div
+        style={{
+          position: "absolute",
+          background: "",
+          top: 0,
+          display: "flex",
+          color: "white",
+          justifyContent: "center",
+          marginTop: "9rem",
+          gap: "0.5rem",
+          width: "100%",
+        }}
+      >
+        <input style={{ width: "75%" }} type="text" value={fcmtoken} />
+      </div>
+    )} */}
 
       <motion.div
         style={{
@@ -247,7 +281,7 @@ export default function Profile() {
           <motion.div>
             {path == "work" ? (
               <motion.div>
-                <Work isOnline={isOnline} allocated_hours={allocated_hours} />
+                <Work isOnline={isOnline} allocated_hours={allocatedHours} />
               </motion.div>
             ) : (
               path == "records" && <Records />
@@ -306,13 +340,7 @@ export default function Profile() {
           setLogoutPrompt(false);
           window.location.reload();
         }}
-        onOk={() => {
-          signOut(auth);
-          usenavigate("/");
-          window.name = "";
-          console.log(window.name);
-          window.location.reload();
-        }}
+        onOk={handleLogout}
       />
 
       <InputDialog

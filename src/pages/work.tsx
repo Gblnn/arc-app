@@ -16,6 +16,7 @@ import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import { useAuth } from "@/contexts/AuthContext";
 
 // interface Props {
 //   status?: boolean;
@@ -68,6 +69,8 @@ export default function Work(props: Props) {
   const [pressProgress, setPressProgress] = useState(0);
   const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
 
+  const { userEmail, userName } = useAuth();
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
@@ -112,25 +115,23 @@ export default function Work(props: Props) {
   const verifyAccess = async () => {
     try {
       setUpdating(true);
-      const RecordCollection = collection(db, "users");
-      const recordQuery = query(
-        RecordCollection,
-        where("email", "==", window.name)
-      );
-      const querySnapshot = await getDocs(recordQuery);
-      const fetchedData: any = [];
-      querySnapshot.forEach((doc: any) => {
-        fetchedData.push({ id: doc.id, ...doc.data() });
-      });
-      setUpdating(false);
-
-      // Add check for data existence
-      if (fetchedData.length > 0) {
-        setName(fetchedData[0].name);
-        console.log(fetchedData[0].name);
-      } else {
-        console.log("No user found for email:", window.name);
+      if (userEmail) {
+        if (userName) {
+          setName(userName);
+        } else if (props.isOnline) {
+          // Try to fetch from Firestore if online and no cached name
+          const userQuery = query(
+            collection(db, "users"),
+            where("email", "==", userEmail)
+          );
+          const querySnapshot = await getDocs(userQuery);
+          const userData = querySnapshot.docs[0]?.data();
+          if (userData?.name) {
+            setName(userData.name);
+          }
+        }
       }
+      setUpdating(false);
     } catch (error) {
       console.error("Error in verifyAccess:", error);
       setUpdating(false);
@@ -144,7 +145,7 @@ export default function Work(props: Props) {
       const recordQuery = query(
         RecordCollection,
         where("status", "==", true),
-        where("email", "==", window.name)
+        where("email", "==", userEmail)
       );
       const querySnapshot = await getDocs(recordQuery);
       const fetchedData: any = [];
@@ -152,21 +153,19 @@ export default function Work(props: Props) {
         fetchedData.push({ id: doc.id, ...doc.data() });
       });
       setUpdating(false);
-      setStatus(fetchedData[0].status);
-      setSessionId(fetchedData[0].id);
-      setSessionStart(fetchedData[0].start);
+      if (fetchedData.length > 0) {
+        setStatus(fetchedData[0].status);
+        setSessionId(fetchedData[0].id);
+        setSessionStart(fetchedData[0].start);
+      }
     } catch (error) {
       setUpdating(false);
     }
   };
 
   useEffect(() => {
-    if (!window.name) {
-      console.log("No email found in window.name");
-      return;
-    }
-    verifyAccess();
-    verifyStatus();
+    props.isOnline && verifyAccess();
+    props.isOnline && verifyStatus();
   }, []);
 
   const StartWork = async () => {
@@ -187,7 +186,7 @@ export default function Work(props: Props) {
         start: new Date(),
         end: "",
         status: true,
-        email: window.name,
+        email: userEmail,
         total: "",
         overtime: "",
         allocated_hours: Number(props.allocated_hours),
@@ -261,7 +260,7 @@ export default function Work(props: Props) {
     }, 10);
 
     setPressTimer(timer);
-  }, [props.isOnline, updating, status]);
+  }, [props.isOnline, updating, status, userEmail]);
 
   const handlePressEnd = useCallback(() => {
     if (pressTimer) {
@@ -447,22 +446,24 @@ export default function Work(props: Props) {
               ) : (
                 "Start"
               )}
-              <p
-                style={{
-                  marginTop: "5rem",
-                  position: "absolute",
-                  fontSize: "0.75rem",
-                  opacity: "0.75",
-                }}
-              >
-                {pressProgress > 0 && !status
-                  ? "Press and Hold"
-                  : pressProgress > 0 && status
-                  ? "Press and Hold"
-                  : status
-                  ? "End Session"
-                  : "Start Session"}
-              </p>
+              {!updating && (
+                <p
+                  style={{
+                    marginTop: "5rem",
+                    position: "absolute",
+                    fontSize: "0.75rem",
+                    opacity: "0.75",
+                  }}
+                >
+                  {pressProgress > 0 && !status
+                    ? "Press and Hold"
+                    : pressProgress > 0 && status
+                    ? "Press and Hold"
+                    : status
+                    ? "End Session"
+                    : "Start Session"}
+                </p>
+              )}
             </button>
           </div>
         </div>

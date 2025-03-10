@@ -29,12 +29,17 @@ export default function ProtectedRoute({
     );
   }
 
-  if (!currentUser) {
+  if (!currentUser || !userRole) {
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userEmail");
+    window.name = "";
+
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(userRole || "")) {
-    return <Navigate to="/unauthorized" replace />;
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

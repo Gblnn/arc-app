@@ -3,19 +3,19 @@ import DefaultDialog from "@/components/default-dialog";
 import Directive from "@/components/directive";
 import IndexDropDown from "@/components/index-dropdown";
 import InputDialog from "@/components/input-dialog";
-import { auth, db } from "@/firebase";
+import { useAuth } from "@/contexts/AuthContext";
+import { db } from "@/firebase";
 import { LoadingOutlined } from "@ant-design/icons";
 import { message } from "antd";
-import { signOut } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { motion } from "framer-motion";
 import {
   Bug,
   FileClock,
+  FileText,
   KeyRound,
   LoaderCircle,
   Mail,
-  FileText,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +32,8 @@ export default function Index() {
   const [access, setAccess] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [name, setName] = useState("");
+
+  const { logout } = useAuth();
 
   useEffect(() => {
     verifyAccess();
@@ -111,6 +113,15 @@ export default function Index() {
 
   const Authenticate = () => {
     access ? usenavigate("/index") : usenavigate("/");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      usenavigate("/");
+    } catch (error) {
+      message.error(String(error));
+    }
   };
 
   return (
@@ -392,13 +403,7 @@ export default function Index() {
             setLogoutPrompt(false);
             window.location.reload();
           }}
-          onOk={() => {
-            signOut(auth);
-            usenavigate("/");
-            window.name = "";
-            console.log(window.name);
-            window.location.reload();
-          }}
+          onOk={handleLogout}
         />
       </div>
       {/* <ReleaseNote /> */}
