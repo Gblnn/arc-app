@@ -1,6 +1,5 @@
-import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LoaderCircle } from "lucide-react";
+import { Navigate, useLocation } from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,35 +10,15 @@ export default function ProtectedRoute({
   children,
   allowedRoles,
 }: ProtectedRouteProps) {
-  const { currentUser, userRole, isLoading } = useAuth();
+  const { currentUser, userRole } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <LoaderCircle className="animate-spin" />
-      </div>
-    );
+  if (!currentUser) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!currentUser || !userRole) {
-    localStorage.removeItem("authUser");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userEmail");
-    window.name = "";
-
-    return <Navigate to="/" state={{ from: location }} replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/" replace />;
+  if (allowedRoles && !allowedRoles.includes(userRole || "")) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;
