@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import { LoaderCircle, LogOut, RefreshCcw, User, UserX } from "lucide-react";
+import { LoaderCircle, LogOut, RefreshCcw, UserX } from "lucide-react";
 import LazyLoader from "./lazy-loader";
 import {
   DropdownMenu,
@@ -133,12 +133,12 @@ export default function IndexDropDown(props: Props) {
               <span style={{ width: "100%" }}>Force Reload</span>
             </DropdownMenuItem>
 
-            {props.onProfile && (
+            {/* {props.onProfile && (
               <DropdownMenuItem onClick={props.onProfile}>
                 <User className="mr-2" color="dodgerblue" />
                 <span style={{ width: "100%" }}>Profile</span>
               </DropdownMenuItem>
-            )}
+            )} */}
 
             <DropdownMenuItem
               onClick={props.onLogout}

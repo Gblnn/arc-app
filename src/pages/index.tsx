@@ -214,7 +214,7 @@ export default function Index() {
                 <IndexDropDown
                   name={name ? name : ""}
                   onLogout={() => setLogoutPrompt(true)}
-                  onProfile={() => usenavigate("/profile")}
+                  // onProfile={() => usenavigate("/profile")}
                 />
               </div>
             }
