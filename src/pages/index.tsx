@@ -29,16 +29,25 @@ export default function Index() {
   const usenavigate = useNavigate();
   const [issue, setIssue] = useState("");
   const [loading, setLoading] = useState(false);
-  const [access, setAccess] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [name, setName] = useState("");
 
-  const { logout } = useAuth();
+  const { logout, userRole, userName } = useAuth();
 
   useEffect(() => {
-    verifyAccess();
-    fetchUsers();
-  }, []);
+    if (userRole === "admin") {
+      setAdmin(true);
+    }
+
+    if (userName) {
+      setName(userName);
+    }
+
+    if (!userRole || !userName) {
+      verifyAccess();
+      fetchUsers();
+    }
+  }, [userRole, userName]);
 
   //   const serviceId = "service_fixajl8";
   //   const templateId = "template_0f3zy3e";
@@ -93,12 +102,6 @@ export default function Index() {
       });
       setLoading(false);
 
-      fetchedData[0].clearance == "Sohar Star United" ||
-      fetchedData[0].clearance == "Vale" ||
-      fetchedData[0].clearance == "All"
-        ? setAccess(true)
-        : setAccess(false);
-
       fetchedData[0].role == "admin" ? setAdmin(true) : setAdmin(false),
         // Navigation
         fetchedData[0].role == "profile"
@@ -109,10 +112,6 @@ export default function Index() {
     } catch (error) {
       message.error(String(error));
     }
-  };
-
-  const Authenticate = () => {
-    access ? usenavigate("/index") : usenavigate("/");
   };
 
   const handleLogout = async () => {
@@ -239,7 +238,6 @@ export default function Index() {
             <div style={{ display: "flex", flexFlow: "column", gap: "0.5rem" }}>
               <Directive
                 to={"/timesheets"}
-                onClick={Authenticate}
                 title={"Time Sheet"}
                 icon={<FileClock color="crimson" width={"1.25rem"} />}
               />
