@@ -1,7 +1,6 @@
-import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function Unauthorized() {
   const navigate = useNavigate();
