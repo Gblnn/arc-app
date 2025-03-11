@@ -446,7 +446,7 @@ export default function Work(props: Props) {
               ) : (
                 "Start"
               )}
-              {!updating && (
+              {!updating && props.isOnline && (
                 <p
                   style={{
                     marginTop: "5rem",
