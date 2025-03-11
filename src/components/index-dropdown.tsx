@@ -8,6 +8,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   trigger?: any;
@@ -26,6 +27,7 @@ interface Props {
 
 export default function IndexDropDown(props: Props) {
   const { userName, allocatedHours, userEmail } = useAuth();
+  const usenavigate = useNavigate();
 
   return (
     <>
@@ -59,7 +61,9 @@ export default function IndexDropDown(props: Props) {
         >
           <DropdownMenuGroup>
             <DropdownMenuItem
-              onClick={() => {}}
+              onClick={() => {
+                usenavigate("/profile");
+              }}
               style={{
                 width: "100%",
                 display: "",

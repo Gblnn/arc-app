@@ -9,6 +9,7 @@ import Profile from "./pages/profile";
 import Timesheets from "./pages/timesheets";
 import UserReset from "./pages/user-reset";
 import Users from "./pages/users";
+import DocumentGenerator from "./pages/document-generator";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/user-reset" element={<UserReset />} />
 
           {/* Protected admin routes */}
+
           <Route
             path="/index"
             element={
@@ -28,6 +30,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/document-generator"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <DocumentGenerator />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/admin"
             element={
@@ -45,21 +57,22 @@ function App() {
             }
           />
 
-          {/* Protected profile routes */}
+          {/* Shared protected routes */}
+
           <Route
             path="/profile/*"
             element={
-              <ProtectedRoute allowedRoles={["profile"]}>
+              <ProtectedRoute allowedRoles={["profile", "admin"]}>
                 <Profile />
               </ProtectedRoute>
             }
           />
 
-          {/* Shared protected routes */}
+          {/* Protected profile routes */}
           <Route
             path="/timesheets"
             element={
-              <ProtectedRoute allowedRoles={["admin", "profile"]}>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <Timesheets />
               </ProtectedRoute>
             }
