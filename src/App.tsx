@@ -10,6 +10,7 @@ import Timesheets from "./pages/timesheets";
 import UserReset from "./pages/user-reset";
 import Users from "./pages/users";
 import DocumentGenerator from "./pages/document-generator";
+import Unauthorized from "./pages/unauthorized";
 
 function App() {
   return (
@@ -79,6 +80,7 @@ function App() {
           />
 
           {/* Add an unauthorized route */}
+          <Route path="*" element={<Unauthorized />} />
         </Routes>
       </Router>
     </AuthProvider>
