@@ -23,9 +23,11 @@ import { motion } from "framer-motion";
 import {
   BriefcaseBusiness,
   Clock,
+  Eye,
+  EyeOff,
   FileDown,
-  ListX,
   LoaderCircle,
+  PenLine,
   Trash2,
 } from "lucide-react";
 import moment from "moment";
@@ -63,6 +65,28 @@ const processQueue = async () => {
   pendingAddresses.clear(); // Clear the set when done
 };
 
+// Add this helper function at the top level
+const roundHours = (rawHours: number) => {
+  // Get decimal part
+  const decimalPart = rawHours % 1;
+  const wholePart = Math.floor(rawHours);
+
+  // Round based on threshold
+  if (decimalPart < 0.3) {
+    return wholePart; // Round down
+  } else if (decimalPart >= 0.7) {
+    return wholePart + 1; // Round up
+  } else {
+    return wholePart + 0.5; // Round to half
+  }
+};
+
+// Add this helper at the top
+const formatTimeForInput = (timestamp: any) => {
+  if (!timestamp) return "";
+  return moment(timestamp.toDate()).format("HH:mm");
+};
+
 export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<any>([]);
@@ -78,6 +102,9 @@ export default function Records() {
   const [timeType, setTimeType] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [allowTimeEdit, setAllowTimeEdit] = useState(false);
+  const [hasShownEditMessage, setHasShownEditMessage] = useState(false);
 
   // const [selectedStart, setSelectedStart] = useState("");
   // const [selectedEnd, setSelectedEnd] = useState("");
@@ -116,15 +143,22 @@ export default function Records() {
 
   const exportDb = useCallback(async () => {
     const exportData = records.map((e: any) => {
-      const allocated_hours = e.allocated_hours;
       const start = e.start.toDate();
       const end = e.end ? e.end.toDate() : null;
-      const total = end
-        ? (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
-        : "-";
+
+      // Use the same rounding logic for export
+      const rawTotal = end
+        ? moment(end).diff(moment(start), "minutes") / 60
+        : 0;
+      const total = end ? roundHours(rawTotal) : "-";
+
+      const rawOvertime =
+        end && Number(total) > e.allocated_hours
+          ? Number(total) - e.allocated_hours
+          : 0;
       const overtime =
-        end && Number(total) > allocated_hours
-          ? Number(total) - allocated_hours
+        end && Number(total) > e.allocated_hours
+          ? roundHours(rawOvertime)
           : "-";
 
       return {
@@ -137,23 +171,27 @@ export default function Records() {
       };
     });
 
-    // Calculate total hours and overtime
-    const totalHours = exportData.reduce((sum: any, record: any) => {
-      return sum + (record.total !== "-" ? Number(record.total) : 0);
-    }, 0);
+    // Calculate rounded totals for the summary row
+    const totalHours = roundHours(
+      exportData.reduce((sum: number, record: any) => {
+        return sum + (record.total !== "-" ? Number(record.total) : 0);
+      }, 0)
+    );
 
-    const totalOT = exportData.reduce((sum: any, record: any) => {
-      return sum + (record.overtime !== "-" ? Number(record.overtime) : 0);
-    }, 0);
+    const totalOT = roundHours(
+      exportData.reduce((sum: number, record: any) => {
+        return sum + (record.overtime !== "-" ? Number(record.overtime) : 0);
+      }, 0)
+    );
 
-    // Append totals to the export data
+    // Append totals row with rounded values
     exportData.push({
       name: "Total",
       date: "",
       start: "",
       end: "",
-      total: totalHours.toFixed(2),
-      overtime: totalOT.toFixed(2),
+      total: totalHours,
+      overtime: totalOT,
     });
 
     const worksheet = XLSX.utils.json_to_sheet(exportData, {
@@ -245,59 +283,72 @@ export default function Records() {
     }
   };
 
-  const updateTime = useCallback(async () => {
+  const updateTime = async () => {
     try {
-      setLoading(true);
-      const timestamp = Timestamp.fromDate(moment(time, "hh:mm").toDate());
-      const recordRef = doc(db, "records", selectedID);
-
-      const updates: any = {
-        [timeType]: timestamp,
-      };
-
-      const recordSnap = await getDoc(recordRef);
-      if (recordSnap.exists()) {
-        const record = recordSnap.data();
-        const start =
-          timeType === "start" ? timestamp.toDate() : record.start?.toDate();
-        const end =
-          timeType === "end" ? timestamp.toDate() : record.end?.toDate();
-
-        if (start && end) {
-          const total = Number(
-            (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
-          );
-          const overtime = total > 10 ? Number((total - 10).toFixed(2)) : null;
-
-          if (overtime !== null) {
-            updates.overtime = overtime;
-          }
-          updates.total = total;
-        }
+      if (!time) {
+        message.error("Please select a valid time");
+        return;
       }
 
-      await updateDoc(recordRef, updates);
-      setLoading(false);
+      setLoading(true);
+      const recordRef = doc(db, "records", selectedID);
+      const record = (await getDoc(recordRef)).data();
+
+      if (!record) {
+        throw new Error("Record not found");
+      }
+
+      const [hours, minutes] = time.split(":");
+      const currentDate = moment(
+        timeType === "start" ? record.start.toDate() : record.end?.toDate()
+      );
+
+      currentDate.set({
+        hours: parseInt(hours),
+        minutes: parseInt(minutes),
+      });
+
+      // Validate time range
+      if (timeType === "end" && currentDate.isBefore(record.start.toDate())) {
+        throw new Error("End time cannot be before start time");
+      }
+
+      if (
+        timeType === "start" &&
+        record.end &&
+        currentDate.isAfter(record.end.toDate())
+      ) {
+        throw new Error("Start time cannot be after end time");
+      }
+
+      await updateDoc(recordRef, {
+        [timeType]: Timestamp.fromDate(currentDate.toDate()),
+      });
+
+      message.success("Time updated successfully");
       setEditTimeDialog(false);
       setTime("");
-    } catch (error) {
+      setTimeType("");
+      setSelectedID("");
+    } catch (error: any) {
+      message.error(error.message || "Failed to update time");
+    } finally {
       setLoading(false);
-      message.error("Errors Logged");
     }
-  }, [selectedID, time, timeType]);
-
-  const Deallocate = async () => {
-    try {
-      timeType == "start"
-        ? message.info("Cannot Deallocate Start Time")
-        : timeType == "end"
-        ? await updateDoc(doc(db, "records", selectedID), {
-            end: "",
-            status: true,
-          })
-        : {};
-    } catch (error) {}
   };
+
+  // const Deallocate = async () => {
+  //   try {
+  //     timeType == "start"
+  //       ? message.info("Cannot Deallocate Start Time")
+  //       : timeType == "end"
+  //       ? await updateDoc(doc(db, "records", selectedID), {
+  //           end: "",
+  //           status: true,
+  //         })
+  //       : {};
+  //   } catch (error) {}
+  // };
 
   // const months = Array.from({ length: 12 }, (i: any) => {
   //   return new Date(0, i).toLocaleString("en-US", { month: "long" });
@@ -308,14 +359,22 @@ export default function Records() {
     return records.map((e: any) => {
       const start = e.start.toDate();
       const end = e.end ? e.end.toDate() : null;
-      const total = end
-        ? (moment(end).diff(moment(start), "minutes") / 60).toFixed(2)
-        : "-";
-      const allocatedHours = e.allocated_hours;
 
-      const overtime =
-        end && Number(total) > Number(allocatedHours)
-          ? (Number(total) - Number(allocatedHours)).toFixed(2)
+      // Calculate both original and rounded values
+      const rawTotal = end
+        ? moment(end).diff(moment(start), "minutes") / 60
+        : 0;
+      const originalTotal = end ? rawTotal.toFixed(2) : "-";
+      const roundedTotal = end ? roundHours(rawTotal) : "-";
+
+      const rawOvertime =
+        end && Number(roundedTotal) > Number(e.allocated_hours)
+          ? Number(roundedTotal) - e.allocated_hours
+          : 0;
+      const originalOvertime = end ? rawOvertime.toFixed(2) : "-";
+      const roundedOvertime =
+        end && Number(roundedTotal) > e.allocated_hours
+          ? roundHours(rawOvertime)
           : "-";
 
       return {
@@ -323,8 +382,10 @@ export default function Records() {
         formattedDate: moment(start).format("DD/MM/YY"),
         formattedStart: moment(start).format("hh:mm A"),
         formattedEnd: end ? moment(end).format("hh:mm A") : "-",
-        total,
-        formattedOvertime: overtime,
+        total: roundedTotal,
+        originalTotal,
+        formattedOvertime: roundedOvertime,
+        originalOvertime,
       };
     });
   }, [records]);
@@ -337,14 +398,34 @@ export default function Records() {
     setSelectedID(record.id);
   }, []);
 
-  const handleTimeClick = useCallback((record: any, type: "start" | "end") => {
-    setTimeType(type);
-    setEditTimeDialog(true);
-    if (type === "start") {
-      setTime(moment(record.start).format("HH:MM A"));
+  const handleTimeClick = useCallback(
+    (record: any, type: "start" | "end") => {
+      if (!allowTimeEdit) {
+        if (!hasShownEditMessage) {
+          message.info("Time editing is disabled");
+          setHasShownEditMessage(true);
+          setTimeout(() => setHasShownEditMessage(false), 3000);
+        }
+        return;
+      }
+      setTimeType(type);
+      setEditTimeDialog(true);
+      setSelectedID(record.id);
+      setTime(
+        type === "start"
+          ? formatTimeForInput(record.start)
+          : formatTimeForInput(record.end)
+      );
+    },
+    [allowTimeEdit, hasShownEditMessage]
+  );
+
+  // Reset message flag when edit mode is enabled
+  useEffect(() => {
+    if (allowTimeEdit) {
+      setHasShownEditMessage(false);
     }
-    setSelectedID(record.id);
-  }, []);
+  }, [allowTimeEdit]);
 
   // Update the dropdown onChange handlers to not clear other filters
   const handleUserChange = (value: string) => {
@@ -598,6 +679,11 @@ export default function Records() {
             onClick={() => onDeleteClick(record)}
           >
             {record.total}
+            {showOriginal && (
+              <small style={{ opacity: 0.5, marginLeft: "0.5rem" }}>
+                ({record.originalTotal})
+              </small>
+            )}
           </td>
           <td
             style={{
@@ -662,16 +748,22 @@ export default function Records() {
   }, []);
 
   // Calculate total hours and overtime
-  const totalHours = processedRecords.reduce((sum: any, record: any) => {
-    return sum + (record.total !== "-" ? Number(record.total) : 0);
-  }, 0);
+  const totalHours = roundHours(
+    processedRecords.reduce((sum: any, record: any) => {
+      return sum + (record.total !== "-" ? Number(record.total) : 0);
+    }, 0)
+  );
 
-  const totalOT = processedRecords.reduce((sum: any, record: any) => {
-    return (
-      sum +
-      (record.formattedOvertime !== "-" ? Number(record.formattedOvertime) : 0)
-    );
-  }, 0);
+  const totalOT = roundHours(
+    processedRecords.reduce((sum: any, record: any) => {
+      return (
+        sum +
+        (record.formattedOvertime !== "-"
+          ? Number(record.formattedOvertime)
+          : 0)
+      );
+    }, 0)
+  );
 
   return (
     <div style={{ height: "100svh", display: "flex", flexDirection: "column" }}>
@@ -728,29 +820,97 @@ export default function Records() {
           padding: "1rem",
           background: "rgba(40, 40, 50, 0.5)",
           display: "flex",
+          flexDirection: "column",
           gap: "1rem",
           zIndex: 30,
-          justifyContent: "stretch",
           borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
         }}
       >
-        <div style={{ flex: 1 }}>
-          <label className="text-xs text-gray-400 mb-1 block">Employee</label>
-          <CustomDropdown
-            value={selectedUser}
-            onChange={handleUserChange}
-            options={userOptions}
-            placeholder="Select Name"
-          />
+        {/* Filters row - Modified for mobile */}
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div style={{ flex: 1 }}>
+            <label className="text-xs text-gray-400 mb-1 block">Employee</label>
+            <CustomDropdown
+              value={selectedUser}
+              onChange={handleUserChange}
+              options={userOptions}
+              placeholder="Select Name"
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label className="text-xs text-gray-400 mb-1 block">Period</label>
+            <CustomDropdown
+              value={selectedMonth}
+              onChange={handleMonthChange}
+              options={monthOptions}
+              placeholder="Select Month"
+            />
+          </div>
         </div>
-        <div style={{ flex: 1 }}>
-          <label className="text-xs text-gray-400 mb-1 block">Period</label>
-          <CustomDropdown
-            value={selectedMonth}
-            onChange={handleMonthChange}
-            options={monthOptions}
-            placeholder="Select Month"
-          />
+
+        {/* Toggle button row */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "0.75rem",
+            fontSize: "0.8rem",
+          }}
+        >
+          <div
+            style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
+          >
+            <button
+              onClick={() => setAllowTimeEdit(!allowTimeEdit)}
+              style={{
+                color: allowTimeEdit ? "crimson" : "gray",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.8rem",
+                height: "2.5rem",
+                background: allowTimeEdit
+                  ? "rgba(220, 20, 60, 0.15)"
+                  : "rgba(100, 100, 100, 0.15)",
+                borderRadius: "0.375rem",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <PenLine width={"1.1rem"} />
+            </button>
+            <p style={{ fontWeight: "600" }}>Overwrite</p>
+          </div>
+
+          <div
+            style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
+          >
+            <p style={{ fontWeight: "600" }}>Values</p>
+            <button
+              onClick={() => setShowOriginal(!showOriginal)}
+              style={{
+                color: "dodgerblue",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.8rem",
+                height: "2.5rem",
+                background: showOriginal
+                  ? "rgba(100, 100, 100, 0.3)"
+                  : "rgba(100, 100, 100, 0.15)",
+                borderRadius: "0.375rem",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              {showOriginal ? (
+                <EyeOff width={"1.1rem"} />
+              ) : (
+                <Eye width={"1.1rem"} />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -798,7 +958,12 @@ export default function Records() {
                   <th style={{ padding: "0.75rem" }}>Date</th>
                   <th style={{ padding: "0.75rem" }}>Start</th>
                   <th style={{ padding: "0.75rem" }}>End</th>
-                  <th style={{ padding: "0.75rem" }}>Total</th>
+                  <th style={{ padding: "0.75rem" }}>
+                    Total
+                    {showOriginal && (
+                      <small style={{ opacity: 0.5 }}>{"  (Original)"}</small>
+                    )}
+                  </th>
                   <th style={{ padding: "0.75rem" }}>OT</th>
                   <th style={{ padding: "0.75rem" }}>Start Location</th>
                   <th style={{ padding: "0.75rem" }}>End Location</th>
@@ -894,34 +1059,28 @@ export default function Records() {
       />
 
       <DefaultDialog
-        title={"Edit Time"}
+        title={`Edit ${timeType === "start" ? "Start" : "End"} Time`}
         titleIcon={<Clock color="crimson" />}
         OkButtonText="Update"
         open={editTimeDialog}
-        onCancel={() => setEditTimeDialog(false)}
+        onCancel={() => {
+          setEditTimeDialog(false);
+          setTime("");
+          setTimeType("");
+          setSelectedID("");
+        }}
         onOk={updateTime}
         updating={loading}
-        title_extra={
-          <button
-            onClick={Deallocate}
-            style={{
-              fontSize: "0.8rem",
-              paddingLeft: "1rem",
-              paddingRight: "1rem",
-            }}
-          >
-            <ListX width={"1rem"} color="crimson" />
-            Deallocate
-          </button>
-        }
         extra={
-          <div style={{ width: "100%", marginTop: "1rem", border: "" }}>
+          <div style={{ width: "100%", marginTop: "1rem" }}>
+            <label className="text-xs text-gray-400 mb-1 block">
+              Select {timeType === "start" ? "Start" : "End"} Time
+            </label>
             <input
               style={{ width: "100%", height: "2.5rem" }}
               type="time"
               value={time}
-              onChange={(e: any) => setTime(e.target.value)}
-              placeholder="Select Time"
+              onChange={(e) => setTime(e.target.value)}
             />
           </div>
         }
