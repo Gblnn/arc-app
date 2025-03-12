@@ -101,50 +101,68 @@ export default function CustomDropdown({
             style={{
               position: "absolute",
               top: "calc(100% + 0.5rem)",
-
               left: 0,
               right: 0,
               background: "rgb(18 18 18)",
               border: "1px solid rgba(100 100 100/ 15%)",
               borderRadius: "0.375rem",
               zIndex: 50,
-              overflow: "hidden",
+              maxHeight: "15rem",
+              overflowY: "auto",
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(100 100 100/ 30%) transparent",
             }}
           >
-            {options.map((option) => (
-              <motion.button
-                key={option.value}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.15,
-                  delay: 0.025,
-                  ease: "easeOut",
-                }}
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem 1rem",
-                  textAlign: "left",
-                  background:
-                    value === option.value
-                      ? "rgba(100 100 100/ 5%)"
-                      : "transparent",
-                  border: "none",
-                  borderBottom: "1px solid rgba(100 100 100/ 15%)",
-                  cursor: "pointer",
-                  fontSize: "0.875rem",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {option.label}
-              </motion.button>
-            ))}
+            <style>
+              {`
+                .dropdown-menu::-webkit-scrollbar {
+                  width: 6px;
+                }
+                .dropdown-menu::-webkit-scrollbar-track {
+                  background: transparent;
+                }
+                .dropdown-menu::-webkit-scrollbar-thumb {
+                  background-color: rgba(100 100 100/ 30%);
+                  border-radius: 3px;
+                }
+              `}
+            </style>
+            <div className="dropdown-menu">
+              {options.map((option) => (
+                <motion.button
+                  key={option.value}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.15,
+                    delay: 0.025,
+                    ease: "easeOut",
+                  }}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem 1rem",
+                    textAlign: "left",
+                    background:
+                      value === option.value
+                        ? "rgba(100 100 100/ 5%)"
+                        : "transparent",
+                    border: "none",
+                    borderBottom: "1px solid rgba(100 100 100/ 15%)",
+                    cursor: "pointer",
+                    fontSize: "0.875rem",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {option.label}
+                </motion.button>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

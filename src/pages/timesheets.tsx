@@ -24,7 +24,6 @@ import {
   BriefcaseBusiness,
   Clock,
   Eye,
-  EyeOff,
   FileDown,
   LoaderCircle,
   PenLine,
@@ -890,7 +889,7 @@ export default function Records() {
             <button
               onClick={() => setShowOriginal(!showOriginal)}
               style={{
-                color: "dodgerblue",
+                color: "",
                 padding: "0.5rem 0.75rem",
                 fontSize: "0.8rem",
                 height: "2.5rem",
@@ -905,7 +904,7 @@ export default function Records() {
               }}
             >
               {showOriginal ? (
-                <EyeOff width={"1.1rem"} />
+                <Eye color="dodgerblue" width={"1.1rem"} />
               ) : (
                 <Eye width={"1.1rem"} />
               )}
