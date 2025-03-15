@@ -1026,7 +1026,7 @@ export default function Records() {
                     colSpan={0}
                     style={{ textAlign: "left", fontWeight: "bold" }}
                   >
-                    Total Hours
+                    Total
                   </td>
                   <td></td>
                   <td></td>
