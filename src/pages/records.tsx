@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase";
 import {
   Timestamp,
@@ -8,7 +9,7 @@ import {
   where,
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { LoaderCircle } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, LoaderCircle } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
@@ -22,6 +23,7 @@ interface Record {
 export default function Records() {
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<Record[]>([]);
+  const { allocatedHours } = useAuth();
 
   useEffect(() => {
     fetchRecords();
@@ -117,21 +119,40 @@ export default function Records() {
     >
       {!loading ? (
         <motion.div>
-          <p
+          <div
             style={{
-              fontWeight: "500",
-              fontSize: "1.5rem",
+              padding: "1rem 1.25rem",
+
               display: "flex",
+              justifyContent: "space-between",
               alignItems: "center",
-              gap: "0.5rem",
-              justifyContent: "center",
+              background: "rgba(100 100 100/ 10%)",
             }}
           >
-            {moment().format("MMMM")}{" "}
-            <b style={{ color: "crimson", fontWeight: "800" }}>
-              {moment().format("YYYY")}
-            </b>
-          </p>
+            <h2
+              style={{
+                fontSize: "1.25rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <CalendarDays color="crimson" />
+              {moment().format("MMMM YYYY")}
+            </h2>
+            <div
+              style={{
+                fontSize: "0.875rem",
+                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <BriefcaseBusiness size={16} />
+              {allocatedHours || "-"} hrs
+            </div>
+          </div>
 
           <br />
           <table style={{ width: "100%", fontSize: "0.9rem" }}>
