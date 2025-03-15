@@ -21,11 +21,12 @@ import {
 } from "firebase/firestore";
 import { motion } from "framer-motion";
 import {
+  Binary,
   BriefcaseBusiness,
   Clock,
-  Eye,
   FileDown,
   LoaderCircle,
+  MapPin,
   PenLine,
   Trash2,
 } from "lucide-react";
@@ -104,6 +105,7 @@ export default function Records() {
   const [showOriginal, setShowOriginal] = useState(false);
   const [allowTimeEdit, setAllowTimeEdit] = useState(false);
   const [hasShownEditMessage, setHasShownEditMessage] = useState(false);
+  const [showLocations, setShowLocations] = useState(false);
 
   // const [selectedStart, setSelectedStart] = useState("");
   // const [selectedEnd, setSelectedEnd] = useState("");
@@ -623,7 +625,13 @@ export default function Records() {
 
   // Update the TableRow component to pass recordId to LocationDisplay
   const TableRow = memo(
-    ({ record, onDeleteClick, onTimeClick, isAlternate }: any) => {
+    ({
+      record,
+      onDeleteClick,
+      onTimeClick,
+      isAlternate,
+      showLocations,
+    }: any) => {
       return (
         <tr
           style={{
@@ -692,36 +700,40 @@ export default function Records() {
           >
             {record.formattedOvertime}
           </td>
-          <td
-            style={{ padding: "0.75rem" }}
-            title={
-              record.startLocation
-                ? `Accuracy: ${record.startLocation.accuracy}m`
-                : ""
-            }
-            onClick={(e) => e.stopPropagation()}
-          >
-            <LocationDisplay
-              location={record.startLocation}
-              recordId={record.id}
-              locationType="startLocation"
-            />
-          </td>
-          <td
-            style={{ padding: "0.75rem" }}
-            title={
-              record.endLocation
-                ? `Accuracy: ${record.endLocation.accuracy}m`
-                : ""
-            }
-            onClick={(e) => e.stopPropagation()}
-          >
-            <LocationDisplay
-              location={record.endLocation}
-              recordId={record.id}
-              locationType="endLocation"
-            />
-          </td>
+          {showLocations && (
+            <>
+              <td
+                style={{ padding: "0.75rem" }}
+                title={
+                  record.startLocation
+                    ? `Accuracy: ${record.startLocation.accuracy}m`
+                    : ""
+                }
+                onClick={(e) => e.stopPropagation()}
+              >
+                <LocationDisplay
+                  location={record.startLocation}
+                  recordId={record.id}
+                  locationType="startLocation"
+                />
+              </td>
+              <td
+                style={{ padding: "0.75rem" }}
+                title={
+                  record.endLocation
+                    ? `Accuracy: ${record.endLocation.accuracy}m`
+                    : ""
+                }
+                onClick={(e) => e.stopPropagation()}
+              >
+                <LocationDisplay
+                  location={record.endLocation}
+                  recordId={record.id}
+                  locationType="endLocation"
+                />
+              </td>
+            </>
+          )}
         </tr>
       );
     }
@@ -885,7 +897,6 @@ export default function Records() {
           <div
             style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
           >
-            <p style={{ fontWeight: "600" }}>Values</p>
             <button
               onClick={() => setShowOriginal(!showOriginal)}
               style={{
@@ -904,10 +915,32 @@ export default function Records() {
               }}
             >
               {showOriginal ? (
-                <Eye color="dodgerblue" width={"1.1rem"} />
+                <Binary color="dodgerblue" width={"1.1rem"} />
               ) : (
-                <Eye width={"1.1rem"} />
+                <Binary width={"1.1rem"} />
               )}
+            </button>
+            <button
+              onClick={() => setShowLocations(!showLocations)}
+              style={{
+                color: "",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.8rem",
+                height: "2.5rem",
+                background: showLocations
+                  ? "rgba(100, 100, 100, 0.3)"
+                  : "rgba(100, 100, 100, 0.15)",
+                borderRadius: "0.375rem",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <MapPin
+                color={showLocations ? "dodgerblue" : "currentColor"}
+                width={"1.1rem"}
+              />
             </button>
           </div>
         </div>
@@ -964,8 +997,12 @@ export default function Records() {
                     )}
                   </th>
                   <th style={{ padding: "0.75rem" }}>OT</th>
-                  <th style={{ padding: "0.75rem" }}>Start Location</th>
-                  <th style={{ padding: "0.75rem" }}>End Location</th>
+                  {showLocations && (
+                    <>
+                      <th style={{ padding: "0.75rem" }}>Start Location</th>
+                      <th style={{ padding: "0.75rem" }}>End Location</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody
@@ -981,6 +1018,7 @@ export default function Records() {
                     onDeleteClick={handleDeleteClick}
                     onTimeClick={handleTimeClick}
                     isAlternate={index % 2 === 1}
+                    showLocations={showLocations}
                   />
                 ))}
                 <tr style={{ background: "rgba(100 100 100/ 50%)" }}>
@@ -997,8 +1035,12 @@ export default function Records() {
                     {totalHours.toFixed(2)}
                   </td>
                   <td style={{ fontWeight: "bold" }}>{totalOT.toFixed(2)}</td>
-                  <td></td>
-                  <td></td>
+                  {showLocations && (
+                    <>
+                      <td></td>
+                      <td></td>
+                    </>
+                  )}
                 </tr>
               </tbody>
             </table>

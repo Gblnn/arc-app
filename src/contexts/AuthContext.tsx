@@ -22,24 +22,54 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<any>(() => {
-    const cached = localStorage.getItem("authUser");
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem("authUser");
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.error("Error parsing authUser:", error);
+      localStorage.removeItem("authUser"); // Clear invalid data
+      return null;
+    }
   });
   const [userRole, setUserRole] = useState<string | null>(() => {
-    const cached = localStorage.getItem("userRole");
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem("userRole");
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.error("Error parsing userRole:", error);
+      localStorage.removeItem("userRole");
+      return null;
+    }
   });
   const [userEmail, setUserEmail] = useState<string | null>(() => {
-    const cached = localStorage.getItem("userEmail");
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem("userEmail");
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.error("Error parsing userEmail:", error);
+      localStorage.removeItem("userEmail");
+      return null;
+    }
   });
   const [userName, setUserName] = useState<string | null>(() => {
-    const cached = localStorage.getItem("userName");
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem("userName");
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.error("Error parsing userName:", error);
+      localStorage.removeItem("userName");
+      return null;
+    }
   });
   const [allocatedHours, setAllocatedHours] = useState<number | null>(() => {
-    const cached = localStorage.getItem("allocatedHours");
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem("allocatedHours");
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.error("Error parsing allocatedHours:", error);
+      localStorage.removeItem("allocatedHours");
+      return null;
+    }
   });
 
   const fetchUserRole = async (email: string) => {
