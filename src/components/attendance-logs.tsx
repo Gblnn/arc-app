@@ -9,10 +9,7 @@ interface AttendanceLogsProps {
   projectCode: string;
 }
 
-export default function AttendanceLogs({
-  userEmail,
-  projectCode,
-}: AttendanceLogsProps) {
+export default function AttendanceLogs({ userEmail }: AttendanceLogsProps) {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
