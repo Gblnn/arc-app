@@ -796,6 +796,11 @@ export default function Records() {
             <div
               style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
             >
+              <RefreshButton
+                fetchingData={loading}
+                onClick={fetchRecords}
+                refreshCompleted={refreshCompleted}
+              />
               <button
                 onClick={exportDb}
                 style={{
@@ -815,11 +820,6 @@ export default function Records() {
                 <FileDown color="lightgreen" width={"1.25rem"} />
                 <span className="hidden sm:inline">Export</span>
               </button>
-              <RefreshButton
-                fetchingData={loading}
-                onClick={fetchRecords}
-                refreshCompleted={refreshCompleted}
-              />
             </div>
           }
         />

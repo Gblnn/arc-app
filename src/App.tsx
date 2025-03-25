@@ -11,6 +11,7 @@ import UserReset from "./pages/user-reset";
 import Users from "./pages/users";
 import DocumentGenerator from "./pages/document-generator";
 import Unauthorized from "./pages/unauthorized";
+import Supervisor from "./pages/supervisor";
 
 function App() {
   return (
@@ -81,6 +82,16 @@ function App() {
 
           {/* Add an unauthorized route */}
           <Route path="*" element={<Unauthorized />} />
+
+          {/* Supervisor route */}
+          <Route
+            path="/supervisor"
+            element={
+              <ProtectedRoute allowedRoles={["supervisor"]}>
+                <Supervisor />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>

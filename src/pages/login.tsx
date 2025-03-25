@@ -22,6 +22,8 @@ export default function Login() {
       navigate("/index");
     } else if (role === '"profile"') {
       navigate("/profile");
+    } else if (role === '"supervisor"') {
+      navigate("/supervisor");
     }
   }, [navigate]);
 
@@ -70,6 +72,8 @@ export default function Login() {
           navigate("/index");
         } else if (userData.role === "profile") {
           navigate("/profile");
+        } else if (userData.role === "supervisor") {
+          navigate("/supervisor");
         }
       } else {
         throw new Error("No role found for user");

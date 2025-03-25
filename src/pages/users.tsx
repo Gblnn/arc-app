@@ -51,6 +51,8 @@ export default function Users() {
 
   const [totalHours, setTotalHours] = useState("");
 
+  const [projectCode, setProjectCode] = useState("");
+
   const auth = getAuth();
 
   const createUser = async () => {
@@ -112,6 +114,7 @@ export default function Users() {
       await updateDoc(doc(db, "users", docid), {
         role: role,
         allocated_hours: totalHours,
+        ...(role === "supervisor" ? { projectCode: projectCode } : {}),
       });
       setLoading(false);
       setUserDialog(false);
@@ -189,6 +192,7 @@ export default function Users() {
                   setDisplayEmail(user.email);
                   setRole(user.role);
                   setTotalHours(user.allocated_hours || "9");
+                  setProjectCode(user.projectCode || "");
                 }}
                 key={user.id}
                 icon={
@@ -269,11 +273,34 @@ export default function Users() {
                 onChange={setRole}
                 options={[
                   { value: "admin", label: "Admin" },
+                  { value: "supervisor", label: "Supervisor" },
                   { value: "profile", label: "Profile" },
                 ]}
                 placeholder="Select Role"
               />
             </div>
+
+            {role === "supervisor" && (
+              <div style={{ marginTop: "1rem" }}>
+                <label className="text-xs text-gray-400 mb-1 block">
+                  Project Code
+                </label>
+                <input
+                  type="text"
+                  value={projectCode}
+                  onChange={(e) => setProjectCode(e.target.value)}
+                  placeholder="Enter Project Code"
+                  style={{
+                    width: "100%",
+                    height: "2.5rem",
+                    background: "rgba(100 100 100/ 20%)",
+                    border: "none",
+                    borderRadius: "0.375rem",
+                    padding: "0 0.75rem",
+                  }}
+                />
+              </div>
+            )}
 
             <div>
               <CustomDropdown

@@ -19,7 +19,7 @@ export default function RefreshButton(props: Props) {
           paddingRight: "1rem",
           width: "3rem",
           height: "2.75rem",
-          background: "rgba(100 100 100/ 30%)",
+          background: "none",
         }}
         onClick={props.onClick}
       >
@@ -46,7 +46,11 @@ export default function RefreshButton(props: Props) {
             exit={{ opacity: 0 }}
             style={{ border: "", display: "flex" }}
           >
-            <RefreshCcw width={"1rem"} height={"1rem"} color="dodgerblue" />
+            <RefreshCcw
+              width={"1.25rem"}
+              height={"1.25rem"}
+              color="dodgerblue"
+            />
           </motion.div>
         )}
       </button>
