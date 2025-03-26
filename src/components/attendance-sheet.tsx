@@ -183,6 +183,7 @@ export default function AttendanceSheet({
             display: "grid",
             gap: "1rem",
             gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+            paddingBottom: selectedWorkers.length > 0 ? "5rem" : "0",
           }}
         >
           {filteredWorkers.map((worker) => (
@@ -279,11 +280,51 @@ export default function AttendanceSheet({
           <div
             style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
           >
-            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-              You are about to mark attendance for {selectedWorkers.length}{" "}
-              worker
-              {selectedWorkers.length > 1 ? "s" : ""} for {hours} hours.
-            </p>
+            <div
+              style={{
+                padding: "1rem",
+                background: "rgba(100, 100, 100, 0.1)",
+                borderRadius: "0.5rem",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                  Workers Selected:
+                </span>
+                <span style={{ color: "white", fontWeight: "500" }}>
+                  {selectedWorkers.length}
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                  Hours:
+                </span>
+                <span style={{ color: "crimson", fontWeight: "500" }}>
+                  {hours}
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: "1rem",
+                background: "rgba(220, 20, 60, 0.1)",
+                border: "1px solid rgba(220, 20, 60, 0.3)",
+                borderRadius: "0.5rem",
+              }}
+            >
+              <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                ⚠️ This action will mark attendance for all selected workers.
+                Please verify the hours before proceeding.
+              </p>
+            </div>
           </div>
         }
       />

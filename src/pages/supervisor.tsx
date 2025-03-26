@@ -677,6 +677,8 @@ export default function Supervisor() {
                   display: "grid",
                   gap: "1rem",
                   gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                  paddingBottom:
+                    selectionMode && selectedWorkers.length > 0 ? "5rem" : "0",
                 }}
               >
                 {filteredWorkers.map((worker: any) => (
