@@ -232,7 +232,7 @@ export default function TransferRequests({
                         ) : selectionMode ? (
                           "Cancel"
                         ) : (
-                          "Select Workers"
+                          "Select"
                         )}
                       </button>
 
@@ -272,9 +272,9 @@ export default function TransferRequests({
                         {selectionMode &&
                           (selectedWorkers.length ===
                           availableWorkers.length ? (
-                            <CheckSquare size={16} color="#94a3b8" />
+                            <CheckSquare size={16} color="crimson" />
                           ) : (
-                            <Square size={16} color="#94a3b8" />
+                            <Square size={16} color="crimson" />
                           ))}
                       </button>
                     </div>
@@ -690,7 +690,7 @@ export default function TransferRequests({
                           border: selectedWorkers.includes(worker.id)
                             ? "1px solid rgba(220, 20, 60, 0.3)"
                             : "1px solid rgba(255, 255, 255, 0.1)",
-                          display: selectedWorkers.length > 0 ? "none" : "flex",
+                          display: selectionMode ? "none" : "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           gap: "0.5rem",
