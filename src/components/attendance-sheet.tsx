@@ -1,14 +1,15 @@
+import { message } from "antd";
 import {
   Check,
   CheckCircle,
-  Search,
   FileDown,
   LoaderCircle,
+  Search,
 } from "lucide-react";
-import { useState, useMemo } from "react";
-import DefaultDialog from "./default-dialog";
 import moment from "moment";
+import { useMemo, useState } from "react";
 import CustomDropdown from "./custom-dropdown";
+import DefaultDialog from "./default-dialog";
 
 interface AttendanceSheetProps {
   workers: any[];
@@ -17,15 +18,16 @@ interface AttendanceSheetProps {
   logs: any[];
   exporting?: boolean;
   onExport?: () => void;
+  onRefreshLogs: () => Promise<void>;
 }
 
 export default function AttendanceSheet({
   workers,
-
   onMarkAttendance,
   logs = [],
   exporting = false,
   onExport,
+  onRefreshLogs,
 }: AttendanceSheetProps) {
   const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
   const [hours, setHours] = useState<string>("9");
@@ -33,7 +35,7 @@ export default function AttendanceSheet({
   const [confirmDialog, setConfirmDialog] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [view, setView] = useState<"attendance" | "logs">("attendance");
-  const [logsDateRange] = useState<"today" | "week" | "month">("today");
+
   const [selectedWorker, setSelectedWorker] = useState("");
   const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM"));
 
@@ -48,6 +50,7 @@ export default function AttendanceSheet({
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
+      // Search query filter
       const matchesSearch =
         log.workerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         log.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -55,21 +58,21 @@ export default function AttendanceSheet({
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
 
+      // Worker filter
+      const matchesWorker = selectedWorker
+        ? log.workerId === selectedWorker
+        : true;
+
+      // Date filter
       const logDate = moment(log.date.toDate());
-      const now = moment();
+      const selectedMoment = moment(selectedDate);
+      const matchesDate =
+        logDate.isSame(selectedMoment, "month") &&
+        logDate.isSame(selectedMoment, "year");
 
-      let matchesDate = false;
-      if (logsDateRange === "today") {
-        matchesDate = logDate.isSame(now, "day");
-      } else if (logsDateRange === "week") {
-        matchesDate = logDate.isSame(now, "week");
-      } else if (logsDateRange === "month") {
-        matchesDate = logDate.isSame(now, "month");
-      }
-
-      return matchesSearch && matchesDate;
+      return matchesSearch && matchesWorker && matchesDate;
     });
-  }, [logs, searchQuery, logsDateRange]);
+  }, [logs, searchQuery, selectedWorker, selectedDate]);
 
   const toggleWorker = (workerId: string) => {
     setSelectedWorkers((prev) =>
@@ -102,8 +105,12 @@ export default function AttendanceSheet({
 
       setSelectedWorkers([]);
       setConfirmDialog(false);
+
+      // Refresh logs after successful post
+      await onRefreshLogs();
     } catch (error) {
       console.error("Error posting attendance:", error);
+      message.error("Failed to post attendance");
     } finally {
       setUpdating(false);
     }
@@ -451,67 +458,75 @@ export default function AttendanceSheet({
           </div>
         ) : (
           <div style={{ padding: "1rem" }}>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-            >
-              {filteredLogs.map((log) => (
-                <div
-                  key={log.id}
-                  style={{
-                    padding: "1rem",
-                    background: "rgba(30, 30, 40, 0.5)",
-                    borderRadius: "0.5rem",
-                    border: "1px solid rgba(255, 255, 255, 0.05)",
-                  }}
-                >
+            {filteredLogs.length > 0 ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
+                {filteredLogs.map((log) => (
                   <div
+                    key={log.id}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
+                      padding: "1rem",
+                      background: "rgba(30, 30, 40, 0.5)",
+                      borderRadius: "0.5rem",
+                      border: "1px solid rgba(255, 255, 255, 0.05)",
                     }}
                   >
-                    <div>
-                      <h3
-                        style={{ fontSize: "1.1rem", marginBottom: "0.25rem" }}
-                      >
-                        {log.workerName}
-                      </h3>
-                      <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-                        {log.status === "absent" ? (
-                          <>Absent • {log.projectCode || "No Project"}</>
-                        ) : (
-                          <>
-                            {log.status}
-                            {log.hours && ` • ${log.hours} hours`} •{" "}
-                            {log.projectCode || "No Project"}
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-                        {moment(log.date.toDate()).format("DD MMM YYYY")}
-                      </p>
-                      <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-                        {moment(log.date.toDate()).format("hh:mm A")}
-                      </p>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <h3
+                          style={{
+                            fontSize: "1.1rem",
+                            marginBottom: "0.25rem",
+                          }}
+                        >
+                          {log.workerName}
+                        </h3>
+                        <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                          {log.status === "absent" ? (
+                            <>Absent • {log.projectCode || "No Project"}</>
+                          ) : (
+                            <>
+                              {log.status}
+                              {log.hours && ` • ${log.hours} hours`} •{" "}
+                              {log.projectCode || "No Project"}
+                            </>
+                          )}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                          {moment(log.date.toDate()).format("DD MMM YYYY")}
+                        </p>
+                        <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                          {moment(log.date.toDate()).format("hh:mm A")}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {filteredLogs.length === 0 && (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "2rem",
-                    color: "#94a3b8",
-                  }}
-                >
-                  No logs found
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "2rem",
+                  color: "#94a3b8",
+                }}
+              >
+                No logs found for the selected filters
+              </div>
+            )}
           </div>
         )}
       </div>

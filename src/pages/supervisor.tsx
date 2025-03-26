@@ -31,7 +31,6 @@ import {
   Search,
   SquareArrowDownLeft,
   Upload,
-  Users,
   X,
 } from "lucide-react";
 import moment from "moment";
@@ -79,6 +78,8 @@ export default function Supervisor() {
   const [rejectDialog, setRejectDialog] = useState(false);
   const [rejectComment, setRejectComment] = useState("");
   const [rejectingRequestId, setRejectingRequestId] = useState<string>("");
+  const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
+  const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
   const { userEmail, logout } = useAuth();
 
@@ -137,6 +138,12 @@ export default function Supervisor() {
       fetchOtherSiteWorkers();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (userEmail) {
+      fetchAttendanceLogs();
+    }
+  }, [userEmail]);
 
   const fetchWorkers = async () => {
     try {
@@ -363,18 +370,25 @@ export default function Supervisor() {
     status: string,
     hours?: number
   ) => {
-    const worker = users.find((w: any) => w.id === workerId);
-    if (!worker) return;
+    try {
+      // Add attendance record to the logs
+      await addDoc(collection(db, "attendanceLogs"), {
+        workerId,
+        workerName: users.find((w: any) => w.id === workerId)?.name,
+        supervisorEmail: userEmail,
+        projectCode: projectCode,
+        status,
+        hours: hours || 0,
+        date: Timestamp.now(),
+        timestamp: Timestamp.now(),
+      });
 
-    await addDoc(collection(db, "attendance"), {
-      workerId,
-      workerName: worker.name,
-      date: new Date(),
-      projectCode,
-      supervisorEmail: userEmail,
-      hours,
-      status,
-    });
+      // message.success("Attendance marked successfully");
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+      message.error("Failed to mark attendance");
+      throw error; // Re-throw to be caught by the component
+    }
   };
 
   const downloadTemplate = () => {
@@ -410,59 +424,53 @@ export default function Supervisor() {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: "array" });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const workers = XLSX.utils.sheet_to_json(sheet);
+          const workers = XLSX.utils.sheet_to_json(sheet) as Array<{
+            Name: string;
+            Company: string;
+            Contract: string;
+          }>;
 
-          let successCount = 0;
-          let errorCount = 0;
+          const totalWorkers = workers.length;
+          let completed = 0;
 
-          // Upload workers with progress
-          for (let i = 0; i < workers.length; i++) {
-            const worker = workers[i] as any;
+          // Show initial progress
+          setUploadProgress(0);
 
-            // Validate and sanitize worker data
-            const workerData = {
-              name: worker.Name?.toString().trim() || "",
-              company: worker.Company?.toString().trim() || "",
-              contract: worker.Contract?.toString().trim() || "",
-              projectCode,
-              supervisorEmail: userEmail,
-              status: "active",
-              createdAt: new Date(),
-            };
-
-            // Skip if required fields are missing
-            if (!workerData.name || !workerData.company) {
-              console.warn(
-                "Skipping worker due to missing required fields:",
-                worker
-              );
-              errorCount++;
+          for (const worker of workers) {
+            // Validate and provide default values
+            if (!worker.Name) {
+              message.error("Worker name is required");
               continue;
             }
 
             try {
-              await addDoc(collection(db, "workers"), workerData);
-              successCount++;
+              await addDoc(collection(db, "workers"), {
+                name: worker.Name.trim(),
+                company: (worker.Company || "Not Specified").trim(),
+                contract: (worker.Contract || "Not Specified").trim(),
+                projectCode,
+                supervisorEmail: userEmail,
+                status: "active",
+                createdAt: new Date(),
+              });
+
+              completed++;
+              // Update progress after each worker
+              const progress = Math.round((completed / totalWorkers) * 100);
+              setUploadProgress(progress);
             } catch (error) {
-              console.error("Error adding worker:", error);
-              errorCount++;
+              console.error(`Error adding worker ${worker.Name}:`, error);
+              message.error(`Failed to add worker ${worker.Name}`);
             }
-
-            // Update progress
-            const progress = Math.round(((i + 1) / workers.length) * 100);
-            setUploadProgress(progress);
           }
 
-          if (errorCount > 0) {
-            message.warning(
-              `Added ${successCount} workers. Skipped ${errorCount} invalid entries.`
-            );
-          } else {
-            message.success(`Successfully added ${successCount} workers`);
-          }
-
-          if (successCount > 0) {
+          if (completed > 0) {
+            message.success(`Successfully added ${completed} workers`);
             fetchWorkers();
+            // Close the dialog after a short delay
+            setTimeout(() => {
+              setWorkerManagementDialog(false);
+            }, 500);
           }
         } catch (error) {
           console.error("Error processing Excel:", error);
@@ -475,11 +483,11 @@ export default function Supervisor() {
       console.error("Error uploading Excel:", error);
       message.error("Failed to upload Excel file");
     } finally {
-      setUploading(false);
-      setUploadProgress(0);
-      if (event.target) {
-        event.target.value = ""; // Reset file input
-      }
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+        event.target.value = "";
+      }, 500);
     }
   };
 
@@ -645,7 +653,9 @@ export default function Supervisor() {
 
   const handleRejectWithComment = async () => {
     if (!rejectComment.trim()) {
-      message.error("Please provide a reason for rejection");
+      message.error(
+        "Please provide a reason for rejecting this transfer request: "
+      );
       return;
     }
 
@@ -698,6 +708,63 @@ export default function Supervisor() {
       ),
     },
   ];
+
+  const fetchAttendanceLogs = async () => {
+    try {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const logsQuery = query(
+        collection(db, "attendanceLogs"),
+        where("supervisorEmail", "==", userEmail),
+        where("date", ">=", Timestamp.fromDate(startOfDay)),
+        orderBy("date", "desc")
+      );
+
+      const snapshot = await getDocs(logsQuery);
+      const logsList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAttendanceLogs(logsList);
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+    }
+  };
+
+  const handleExportLogs = async () => {
+    try {
+      setExporting(true);
+
+      // Format logs for export
+      const exportData = attendanceLogs.map((log) => ({
+        Date: moment(log.date.toDate()).format("DD/MM/YYYY"),
+        Time: moment(log.date.toDate()).format("hh:mm A"),
+        "Worker Name": log.workerName,
+        Status: log.status.charAt(0).toUpperCase() + log.status.slice(1),
+        Hours: log.hours || 0,
+        "Project Code": log.projectCode || "No Project",
+      }));
+
+      // Create workbook
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Attendance Logs");
+
+      // Save file
+      XLSX.writeFile(
+        wb,
+        `attendance_logs_${moment().format("YYYY-MM-DD")}.xlsx`
+      );
+
+      message.success("Logs exported successfully");
+    } catch (error) {
+      console.error("Error exporting logs:", error);
+      message.error("Failed to export logs");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div style={{ height: "100svh", display: "flex", flexDirection: "column" }}>
@@ -979,9 +1046,10 @@ export default function Supervisor() {
             workers={users}
             projectCode={projectCode}
             onMarkAttendance={handleMarkAttendance}
-            logs={[]}
-            exporting={false}
-            onExport={() => {}}
+            logs={attendanceLogs}
+            exporting={exporting}
+            onExport={handleExportLogs}
+            onRefreshLogs={fetchAttendanceLogs}
           />
         )}
 
@@ -997,8 +1065,22 @@ export default function Supervisor() {
             requests={transferRequests}
             onRespond={handleTransferResponse}
             availableWorkers={filteredOtherWorkers}
-            onRequestTransfer={(worker) => {
-              setSelectedTransferWorker(worker);
+            onRequestTransfer={(workers) => {
+              // If it's a single worker
+              if (!Array.isArray(workers)) {
+                setSelectedTransferWorker({
+                  ...workers,
+                  projectCode: workers.projectCode || "No Project",
+                });
+              } else {
+                // If it's multiple workers
+                setSelectedTransferWorker({
+                  name: `${workers.length} Workers`,
+                  projectCode: workers[0].projectCode || "No Project", // Use first worker's project
+                  company: workers[0].company, // Use first worker's company
+                  id: "bulk",
+                });
+              }
               setConfirmTransferDialog(true);
             }}
             projectOptions={[
@@ -1099,215 +1181,227 @@ export default function Supervisor() {
       {/* Worker Management Dialog */}
       <DefaultDialog
         close
-        title="Add Worker"
-        titleIcon={<Users color="crimson" />}
+        title="Worker Management"
         open={workerManagementDialog}
         onCancel={() => setWorkerManagementDialog(false)}
         extra={
           <div
             style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
           >
-            {/* Excel Upload Section */}
-            <div>
-              <div
+            {/* Manual worker addition section */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <h3
                 style={{
-                  marginBottom: "0.5rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
+                  fontSize: "0.9rem",
+                  color: "#94a3b8",
+                  fontWeight: "500",
                 }}
               >
-                <div
-                  style={{
-                    height: "1px",
-                    flex: 1,
-                    background: "rgba(255, 255, 255, 0.1)",
-                  }}
-                />
-                <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                  Bulk Upload
-                </span>
-                <div
-                  style={{
-                    height: "1px",
-                    flex: 1,
-                    background: "rgba(255, 255, 255, 0.1)",
-                  }}
-                />
-              </div>
-
-              {/* Template Download Button */}
-              <button
-                onClick={downloadTemplate}
-                style={{
-                  width: "100%",
-                  marginBottom: "0.5rem",
-                  padding: "0.75rem",
-                  background: "rgba(100, 100, 100, 0.2)",
-                  borderRadius: "0.375rem",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <Download size={20} />
-                <span>Download Template</span>
-              </button>
-
-              {/* Upload Button with Progress */}
-              <label
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                  padding: "0.75rem",
-                  background: "rgba(100, 100, 100, 0.2)",
-                  borderRadius: "0.375rem",
-                  cursor: uploading ? "not-allowed" : "pointer",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                {uploading ? (
-                  <>
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        height: "100%",
-                        width: `${uploadProgress}%`,
-                        background: "rgba(220, 20, 60, 0.2)",
-                        transition: "width 0.2s ease",
-                      }}
-                    />
-                    <LoaderCircle size={20} className="animate-spin" />
-                    <span>Uploading... {uploadProgress}%</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload size={20} />
-                    <span>Upload Excel File</span>
-                  </>
-                )}
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleExcelUpload}
-                  style={{ display: "none" }}
-                  disabled={uploading}
-                />
-              </label>
-            </div>
-
-            <div>
-              <div
-                style={{
-                  marginBottom: "0.5rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <div
-                  style={{
-                    height: "1px",
-                    flex: 1,
-                    background: "rgba(255, 255, 255, 0.1)",
-                  }}
-                />
-                <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                  Single Entry
-                </span>
-                <div
-                  style={{
-                    height: "1px",
-                    flex: 1,
-                    background: "rgba(255, 255, 255, 0.1)",
-                  }}
-                />
-              </div>
+                Add Worker Manually
+              </h3>
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "0.5rem",
+                  gap: "0.75rem",
                 }}
               >
                 <input
                   type="text"
                   value={newWorker.name}
                   onChange={(e) =>
-                    setNewWorker((prev) => ({ ...prev, name: e.target.value }))
+                    setNewWorker({ ...newWorker, name: e.target.value })
                   }
                   placeholder="Worker Name"
                   style={{
-                    width: "100%",
-                    height: "2.5rem",
-                    background: "rgba(100 100 100/ 20%)",
-                    border: "none",
-                    borderRadius: "0.375rem",
-                    padding: "0 0.75rem",
+                    padding: "0.75rem",
+                    background: "rgba(40, 40, 50, 0.5)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "0.5rem",
+                    color: "white",
+                    fontSize: "0.9rem",
                   }}
                 />
-                <input
-                  type="text"
-                  value={newWorker.company}
-                  onChange={(e) =>
-                    setNewWorker((prev) => ({
-                      ...prev,
-                      company: e.target.value,
-                    }))
-                  }
-                  placeholder="Parent Company"
-                  style={{
-                    width: "100%",
-                    height: "2.5rem",
-                    background: "rgba(100 100 100/ 20%)",
-                    border: "none",
-                    borderRadius: "0.375rem",
-                    padding: "0 0.75rem",
-                  }}
-                />
-                <input
-                  type="text"
-                  value={newWorker.contract}
-                  onChange={(e) =>
-                    setNewWorker((prev) => ({
-                      ...prev,
-                      contract: e.target.value,
-                    }))
-                  }
-                  placeholder="Contract Details"
-                  style={{
-                    width: "100%",
-                    height: "2.5rem",
-                    background: "rgba(100 100 100/ 20%)",
-                    border: "none",
-                    borderRadius: "0.375rem",
-                    padding: "0 0.75rem",
-                  }}
-                />
-                <br />
+                <div style={{ display: "flex", gap: "0.75rem" }}>
+                  <input
+                    type="text"
+                    value={newWorker.company}
+                    onChange={(e) =>
+                      setNewWorker({ ...newWorker, company: e.target.value })
+                    }
+                    placeholder="Company"
+                    style={{
+                      padding: "0.75rem",
+                      background: "rgba(40, 40, 50, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      borderRadius: "0.5rem",
+                      color: "white",
+                      fontSize: "0.9rem",
+                      flex: 1,
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={newWorker.contract}
+                    onChange={(e) =>
+                      setNewWorker({ ...newWorker, contract: e.target.value })
+                    }
+                    placeholder="Contract"
+                    style={{
+                      padding: "0.75rem",
+                      background: "rgba(40, 40, 50, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      borderRadius: "0.5rem",
+                      color: "white",
+                      fontSize: "0.9rem",
+                      flex: 1,
+                    }}
+                  />
+                </div>
                 <button
                   onClick={handleAddWorker}
-                  disabled={!newWorker.name || !newWorker.company}
+                  disabled={
+                    !newWorker.name || !newWorker.company || !newWorker.contract
+                  }
                   style={{
-                    background:
-                      newWorker.name && newWorker.company
-                        ? "crimson"
-                        : "rgba(100, 100, 100, 0.2)",
+                    padding: "0.75rem",
+                    background: "crimson",
+                    borderRadius: "0.5rem",
+                    opacity:
+                      !newWorker.name ||
+                      !newWorker.company ||
+                      !newWorker.contract
+                        ? 0.5
+                        : 1,
+                    cursor:
+                      !newWorker.name ||
+                      !newWorker.company ||
+                      !newWorker.contract
+                        ? "not-allowed"
+                        : "pointer",
                     color: "white",
-                    height: "2.5rem",
-                    borderRadius: "0.375rem",
+                    fontSize: "0.9rem",
+                    fontWeight: "500",
                   }}
                 >
-                  <Plus color="crimson" size={14} />
                   Add Worker
                 </button>
+              </div>
+            </div>
+
+            {/* Bulk upload section */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <h3
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#94a3b8",
+                  fontWeight: "500",
+                }}
+              >
+                Bulk Upload
+              </h3>
+
+              {/* Upload progress bar */}
+              {uploading && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                      Uploading workers...
+                    </span>
+                    <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                      {uploadProgress}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "4px",
+                      background: "rgba(40, 40, 50, 0.5)",
+                      borderRadius: "2px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${uploadProgress}%`,
+                        height: "100%",
+                        background: "crimson",
+                        transition: "width 0.3s ease",
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "0.75rem" }}>
+                <button
+                  onClick={downloadTemplate}
+                  style={{
+                    padding: "0.75rem",
+                    background: "rgba(40, 40, 50, 0.5)",
+                    borderRadius: "0.5rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.5rem",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    cursor: "pointer",
+                    flex: 1,
+                    color: "#94a3b8",
+                    fontSize: "0.9rem",
+                  }}
+                  disabled={uploading}
+                >
+                  <Download size={18} />
+                  Template
+                </button>
+                <label
+                  style={{
+                    padding: "0.75rem",
+                    background: "rgba(40, 40, 50, 0.5)",
+                    borderRadius: "0.5rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.5rem",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    cursor: uploading ? "not-allowed" : "pointer",
+                    flex: 1,
+                    opacity: uploading ? 0.5 : 1,
+                    color: "#94a3b8",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {uploading ? (
+                    <LoaderCircle className="animate-spin" size={18} />
+                  ) : (
+                    <Upload size={18} />
+                  )}
+                  Upload Excel
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleExcelUpload}
+                    style={{ display: "none" }}
+                    disabled={uploading}
+                  />
+                </label>
               </div>
             </div>
           </div>

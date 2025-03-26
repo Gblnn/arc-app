@@ -3,6 +3,7 @@ import {
   Check,
   CheckCircle,
   CheckSquare,
+  ChevronRight,
   LoaderCircle,
   Search,
   Square,
@@ -468,10 +469,20 @@ export default function TransferRequests({
                             borderRadius: "0.375rem",
                             color: "#94a3b8",
                             fontSize: "0.9rem",
+                            fontWeight: "500",
+                            display: "flex",
+                            alignItems: "center",
                           }}
                         >
-                          <span style={{ color: "salmon", fontWeight: "500" }}>
-                            Rejection reason:
+                          <span
+                            style={{
+                              color: "salmon",
+                              fontWeight: "500",
+                              display: "flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            MEMO <ChevronRight size={15} />{" "}
                           </span>{" "}
                           {request.rejectionReason}
                         </p>
@@ -594,8 +605,11 @@ export default function TransferRequests({
             ) : (
               <div
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
+                  display: "grid",
+                  gridTemplateColumns:
+                    windowWidth >= 768
+                      ? "repeat(auto-fill, minmax(300px, 1fr))"
+                      : "1fr",
                   gap: "1rem",
                 }}
               >
@@ -614,6 +628,7 @@ export default function TransferRequests({
                         : "1px solid rgba(255, 255, 255, 0.05)",
                       cursor: selectionMode ? "pointer" : "default",
                       transition: "all 0.2s ease",
+                      height: "fit-content",
                     }}
                   >
                     <div

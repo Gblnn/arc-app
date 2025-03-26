@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, SendHorizontal } from "lucide-react";
+import { BriefcaseBusiness, SquareArrowUpRight } from "lucide-react";
 
 interface WorkerCardProps {
   worker: any;
@@ -62,7 +62,7 @@ export default function WorkerCard({
             title="Handover Worker"
           >
             Handover
-            <SendHorizontal color="crimson" size={16} />
+            <SquareArrowUpRight size={18} />
           </button>
         )}
       </div>
