@@ -7,6 +7,7 @@ interface Props {
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
   placeholder?: string;
+  style?: React.CSSProperties;
 }
 
 export default function CustomDropdown({

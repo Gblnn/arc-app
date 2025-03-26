@@ -4,6 +4,7 @@ import DefaultDialog from "@/components/default-dialog";
 import HandoverHistory from "@/components/handover-history";
 import IndexDropDown from "@/components/index-dropdown";
 import RefreshButton from "@/components/refresh-button";
+import TransferRequests from "@/components/transfer-requests";
 import WorkerCard from "@/components/worker-card";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/firebase";
@@ -21,19 +22,21 @@ import {
   where,
 } from "firebase/firestore";
 import {
+  ArrowRight,
+  CheckCircle,
   Download,
   Hash,
   LoaderCircle,
   Plus,
   Search,
+  SquareArrowDownLeft,
   Upload,
   Users,
-  CheckCircle,
+  X,
 } from "lucide-react";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AttendanceLogs from "@/components/attendance-logs";
 
 export default function Supervisor() {
   const [loading, setLoading] = useState(false);
@@ -63,8 +66,39 @@ export default function Supervisor() {
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [selectionMode, setSelectionMode] = useState(false);
+  const [deleteUpdating, setDeleteUpdating] = useState(false);
+  const [otherSiteWorkers, setOtherSiteWorkers] = useState<any[]>([]);
+  const [loadingWorkers, setLoadingWorkers] = useState(false);
+
+  const [transferRequests, setTransferRequests] = useState<any[]>([]);
+  const [selectedProject, setSelectedProject] = useState("");
+  const [requestingWorkerId, setRequestingWorkerId] = useState<string>("");
+  const [confirmTransferDialog, setConfirmTransferDialog] = useState(false);
+  const [selectedTransferWorker, setSelectedTransferWorker] =
+    useState<any>(null);
+  const [rejectDialog, setRejectDialog] = useState(false);
+  const [rejectComment, setRejectComment] = useState("");
+  const [rejectingRequestId, setRejectingRequestId] = useState<string>("");
   const navigate = useNavigate();
   const { userEmail, logout } = useAuth();
+
+  const filteredOtherWorkers = useMemo(() => {
+    return otherSiteWorkers.filter((worker) => {
+      const matchesSearch = worker.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesProject = selectedProject
+        ? worker.projectCode === selectedProject
+        : true;
+      return matchesSearch && matchesProject;
+    });
+  }, [otherSiteWorkers, searchQuery, selectedProject]);
+
+  const pendingTransferCount = useMemo(() => {
+    return transferRequests.filter(
+      (req) => req.status === "pending" && req.type === "incoming"
+    ).length;
+  }, [transferRequests]);
 
   useEffect(() => {
     fetchWorkers();
@@ -91,6 +125,18 @@ export default function Supervisor() {
       fetchHandovers();
     }
   }, [userEmail]);
+
+  useEffect(() => {
+    if (userEmail) {
+      fetchTransferRequests();
+    }
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (activeTab === "Transfers") {
+      fetchOtherSiteWorkers();
+    }
+  }, [activeTab]);
 
   const fetchWorkers = async () => {
     try {
@@ -211,6 +257,27 @@ export default function Supervisor() {
     }
   };
 
+  const fetchOtherSiteWorkers = async () => {
+    try {
+      setLoadingWorkers(true);
+      const workersQuery = query(
+        collection(db, "workers"),
+        where("supervisorEmail", "!=", userEmail),
+        where("status", "==", "active")
+      );
+      const snapshot = await getDocs(workersQuery);
+      const workersList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setOtherSiteWorkers(workersList);
+    } catch (error) {
+      console.error("Error fetching workers:", error);
+    } finally {
+      setLoadingWorkers(false);
+    }
+  };
+
   const handleWorkerHandover = async () => {
     try {
       const targetSupervisorData = supervisors.find(
@@ -296,26 +363,18 @@ export default function Supervisor() {
     status: string,
     hours?: number
   ) => {
-    if (!hours) return; // Early return if hours not provided
-    try {
-      const worker = users.find((w: any) => w.id === workerId);
-      if (!worker) return;
+    const worker = users.find((w: any) => w.id === workerId);
+    if (!worker) return;
 
-      await addDoc(collection(db, "attendance"), {
-        workerId,
-        workerName: worker.name,
-        date: new Date(),
-        projectCode,
-        supervisorEmail: userEmail,
-        hours,
-        status,
-      });
-
-      message.success(`Marked ${worker.name} as ${status}`);
-    } catch (error) {
-      console.error("Error marking attendance:", error);
-      message.error("Failed to mark attendance");
-    }
+    await addDoc(collection(db, "attendance"), {
+      workerId,
+      workerName: worker.name,
+      date: new Date(),
+      projectCode,
+      supervisorEmail: userEmail,
+      hours,
+      status,
+    });
   };
 
   const downloadTemplate = () => {
@@ -339,55 +398,78 @@ export default function Supervisor() {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     try {
-      setUploading(true);
-      setUploadProgress(0);
       const file = event.target.files?.[0];
       if (!file) return;
+
+      setUploading(true);
+      setUploadProgress(0);
 
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: "array" });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const workers = XLSX.utils.sheet_to_json(sheet);
 
-          // Batch add workers with progress
-          for (let i = 0; i < jsonData.length; i++) {
-            const row = jsonData[i] as {
-              Name: string;
-              Company: string;
-              Contract: string;
-            };
+          let successCount = 0;
+          let errorCount = 0;
 
-            // Validate and provide default values for empty fields
+          // Upload workers with progress
+          for (let i = 0; i < workers.length; i++) {
+            const worker = workers[i] as any;
+
+            // Validate and sanitize worker data
             const workerData = {
-              name: row["Name"]?.toString().trim() || "",
-              company: row["Company"]?.toString().trim() || "",
-              contract: row["Contract"]?.toString().trim() || "",
+              name: worker.Name?.toString().trim() || "",
+              company: worker.Company?.toString().trim() || "",
+              contract: worker.Contract?.toString().trim() || "",
               projectCode,
               supervisorEmail: userEmail,
               status: "active",
               createdAt: new Date(),
             };
 
-            // Skip if required fields are empty
+            // Skip if required fields are missing
             if (!workerData.name || !workerData.company) {
-              console.warn("Skipping row due to missing required fields:", row);
+              console.warn(
+                "Skipping worker due to missing required fields:",
+                worker
+              );
+              errorCount++;
               continue;
             }
 
-            await addDoc(collection(db, "workers"), workerData);
-            setUploadProgress(Math.round(((i + 1) / jsonData.length) * 100));
+            try {
+              await addDoc(collection(db, "workers"), workerData);
+              successCount++;
+            } catch (error) {
+              console.error("Error adding worker:", error);
+              errorCount++;
+            }
+
+            // Update progress
+            const progress = Math.round(((i + 1) / workers.length) * 100);
+            setUploadProgress(progress);
           }
 
-          message.success(`Successfully added ${jsonData.length} workers`);
-          fetchWorkers();
+          if (errorCount > 0) {
+            message.warning(
+              `Added ${successCount} workers. Skipped ${errorCount} invalid entries.`
+            );
+          } else {
+            message.success(`Successfully added ${successCount} workers`);
+          }
+
+          if (successCount > 0) {
+            fetchWorkers();
+          }
         } catch (error) {
           console.error("Error processing Excel:", error);
           message.error("Failed to process Excel file");
         }
       };
+
       reader.readAsArrayBuffer(file);
     } catch (error) {
       console.error("Error uploading Excel:", error);
@@ -395,7 +477,9 @@ export default function Supervisor() {
     } finally {
       setUploading(false);
       setUploadProgress(0);
-      event.target.value = "";
+      if (event.target) {
+        event.target.value = ""; // Reset file input
+      }
     }
   };
 
@@ -429,6 +513,7 @@ export default function Supervisor() {
 
   const handleDeleteSelected = async () => {
     try {
+      setDeleteUpdating(true);
       // Update each selected worker's status to 'inactive'
       for (const workerId of selectedWorkers) {
         await updateDoc(doc(db, "workers", workerId), {
@@ -442,12 +527,177 @@ export default function Supervisor() {
       );
       setSelectedWorkers([]);
       setDeleteConfirmDialog(false); // Close the dialog
+      setSelectionMode(false);
       message.success("Workers deleted successfully");
     } catch (error) {
       console.error("Error deleting workers:", error);
       message.error("Failed to delete workers");
+    } finally {
+      setDeleteUpdating(false);
     }
   };
+
+  const handleTransferRequest = async (workers: any | any[]) => {
+    const workersArray = Array.isArray(workers) ? workers : [workers];
+
+    try {
+      setRequestingWorkerId(Array.isArray(workers) ? "bulk" : workers.id);
+
+      for (const worker of workersArray) {
+        await addDoc(collection(db, "transferRequests"), {
+          workerId: worker.id,
+          workerName: worker.name,
+          fromSupervisor: worker.supervisorEmail,
+          toSupervisor: userEmail,
+          fromProject: worker.projectCode,
+          toProject: projectCode,
+          status: "pending",
+          type: "outgoing",
+          requestDate: new Date(),
+        });
+      }
+
+      message.success(
+        `Transfer request${workersArray.length > 1 ? "s" : ""} sent`
+      );
+      setConfirmTransferDialog(false);
+      setSelectedTransferWorker(null);
+    } catch (error) {
+      console.error("Error requesting transfer:", error);
+      message.error("Failed to send transfer request");
+    } finally {
+      setRequestingWorkerId("");
+    }
+  };
+
+  const fetchTransferRequests = async () => {
+    try {
+      const incomingQuery = query(
+        collection(db, "transferRequests"),
+        where("fromSupervisor", "==", userEmail),
+        orderBy("requestDate", "desc")
+      );
+
+      const outgoingQuery = query(
+        collection(db, "transferRequests"),
+        where("toSupervisor", "==", userEmail),
+        orderBy("requestDate", "desc")
+      );
+
+      const [incomingSnapshot, outgoingSnapshot] = await Promise.all([
+        getDocs(incomingQuery),
+        getDocs(outgoingQuery),
+      ]);
+
+      const requests = [
+        ...incomingSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          type: "incoming", // I need to approve/reject these
+        })),
+        ...outgoingSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          type: "outgoing", // I requested these
+        })),
+      ];
+
+      setTransferRequests(requests);
+    } catch (error) {
+      console.error("Error fetching transfer requests:", error);
+    }
+  };
+
+  const handleTransferResponse = async (
+    requestId: string,
+    approved: boolean
+  ) => {
+    if (!approved) {
+      // Show rejection dialog instead of immediately rejecting
+      setRejectingRequestId(requestId);
+      setRejectDialog(true);
+      return;
+    }
+
+    try {
+      const request = transferRequests.find((r) => r.id === requestId);
+      if (!request) return;
+
+      await updateDoc(doc(db, "transferRequests", requestId), {
+        status: "approved",
+        responseDate: new Date(),
+      });
+
+      // Update worker's supervisor and project
+      await updateDoc(doc(db, "workers", request.workerId), {
+        supervisorEmail: request.toSupervisor,
+        projectCode: request.toProject,
+        lastTransferDate: new Date(),
+      });
+
+      message.success("Transfer request approved");
+      fetchTransferRequests();
+    } catch (error) {
+      console.error("Error handling transfer response:", error);
+      message.error("Failed to process transfer request");
+    }
+  };
+
+  const handleRejectWithComment = async () => {
+    if (!rejectComment.trim()) {
+      message.error("Please provide a reason for rejection");
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, "transferRequests", rejectingRequestId), {
+        status: "rejected",
+        responseDate: new Date(),
+        rejectionReason: rejectComment,
+      });
+
+      message.info("Transfer request rejected");
+      setRejectDialog(false);
+      setRejectComment("");
+      setRejectingRequestId("");
+      fetchTransferRequests();
+    } catch (error) {
+      console.error("Error rejecting transfer:", error);
+      message.error("Failed to reject transfer request");
+    }
+  };
+
+  const tabs = [
+    "Attendance",
+    "Workers",
+    {
+      id: "Transfers",
+      label: (
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          Transfers
+          {pendingTransferCount > 0 && (
+            <div
+              style={{
+                background: "crimson",
+                color: "white",
+                fontSize: "0.7rem",
+                padding: "0.4rem",
+                paddingTop: "0.45rem",
+                borderRadius: "1rem",
+                minWidth: "1.2rem",
+                height: "1.2rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {pendingTransferCount}
+            </div>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div style={{ height: "100svh", display: "flex", flexDirection: "column" }}>
@@ -513,17 +763,24 @@ export default function Supervisor() {
             minWidth: "min-content",
           }}
         >
-          {["Attendance", "Workers", "Logs"].map((tab) => (
+          {tabs.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              key={typeof tab === "string" ? tab : tab.id}
+              onClick={() =>
+                setActiveTab(typeof tab === "string" ? tab : tab.id)
+              }
               style={{
                 borderRadius: "0",
                 padding: "1rem 0",
-                color: activeTab === tab ? "white" : "#94a3b8",
+                color:
+                  activeTab === (typeof tab === "string" ? tab : tab.id)
+                    ? "white"
+                    : "#94a3b8",
                 borderBottom: "3px solid",
                 borderBottomColor:
-                  activeTab === tab ? "crimson" : "transparent",
+                  activeTab === (typeof tab === "string" ? tab : tab.id)
+                    ? "crimson"
+                    : "transparent",
                 background: "none",
                 fontSize: "0.9rem",
                 fontWeight: "500",
@@ -531,7 +788,7 @@ export default function Supervisor() {
                 transition: "color 0.2s ease",
               }}
             >
-              {tab}
+              {typeof tab === "string" ? tab : tab.label}
             </button>
           ))}
         </div>
@@ -608,7 +865,7 @@ export default function Supervisor() {
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  gap: "1rem",
                   alignItems: "center",
                   height: "40px",
                 }}
@@ -722,11 +979,10 @@ export default function Supervisor() {
             workers={users}
             projectCode={projectCode}
             onMarkAttendance={handleMarkAttendance}
+            logs={[]}
+            exporting={false}
+            onExport={() => {}}
           />
-        )}
-
-        {activeTab === "Logs" && userEmail && (
-          <AttendanceLogs userEmail={userEmail} projectCode={projectCode} />
         )}
 
         {activeTab === "Handovers" && (
@@ -735,31 +991,56 @@ export default function Supervisor() {
             outgoingHandovers={outgoingHandovers}
           />
         )}
+
+        {activeTab === "Transfers" && (
+          <TransferRequests
+            requests={transferRequests}
+            onRespond={handleTransferResponse}
+            availableWorkers={filteredOtherWorkers}
+            onRequestTransfer={(worker) => {
+              setSelectedTransferWorker(worker);
+              setConfirmTransferDialog(true);
+            }}
+            projectOptions={[
+              { value: "", label: "All Projects" },
+              ...Array.from(new Set(otherSiteWorkers.map((w) => w.projectCode)))
+                .filter(Boolean)
+                .map((code) => ({ value: code, label: code })),
+            ]}
+            selectedProject={selectedProject}
+            onProjectChange={setSelectedProject}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            loadingWorkers={loadingWorkers}
+          />
+        )}
       </div>
 
-      {/* Floating Action Button for Worker Management */}
+      {/* Floating Action Buttons */}
       {activeTab === "Workers" && !selectionMode && (
-        <button
-          onClick={() => setWorkerManagementDialog(true)}
-          style={{
-            position: "fixed",
-            bottom: "2rem",
-            right: "2rem",
-            width: "3.5rem",
-            height: "3.5rem",
-            borderRadius: "50%",
-            background: "crimson",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
-            zIndex: 50,
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          <Plus size={24} color="white" />
-        </button>
+        <>
+          <button
+            onClick={() => setWorkerManagementDialog(true)}
+            style={{
+              position: "fixed",
+              bottom: "2rem",
+              right: "2rem",
+              width: "3.5rem",
+              height: "3.5rem",
+              borderRadius: "50%",
+              background: "crimson",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+              zIndex: 50,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            <Plus size={24} color="white" />
+          </button>
+        </>
       )}
 
       {/* Fixed Action Buttons */}
@@ -903,10 +1184,7 @@ export default function Supervisor() {
                         transition: "width 0.2s ease",
                       }}
                     />
-                    <LoaderCircle
-                      size={20}
-                      style={{ animation: "spin 1s linear infinite" }}
-                    />
+                    <LoaderCircle size={20} className="animate-spin" />
                     <span>Uploading... {uploadProgress}%</span>
                   </>
                 ) : (
@@ -1105,11 +1383,13 @@ export default function Supervisor() {
       {/* Delete Confirmation Dialog */}
       <DefaultDialog
         title="Confirm Delete"
+        titleIcon={<X color="crimson" />}
         open={deleteConfirmDialog}
         onCancel={() => setDeleteConfirmDialog(false)}
         onOk={handleDeleteSelected}
         OkButtonText="Delete Workers"
-        disabled={deleteConfirmText !== "DELETE"}
+        disabled={deleteConfirmText !== "DELETE" || deleteUpdating}
+        updating={deleteUpdating}
         extra={
           <div
             style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
@@ -1120,7 +1400,11 @@ export default function Supervisor() {
               undone.
             </p>
             <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-              Type <span style={{ color: "crimson" }}>DELETE</span> to confirm:
+              Type{" "}
+              <span style={{ color: "crimson", fontWeight: "bold" }}>
+                DELETE
+              </span>{" "}
+              to confirm:
             </p>
             <input
               type="text"
@@ -1140,6 +1424,102 @@ export default function Supervisor() {
                 fontSize: "0.9rem",
                 transition: "border 0.2s ease",
               }}
+            />
+          </div>
+        }
+      />
+
+      {/* Add the confirmation dialog */}
+      <DefaultDialog
+        title="Confirm Request"
+        titleIcon={<SquareArrowDownLeft color="dodgerblue" />}
+        desc="Confirm transfer request for this worker?"
+        open={confirmTransferDialog}
+        OkButtonText="Confirm"
+        onCancel={() => {
+          setConfirmTransferDialog(false);
+          setSelectedTransferWorker(null);
+        }}
+        onOk={() => handleTransferRequest(selectedTransferWorker)}
+        updating={requestingWorkerId === selectedTransferWorker?.id}
+        extra={
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
+            {selectedTransferWorker && (
+              <div
+                style={{
+                  padding: "1rem",
+                  background: "rgba(30, 30, 40, 0.5)",
+                  borderRadius: "0.5rem",
+                  border: "1px solid rgba(255, 255, 255, 0.05)",
+                  display: "flex",
+                  flexFlow: "column",
+                  gap: "0.35rem",
+                }}
+              >
+                <h3 style={{ fontSize: "1.1rem", marginBottom: "" }}>
+                  {selectedTransferWorker.name}
+                </h3>
+                <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                  {selectedTransferWorker.company}
+                </p>
+                <p
+                  style={{
+                    color: "#94a3b8",
+                    fontSize: "0.9rem",
+                    display: "flex",
+                    gap: "0.5rem",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {selectedTransferWorker.projectCode || "No Project"}{" "}
+                  <ArrowRight size={16} />
+                  {projectCode || "No Project"}
+                </p>
+              </div>
+            )}
+          </div>
+        }
+      />
+
+      {/* Rejection Dialog */}
+      <DefaultDialog
+        title="Reject Transfer Request"
+        titleIcon={<X color="salmon" />}
+        open={rejectDialog}
+        onCancel={() => {
+          setRejectDialog(false);
+          setRejectComment("");
+          setRejectingRequestId("");
+        }}
+        onOk={handleRejectWithComment}
+        OkButtonText="Reject"
+        OkButtonDisabled={!rejectComment.trim()}
+        extra={
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
+            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+              Please provide a reason for rejecting this transfer request:
+            </p>
+            <textarea
+              value={rejectComment}
+              onChange={(e) => setRejectComment(e.target.value)}
+              placeholder="Enter rejection reason..."
+              style={{
+                width: "100%",
+                minHeight: "5rem",
+                background: "rgba(40, 40, 50, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                borderRadius: "0.375rem",
+                padding: "0.75rem",
+                fontSize: "0.9rem",
+                color: "white",
+                resize: "vertical",
+              }}
+              autoFocus
             />
           </div>
         }

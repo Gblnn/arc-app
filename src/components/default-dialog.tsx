@@ -73,6 +73,7 @@ interface Props {
   contact?: string;
   titleinfo?: boolean;
   onTitleClick?: any;
+  OkButtonDisabled?: boolean;
 }
 
 export default function DefaultDialog(props: Props) {
@@ -614,10 +615,16 @@ export default function DefaultDialog(props: Props) {
                   }}
                 >
                   <Button
-                    className={props.disabled ? "disabled" : ""}
+                    className={
+                      props.disabled || props.OkButtonDisabled ? "disabled" : ""
+                    }
                     variant={props.destructive ? "destructive" : "default"}
                     id="okBtn"
-                    onClick={props.updating ? null : props.onOk}
+                    onClick={
+                      props.updating || props.OkButtonDisabled
+                        ? null
+                        : props.onOk
+                    }
                     style={{ flex: 1 }}
                   >
                     {props.sendmail ? (
