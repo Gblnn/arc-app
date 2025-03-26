@@ -756,7 +756,7 @@ export default function Supervisor() {
             cursor: "pointer",
           }}
         >
-          <Users size={24} color="white" />
+          <Plus size={24} color="white" />
         </button>
       )}
 
@@ -1080,6 +1080,21 @@ export default function Supervisor() {
                 }))}
                 placeholder="Select Supervisor"
               />
+            </div>
+
+            <div
+              style={{
+                marginTop: "0.5rem",
+                padding: "1rem",
+                background: "rgba(220, 20, 60, 0.1)",
+                border: "1px solid rgba(220, 20, 60, 0.3)",
+                borderRadius: "0.5rem",
+              }}
+            >
+              <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                ⚠️ Warning: Once handed over, you'll need to contact the other
+                supervisor to get the worker back.
+              </p>
             </div>
           </div>
         }

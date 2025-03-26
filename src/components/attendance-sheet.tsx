@@ -1,5 +1,6 @@
 import { Check, CheckCircle, Search } from "lucide-react";
 import { useState } from "react";
+import DefaultDialog from "./default-dialog";
 
 interface AttendanceSheetProps {
   workers: any[];
@@ -15,6 +16,7 @@ export default function AttendanceSheet({
   const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
   const [hours, setHours] = useState<string>("9");
   const [searchQuery, setSearchQuery] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState(false);
 
   const filteredWorkers = workers.filter(
     (worker) =>
@@ -31,11 +33,16 @@ export default function AttendanceSheet({
     );
   };
 
+  const handlePostClick = () => {
+    setConfirmDialog(true);
+  };
+
   const handleBulkAttendance = () => {
     selectedWorkers.forEach((workerId) => {
       onMarkAttendance(workerId, "present", Number(hours));
     });
     setSelectedWorkers([]);
+    setConfirmDialog(false);
   };
 
   const handleSelectAll = () => {
@@ -102,72 +109,14 @@ export default function AttendanceSheet({
           </div>
         </div>
 
-        {/* Bulk Actions */}
+        {/* Hours and Selection Controls in one line */}
         <div style={{ padding: "0 1rem 1rem" }}>
           <div
             style={{
-              padding: "1rem",
-              background: "rgba(30, 30, 40, 0.5)",
-              borderRadius: "0.5rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "1rem",
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-              }}
-            >
-              <div>
-                <input
-                  type="number"
-                  value={hours}
-                  onChange={(e) => setHours(e.target.value)}
-                  style={{
-                    width: "5rem",
-                    height: "2rem",
-                    background: "rgba(100 100 100/ 20%)",
-                    border: "2px solid crimson",
-                    borderRadius: "0.375rem",
-                    padding: "0 0.75rem",
-                    fontWeight: "medium",
-                  }}
-                  min="1"
-                  max="12"
-                />
-                <span style={{ marginLeft: "0.5rem", fontSize: "0.9rem" }}>
-                  hours
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleBulkAttendance}
-              disabled={selectedWorkers.length === 0}
-              style={{
-                padding: "0.5rem 1rem",
-                background: selectedWorkers.length
-                  ? "crimson"
-                  : "rgba(100, 100, 100, 0.2)",
-                borderRadius: "0.375rem",
-                fontSize: "0.9rem",
-              }}
-            >
-              Post Attendance
-            </button>
-          </div>
-
-          {/* Selection Controls */}
-          <div
-            style={{
-              marginTop: "1rem",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              gap: "1rem",
             }}
           >
             <button
@@ -183,6 +132,7 @@ export default function AttendanceSheet({
                 gap: "0.5rem",
                 border: "1px solid rgba(255, 255, 255, 0.1)",
                 cursor: "pointer",
+                height: "36px",
               }}
             >
               <CheckCircle color="crimson" strokeWidth={3} size={16} />
@@ -195,6 +145,33 @@ export default function AttendanceSheet({
                 </span>
               )}
             </button>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+            >
+              <span style={{ marginLeft: "0.5rem", fontSize: "0.9rem" }}>
+                hours
+              </span>
+              <input
+                type="number"
+                value={hours}
+                onChange={(e) => setHours(e.target.value)}
+                style={{
+                  width: "3rem",
+                  height: "36px",
+                  background: "rgba(100 100 100/ 20%)",
+                  border: "2px solid crimson",
+                  borderRadius: "0.375rem",
+                  padding: "0 0.75rem",
+                  fontWeight: "medium",
+                  animation:
+                    selectedWorkers.length > 0
+                      ? "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+                      : "none",
+                }}
+                min="1"
+                max="12"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -259,6 +236,70 @@ export default function AttendanceSheet({
           ))}
         </div>
       </div>
+
+      {/* Fixed Post Attendance Button */}
+      {selectedWorkers.length > 0 && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "1rem",
+            background: "rgba(30, 30, 40, 0.95)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+            zIndex: 50,
+          }}
+        >
+          <button
+            onClick={handlePostClick}
+            style={{
+              width: "100%",
+              padding: "1rem",
+              background: "crimson",
+              borderRadius: "0.5rem",
+              fontSize: "0.9rem",
+              fontWeight: "500",
+            }}
+          >
+            Post Attendance ({selectedWorkers.length})
+          </button>
+        </div>
+      )}
+
+      <DefaultDialog
+        title="Confirm Attendance"
+        open={confirmDialog}
+        onCancel={() => setConfirmDialog(false)}
+        onOk={handleBulkAttendance}
+        OkButtonText="Post"
+        extra={
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
+            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+              You are about to mark attendance for {selectedWorkers.length}{" "}
+              worker
+              {selectedWorkers.length > 1 ? "s" : ""} for {hours} hours.
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 }
+
+<style>
+  {`
+    @keyframes pulse {
+      0%, 100% {
+        border-color: rgb(220, 20, 60);
+      }
+      50% {
+        border-color: rgba(220, 20, 60, 0.3);
+      }
+    }
+  `}
+</style>;
