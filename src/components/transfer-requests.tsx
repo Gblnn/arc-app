@@ -14,10 +14,17 @@ import {
 import moment from "moment";
 import { useEffect, useState } from "react";
 import CustomDropdown from "./custom-dropdown";
+import { motion } from "framer-motion";
+import DefaultDialog from "./default-dialog";
+import { message } from "antd";
 
 interface Props {
   requests: any[];
-  onRespond: (requestId: string, approved: boolean) => Promise<void>;
+  onRespond: (
+    requestId: string,
+    approved: boolean,
+    rejectionReason?: string
+  ) => Promise<void>;
   availableWorkers: any[];
   onRequestTransfer: (worker: any) => void;
   projectOptions: { value: string; label: string }[];
@@ -26,6 +33,9 @@ interface Props {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   loadingWorkers?: boolean;
+  incomingHandovers: any[];
+  outgoingHandovers: any[];
+  onRefreshHandovers: () => void;
 }
 
 const useWindowSize = () => {
@@ -51,18 +61,53 @@ export default function TransferRequests({
   projectOptions,
   selectedProject,
   onProjectChange,
+  incomingHandovers,
+  outgoingHandovers,
+  onRefreshHandovers,
 }: Props) {
-  const [view, setView] = useState<"requests" | "available">("requests");
+  const [view, setView] = useState<"requests" | "available" | "handovers">(
+    "requests"
+  );
   const [responding, setResponding] = useState<string>("");
   const windowWidth = useWindowSize();
   const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectDropdownOpen, setSelectDropdownOpen] = useState(false);
+  const [rejectDialog, setRejectDialog] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectingRequest, setRejectingRequest] = useState<string | null>(null);
+
+  const pendingRequestsCount = requests.filter(
+    (req) => req.status === "pending"
+  ).length;
 
   const handleResponse = async (requestId: string, approved: boolean) => {
+    if (!approved) {
+      setRejectingRequest(requestId);
+      setRejectDialog(true);
+      return;
+    }
+
     try {
       setResponding(requestId);
       await onRespond(requestId, approved);
+    } finally {
+      setResponding("");
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectingRequest || !rejectionReason.trim()) {
+      message.error("Please provide a reason for rejection");
+      return;
+    }
+
+    try {
+      setResponding(rejectingRequest);
+      await onRespond(rejectingRequest, false, rejectionReason);
+      setRejectDialog(false);
+      setRejectionReason("");
+      setRejectingRequest(null);
     } finally {
       setResponding("");
     }
@@ -114,9 +159,26 @@ export default function TransferRequests({
                       : "transparent",
                   color: view === "requests" ? "white" : "#94a3b8",
                   transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  position: "relative",
                 }}
               >
                 Requests
+                {pendingRequestsCount > 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "4px",
+                      right: "4px",
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      background: "crimson",
+                    }}
+                  />
+                )}
               </button>
               <button
                 onClick={() => setView("available")}
@@ -132,7 +194,26 @@ export default function TransferRequests({
                   transition: "all 0.2s ease",
                 }}
               >
-                Available Workers
+                External
+              </button>
+              <button
+                onClick={() => {
+                  setView("handovers");
+                  onRefreshHandovers();
+                }}
+                style={{
+                  padding: "0.5rem 1rem",
+                  borderRadius: "0.375rem",
+                  fontSize: "0.9rem",
+                  background:
+                    view === "handovers"
+                      ? "rgba(30, 30, 40, 0.95)"
+                      : "transparent",
+                  color: view === "handovers" ? "white" : "#94a3b8",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Handovers
               </button>
             </div>
           </div>
@@ -412,7 +493,9 @@ export default function TransferRequests({
                       )}
                       {" • "}
                       {request.status === "pending" ? (
-                        <span style={{ color: "orange", fontWeight: "bold" }}>
+                        <span
+                          style={{ color: "goldenrod", fontWeight: "bold" }}
+                        >
                           Pending
                         </span>
                       ) : request.status === "approved" ? (
@@ -423,7 +506,7 @@ export default function TransferRequests({
                         </span>
                       ) : (
                         <span style={{ color: "crimson", fontWeight: "bold" }}>
-                          Rejected
+                          Declined
                         </span>
                       )}
                     </p>
@@ -482,7 +565,7 @@ export default function TransferRequests({
                               alignItems: "center",
                             }}
                           >
-                            MEMO <ChevronRight size={15} />{" "}
+                            <ChevronRight size={15} />{" "}
                           </span>{" "}
                           {request.rejectionReason}
                         </p>
@@ -578,7 +661,7 @@ export default function TransferRequests({
               </div>
             )}
           </div>
-        ) : (
+        ) : view === "available" ? (
           <div
             style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
           >
@@ -757,8 +840,268 @@ export default function TransferRequests({
               </div>
             )}
           </div>
+        ) : view === "handovers" ? (
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
+          >
+            <div>
+              <h3
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#94a3b8",
+                  marginBottom: "1rem",
+                }}
+              >
+                Incoming Handovers
+              </h3>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    windowWidth >= 768
+                      ? "repeat(auto-fill, minmax(350px, 1fr))"
+                      : "1fr",
+                  gap: "1rem",
+                }}
+              >
+                {incomingHandovers.length > 0 ? (
+                  incomingHandovers.map((handover) => (
+                    <motion.div
+                      key={handover.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      style={{
+                        padding: "1rem",
+                        background: "rgba(30, 30, 40, 0.5)",
+                        borderRadius: "0.5rem",
+                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        <h4 style={{ fontSize: "1rem" }}>
+                          {handover.workerName}
+                        </h4>
+                        <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                          {moment(handover.date.toDate()).format("DD MMM YYYY")}
+                        </span>
+                      </div>
+                      <p
+                        style={{
+                          color: "#94a3b8",
+                          fontSize: "0.9rem",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        {handover.fromProject || "No Project"}{" "}
+                        <ArrowRight size={14} />{" "}
+                        {handover.toProject || "No Project"}
+                      </p>
+                      <p
+                        style={{
+                          color: "#94a3b8",
+                          fontSize: "0.8rem",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        From supervisor of {handover.fromProject}
+                      </p>
+                    </motion.div>
+                  ))
+                ) : (
+                  <p style={{ color: "#94a3b8", textAlign: "center" }}>
+                    No incoming handovers
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#94a3b8",
+                  marginBottom: "1rem",
+                }}
+              >
+                Outgoing Handovers
+              </h3>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    windowWidth >= 768
+                      ? "repeat(auto-fill, minmax(350px, 1fr))"
+                      : "1fr",
+                  gap: "1rem",
+                }}
+              >
+                {outgoingHandovers.length > 0 ? (
+                  outgoingHandovers.map((handover) => (
+                    <motion.div
+                      key={handover.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      style={{
+                        padding: "1rem",
+                        background: "rgba(30, 30, 40, 0.5)",
+                        borderRadius: "0.5rem",
+                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        <h4 style={{ fontSize: "1rem" }}>
+                          {handover.workerName}
+                        </h4>
+                        <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                          {moment(handover.date.toDate()).format("DD MMM YYYY")}
+                        </span>
+                      </div>
+                      <p
+                        style={{
+                          color: "#94a3b8",
+                          fontSize: "0.9rem",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        {handover.fromProject || "No Project"}{" "}
+                        <ArrowRight size={14} />{" "}
+                        {handover.toProject || "No Project"}
+                      </p>
+                      <p
+                        style={{
+                          color: "#94a3b8",
+                          fontSize: "0.8rem",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        To supervisor of {handover.toProject}
+                      </p>
+                    </motion.div>
+                  ))
+                ) : (
+                  <p style={{ color: "#94a3b8", textAlign: "center" }}>
+                    No outgoing handovers
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          ""
         )}
       </div>
+
+      <DefaultDialog
+        title="Reject Transfer Request"
+        open={rejectDialog}
+        onCancel={() => {
+          setRejectDialog(false);
+          setRejectionReason("");
+          setRejectingRequest(null);
+        }}
+        onOk={handleReject}
+        OkButtonText="Reject Transfer"
+        updating={!!responding}
+        destructive
+        extra={
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+          >
+            <div></div>
+            {/* Request Info Section */}
+            <div
+              style={{
+                padding: "1rem",
+                background: "rgba(220, 20, 60, 0.05)",
+                border: "1px solid rgba(220, 20, 60, 0.2)",
+                borderRadius: "0.5rem",
+              }}
+            >
+              <div
+                style={{
+                  marginBottom: "0.5rem",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexFlow: "column",
+                }}
+              >
+                <h4 style={{ fontSize: "0.9rem", marginBottom: "0.25rem" }}>
+                  {requests.find((r) => r.id === rejectingRequest)?.workerName}
+                </h4>
+                <p
+                  style={{
+                    color: "#94a3b8",
+                    fontSize: "0.8rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  {requests.find((r) => r.id === rejectingRequest)
+                    ?.fromProject || "No Project"}
+                  <ArrowRight size={12} />
+                  {requests.find((r) => r.id === rejectingRequest)?.toProject ||
+                    "No Project"}
+                </p>
+              </div>
+            </div>
+
+            {/* Rejection Reason Input */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+              }}
+            >
+              <label style={{ fontSize: "0.9rem", color: "#94a3b8" }}>
+                Clarification Notes
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Add Comment..."
+                style={{
+                  padding: "0.75rem",
+                  background: "rgba(40, 40, 50, 0.5)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "0.5rem",
+                  color: "white",
+                  fontSize: "0.9rem",
+                  minHeight: "100px",
+                  resize: "vertical",
+                }}
+              />
+              <p
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#94a3b8",
+                  marginTop: "0.25rem",
+                }}
+              >
+                This reason will be visible to the requesting supervisor
+              </p>
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -36,6 +36,21 @@ import {
 import moment from "moment";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DocumentsManager from "@/components/documents-manager";
+
+interface TransferRequest {
+  id: string;
+  type: string;
+  status: string;
+  requestDate: {
+    toDate: () => Date;
+  };
+}
+
+interface Tab {
+  id: string;
+  label: string | JSX.Element;
+}
 
 export default function Supervisor() {
   const [loading, setLoading] = useState(false);
@@ -71,7 +86,7 @@ export default function Supervisor() {
 
   const [transferRequests, setTransferRequests] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState("");
-  const [requestingWorkerId, setRequestingWorkerId] = useState<string>("");
+  const [requestingWorkerId] = useState<string>("");
   const [confirmTransferDialog, setConfirmTransferDialog] = useState(false);
   const [selectedTransferWorker, setSelectedTransferWorker] =
     useState<any>(null);
@@ -80,6 +95,7 @@ export default function Supervisor() {
   const [rejectingRequestId, setRejectingRequestId] = useState<string>("");
   const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [setTransferringWorker] = useState<any>(null);
   const navigate = useNavigate();
   const { userEmail, logout } = useAuth();
 
@@ -148,24 +164,20 @@ export default function Supervisor() {
   const fetchWorkers = async () => {
     try {
       setLoading(true);
-      setRefreshCompleted(false);
-      const workersQuery = query(
+      const q = query(
         collection(db, "workers"),
         where("supervisorEmail", "==", userEmail),
         where("status", "==", "active")
       );
-      const snapshot = await getDocs(workersQuery);
+      const snapshot = await getDocs(q);
       const workersList = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       setUsers(workersList);
-      setRefreshCompleted(true);
-      setTimeout(() => {
-        setRefreshCompleted(false);
-      }, 1000);
     } catch (error) {
       console.error("Error fetching workers:", error);
+      message.error("Failed to fetch workers");
     } finally {
       setLoading(false);
     }
@@ -238,6 +250,7 @@ export default function Supervisor() {
 
   const fetchHandovers = async () => {
     try {
+      setLoading(true);
       // Fetch incoming handovers
       const incomingQuery = query(
         collection(db, "handovers"),
@@ -245,9 +258,11 @@ export default function Supervisor() {
         orderBy("date", "desc")
       );
       const incomingSnapshot = await getDocs(incomingQuery);
-      setIncomingHandovers(
-        incomingSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-      );
+      const incomingList = incomingSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setIncomingHandovers(incomingList);
 
       // Fetch outgoing handovers
       const outgoingQuery = query(
@@ -256,11 +271,16 @@ export default function Supervisor() {
         orderBy("date", "desc")
       );
       const outgoingSnapshot = await getDocs(outgoingQuery);
-      setOutgoingHandovers(
-        outgoingSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-      );
+      const outgoingList = outgoingSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setOutgoingHandovers(outgoingList);
     } catch (error) {
       console.error("Error fetching handovers:", error);
+      message.error("Failed to fetch handovers");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -545,36 +565,35 @@ export default function Supervisor() {
     }
   };
 
-  const handleTransferRequest = async (workers: any | any[]) => {
-    const workersArray = Array.isArray(workers) ? workers : [workers];
-
+  const handleTransferRequest = async (workerOrWorkers: any) => {
     try {
-      setRequestingWorkerId(Array.isArray(workers) ? "bulk" : workers.id);
+      setConfirmTransferDialog(false);
+      setTransferringWorker(null);
 
-      for (const worker of workersArray) {
+      const workers = Array.isArray(workerOrWorkers)
+        ? workerOrWorkers
+        : [workerOrWorkers];
+
+      for (const worker of workers) {
         await addDoc(collection(db, "transferRequests"), {
           workerId: worker.id,
           workerName: worker.name,
-          fromSupervisor: worker.supervisorEmail,
+          fromProject: worker.projectCode || "No Project",
+          toProject: projectCode || "No Project", // Use projectCode instead of selectedProject
+          fromSupervisor: worker.supervisorEmail || "", // Add fallback
           toSupervisor: userEmail,
-          fromProject: worker.projectCode,
-          toProject: projectCode,
           status: "pending",
-          type: "outgoing",
           requestDate: new Date(),
+          type: "outgoing",
         });
       }
 
       message.success(
-        `Transfer request${workersArray.length > 1 ? "s" : ""} sent`
+        `Transfer request${workers.length > 1 ? "s" : ""} sent successfully`
       );
-      setConfirmTransferDialog(false);
-      setSelectedTransferWorker(null);
     } catch (error) {
       console.error("Error requesting transfer:", error);
       message.error("Failed to send transfer request");
-    } finally {
-      setRequestingWorkerId("");
     }
   };
 
@@ -601,16 +620,25 @@ export default function Supervisor() {
         ...incomingSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-          type: "incoming", // I need to approve/reject these
+          type: "incoming",
         })),
         ...outgoingSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-          type: "outgoing", // I requested these
+          type: "outgoing",
         })),
       ];
 
-      setTransferRequests(requests);
+      // Sort requests to show pending first, then by date
+      const sortedRequests = (requests as TransferRequest[]).sort((a, b) => {
+        if (a.status === "pending" && b.status !== "pending") return -1;
+        if (a.status !== "pending" && b.status === "pending") return 1;
+        return (
+          b.requestDate.toDate().getTime() - a.requestDate.toDate().getTime()
+        );
+      });
+
+      setTransferRequests(sortedRequests);
     } catch (error) {
       console.error("Error fetching transfer requests:", error);
     }
@@ -620,34 +648,54 @@ export default function Supervisor() {
     requestId: string,
     approved: boolean
   ) => {
-    if (!approved) {
-      // Show rejection dialog instead of immediately rejecting
-      setRejectingRequestId(requestId);
-      setRejectDialog(true);
-      return;
-    }
-
     try {
       const request = transferRequests.find((r) => r.id === requestId);
       if (!request) return;
 
+      if (approved) {
+        // Update worker's supervisor and project
+        await updateDoc(doc(db, "workers", request.workerId), {
+          projectCode: request.toProject,
+          supervisorEmail: request.toSupervisor,
+          lastTransferDate: new Date(),
+        });
+
+        // Create handover record
+        await addDoc(collection(db, "handovers"), {
+          workerId: request.workerId,
+          workerName: request.workerName,
+          fromProject: request.fromProject,
+          toProject: request.toProject,
+          fromSupervisor: request.fromSupervisor,
+          toSupervisor: request.toSupervisor,
+          date: new Date(),
+        });
+      }
+
+      // Update transfer request status
       await updateDoc(doc(db, "transferRequests", requestId), {
-        status: "approved",
+        status: approved ? "approved" : "rejected",
         responseDate: new Date(),
       });
 
-      // Update worker's supervisor and project
-      await updateDoc(doc(db, "workers", request.workerId), {
-        supervisorEmail: request.toSupervisor,
-        projectCode: request.toProject,
-        lastTransferDate: new Date(),
-      });
+      // Update local state immediately
+      setTransferRequests((prev) =>
+        prev.map((req) =>
+          req.id === requestId
+            ? { ...req, status: approved ? "approved" : "rejected" }
+            : req
+        )
+      );
 
-      message.success("Transfer request approved");
-      fetchTransferRequests();
+      // Refresh workers list immediately after approval
+      await fetchWorkers();
+
+      message.success(
+        `Transfer request ${approved ? "approved" : "rejected"} successfully`
+      );
     } catch (error) {
-      console.error("Error handling transfer response:", error);
-      message.error("Failed to process transfer request");
+      console.error("Error responding to transfer:", error);
+      message.error("Failed to respond to transfer request");
     }
   };
 
@@ -677,9 +725,9 @@ export default function Supervisor() {
     }
   };
 
-  const tabs = [
-    "Attendance",
-    "Workers",
+  const tabs: Tab[] = [
+    { id: "Workers", label: "Workers" },
+    { id: "Attendance", label: "Attendance" },
     {
       id: "Transfers",
       label: (
@@ -707,6 +755,8 @@ export default function Supervisor() {
         </div>
       ),
     },
+    // { id: "Handovers", label: "Handovers" },
+    { id: "Documents", label: "Documents" },
   ];
 
   const fetchAttendanceLogs = async () => {
@@ -817,45 +867,47 @@ export default function Supervisor() {
       {/* New Tab Navigation */}
       <div
         style={{
-          padding: "0 1rem",
+          display: "flex",
+
           background: "rgba(40, 40, 50, 0.5)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
           overflowX: "auto",
+          border: "",
         }}
       >
         <div
           style={{
             display: "flex",
-            gap: "1.5rem",
-            minWidth: "min-content",
+            gap: "0.5rem",
+            width: "100%",
+            margin: "0.5rem",
+            // padding: "0.5rem",
+            // paddingLeft: "0",
+            // paddingRight: "0.5rem",
+            border: "",
           }}
         >
           {tabs.map((tab) => (
             <button
-              key={typeof tab === "string" ? tab : tab.id}
-              onClick={() =>
-                setActiveTab(typeof tab === "string" ? tab : tab.id)
-              }
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               style={{
-                borderRadius: "0",
-                padding: "1rem 0",
-                color:
-                  activeTab === (typeof tab === "string" ? tab : tab.id)
-                    ? "white"
-                    : "#94a3b8",
-                borderBottom: "3px solid",
-                borderBottomColor:
-                  activeTab === (typeof tab === "string" ? tab : tab.id)
-                    ? "crimson"
+                padding: "0.5rem 1rem",
+                background:
+                  activeTab === tab.id
+                    ? "rgba(220, 20, 60, 0.1)"
                     : "transparent",
-                background: "none",
+                border: `1px solid ${
+                  activeTab === tab.id
+                    ? "rgba(220, 20, 60, 0.2)"
+                    : "rgba(255, 255, 255, 0.1)"
+                }`,
+                borderRadius: "0.5rem",
+                color: activeTab === tab.id ? "salmon" : "#94a3b8",
                 fontSize: "0.9rem",
-                fontWeight: "500",
-                minWidth: "80px",
-                transition: "color 0.2s ease",
               }}
             >
-              {typeof tab === "string" ? tab : tab.label}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -1057,6 +1109,7 @@ export default function Supervisor() {
           <HandoverHistory
             incomingHandovers={incomingHandovers}
             outgoingHandovers={outgoingHandovers}
+            onRefresh={fetchHandovers}
           />
         )}
 
@@ -1094,8 +1147,13 @@ export default function Supervisor() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             loadingWorkers={loadingWorkers}
+            incomingHandovers={incomingHandovers}
+            outgoingHandovers={outgoingHandovers}
+            onRefreshHandovers={fetchHandovers}
           />
         )}
+
+        {activeTab === "Documents" && <DocumentsManager workers={users} />}
       </div>
 
       {/* Floating Action Buttons */}
@@ -1595,9 +1653,7 @@ export default function Supervisor() {
           <div
             style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
           >
-            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-              Please provide a reason for rejecting this transfer request:
-            </p>
+            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>Comment</p>
             <textarea
               value={rejectComment}
               onChange={(e) => setRejectComment(e.target.value)}

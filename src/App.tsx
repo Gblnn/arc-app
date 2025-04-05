@@ -85,7 +85,7 @@ function App() {
 
           {/* Supervisor route */}
           <Route
-            path="/supervisor"
+            path="/supervisor/*"
             element={
               <ProtectedRoute allowedRoles={["supervisor"]}>
                 <Supervisor />

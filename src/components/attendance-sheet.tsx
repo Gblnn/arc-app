@@ -7,14 +7,19 @@ import {
   Search,
 } from "lucide-react";
 import moment from "moment";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import CustomDropdown from "./custom-dropdown";
 import DefaultDialog from "./default-dialog";
 
 interface AttendanceSheetProps {
   workers: any[];
   projectCode: string;
-  onMarkAttendance: (workerId: string, status: string, hours?: number) => void;
+  onMarkAttendance: (
+    workerId: string,
+    status: string,
+    hours?: number,
+    remarks?: string
+  ) => void;
   logs: any[];
   exporting?: boolean;
   onExport?: () => void;
@@ -86,6 +91,10 @@ export default function AttendanceSheet({
     setConfirmDialog(true);
   };
 
+  const [absenteeRemarks, setAbsenteeRemarks] = useState<{
+    [key: string]: string;
+  }>({});
+
   const handleBulkAttendance = async () => {
     try {
       setUpdating(true);
@@ -94,19 +103,24 @@ export default function AttendanceSheet({
         await onMarkAttendance(workerId, "present", Number(hours));
       }
 
-      // Mark unselected workers as absent
-      const unselectedWorkers = filteredWorkers
-        .filter((worker) => !selectedWorkers.includes(worker.id))
-        .map((worker) => worker.id);
+      // Mark unselected workers as absent with remarks
+      const unselectedWorkers = filteredWorkers.filter(
+        (worker) => !selectedWorkers.includes(worker.id)
+      );
 
-      for (const workerId of unselectedWorkers) {
-        await onMarkAttendance(workerId, "absent", 0);
+      for (const worker of unselectedWorkers) {
+        await onMarkAttendance(
+          worker.id,
+          "absent",
+          0,
+          absenteeRemarks[worker.id] || ""
+        );
       }
 
       setSelectedWorkers([]);
+      setAbsenteeRemarks({});
       setConfirmDialog(false);
 
-      // Refresh logs after successful post
       await onRefreshLogs();
     } catch (error) {
       console.error("Error posting attendance:", error);
@@ -125,6 +139,20 @@ export default function AttendanceSheet({
       setSelectedWorkers(filteredWorkers.map((worker) => worker.id));
     }
   };
+
+  const useWindowSize = () => {
+    const [width, setWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+      const handleResize = () => setWidth(window.innerWidth);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    return width;
+  };
+
+  const windowWidth = useWindowSize();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -275,20 +303,22 @@ export default function AttendanceSheet({
                 }}
               >
                 <CheckCircle color="crimson" strokeWidth={3} size={16} />
-                {selectedWorkers.length > 0 ? (
-                  <>
-                    Selected {selectedWorkers.length}
-                    {filteredWorkers.length > 0 && (
-                      <span style={{ color: "crimson", fontWeight: "bold" }}>
-                        {selectedWorkers.length === filteredWorkers.length
-                          ? " Deselect All"
-                          : " Select All"}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  "Select Workers"
-                )}
+                <span>
+                  Selected {selectedWorkers.length}
+                  {filteredWorkers.length > 0 && (
+                    <span
+                      style={{
+                        color: "crimson",
+                        fontWeight: "bold",
+                        marginLeft: "0.25rem",
+                      }}
+                    >
+                      {selectedWorkers.length === filteredWorkers.length
+                        ? "Deselect All"
+                        : "Select All"}
+                    </span>
+                  )}
+                </span>
               </button>
 
               {/* Hours input with label */}
@@ -315,7 +345,7 @@ export default function AttendanceSheet({
                   min="1"
                   max="24"
                   style={{
-                    width: "5rem",
+                    width: windowWidth >= 768 ? "5rem" : "3rem",
                     height: "2rem",
                     padding: "0.75rem",
                     background: "rgba(40, 40, 50, 0.5)",
@@ -402,6 +432,9 @@ export default function AttendanceSheet({
                       <h3 style={{ fontSize: "1rem", marginBottom: "0.25rem" }}>
                         {worker.name}
                       </h3>
+                      <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                        {worker.projectCode || "No Project"}
+                      </p>
                     </div>
                     <div
                       style={{
@@ -540,7 +573,7 @@ export default function AttendanceSheet({
         updating={updating}
         extra={
           <div
-            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
           >
             <div
               style={{
@@ -574,19 +607,82 @@ export default function AttendanceSheet({
               </div>
             </div>
 
-            <div
-              style={{
-                padding: "1rem",
-                background: "rgba(220, 20, 60, 0.1)",
-                border: "1px solid rgba(220, 20, 60, 0.3)",
-                borderRadius: "0.5rem",
-              }}
-            >
-              <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-                ⚠️ Selected workers will be marked as present for {hours} hours.
-                Unselected workers will be marked as absent.
-              </p>
-            </div>
+            {/* Absentees Section */}
+            {filteredWorkers.filter(
+              (worker) => !selectedWorkers.includes(worker.id)
+            ).length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                  maxHeight: "300px",
+                  overflow: "auto",
+                  paddingRight: "0.5rem",
+                }}
+              >
+                <h4
+                  style={{
+                    color: "#94a3b8",
+                    fontSize: "0.9rem",
+                    position: "sticky",
+                    top: 0,
+                    background: "rgb(18 18 18)",
+                    padding: "0.25rem 0",
+                    zIndex: 1,
+                  }}
+                >
+                  Absent Workers
+                </h4>
+                {filteredWorkers
+                  .filter((worker) => !selectedWorkers.includes(worker.id))
+                  .map((worker) => (
+                    <div
+                      key={worker.id}
+                      style={{
+                        padding: "0.75rem",
+                        background: "rgba(220, 20, 60, 0.05)",
+                        border: "1px solid rgba(220, 20, 60, 0.2)",
+                        borderRadius: "0.5rem",
+                      }}
+                    >
+                      <div style={{ marginBottom: "0.5rem" }}>
+                        <h4
+                          style={{
+                            fontSize: "0.9rem",
+                            marginBottom: "0.25rem",
+                          }}
+                        >
+                          {worker.name}
+                        </h4>
+                        <p style={{ color: "#94a3b8", fontSize: "0.8rem" }}>
+                          {worker.projectCode || "No Project"}
+                        </p>
+                      </div>
+                      <input
+                        type="text"
+                        value={absenteeRemarks[worker.id] || ""}
+                        onChange={(e) =>
+                          setAbsenteeRemarks((prev) => ({
+                            ...prev,
+                            [worker.id]: e.target.value,
+                          }))
+                        }
+                        placeholder="Add remarks (optional)"
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          background: "rgba(40, 40, 50, 0.5)",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          borderRadius: "0.375rem",
+                          color: "white",
+                          fontSize: "0.9rem",
+                        }}
+                      />
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         }
       />
