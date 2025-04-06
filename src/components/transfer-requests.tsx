@@ -121,6 +121,18 @@ export default function TransferRequests({
     );
   };
 
+  const handleBulkTransfer = () => {
+    if (selectedWorkers.length === 0) {
+      message.error("Please select workers to transfer");
+      return;
+    }
+
+    onRequestTransfer(selectedWorkers);
+
+    setSelectedWorkers([]);
+    setSelectionMode(false);
+  };
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div
@@ -807,34 +819,18 @@ export default function TransferRequests({
 
                 {selectedWorkers.length > 0 && (
                   <button
-                    onClick={() =>
-                      onRequestTransfer(
-                        availableWorkers.filter((w) =>
-                          selectedWorkers.includes(w.id)
-                        )
-                      )
-                    }
+                    onClick={handleBulkTransfer}
                     style={{
-                      position: "fixed",
-                      bottom: "2rem",
-                      right: "2rem",
-                      padding: "1rem",
-                      background: "crimson",
-                      borderRadius: "0.5rem",
-                      fontSize: "0.9rem",
-
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      padding: "0.5rem 0.75rem",
+                      background: "rgba(30, 144, 255, 0.15)",
+                      borderRadius: "0.375rem",
                       display: "flex",
                       alignItems: "center",
                       gap: "0.5rem",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
-                      zIndex: 50,
                     }}
-                    className="hover:bg-[rgba(40,40,50,0.7)]"
                   >
                     <SquareArrowDownLeft size={18} />
-                    Transfer ({selectedWorkers.length})
+                    Transfer Selected ({selectedWorkers.length})
                   </button>
                 )}
               </div>

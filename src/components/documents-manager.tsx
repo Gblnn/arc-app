@@ -136,18 +136,18 @@ export default function DocumentsManager({ workers }: Props) {
     }
   };
 
-  const handleUpdateExpiry = async (documentId: string, newDate: string) => {
-    try {
-      await updateDoc(doc(db, "documents", documentId), {
-        expiryDate: new Date(newDate),
-      });
-      message.success("Expiry date updated");
-      fetchWorkerDocuments(selectedWorker.id);
-    } catch (error) {
-      console.error("Error updating expiry:", error);
-      message.error("Failed to update expiry date");
-    }
-  };
+  // const handleUpdateExpiry = async (documentId: string, newDate: string) => {
+  //   try {
+  //     await updateDoc(doc(db, "documents", documentId), {
+  //       expiryDate: new Date(newDate),
+  //     });
+  //     message.success("Expiry date updated");
+  //     fetchWorkerDocuments(selectedWorker.id);
+  //   } catch (error) {
+  //     console.error("Error updating expiry:", error);
+  //     message.error("Failed to update expiry date");
+  //   }
+  // };
 
   const isExpiringSoon = (date: Date) => {
     const expiryDate = new Date(date);
@@ -166,7 +166,7 @@ export default function DocumentsManager({ workers }: Props) {
     setDocumentNumber("");
   };
 
-  const getRequiredDocuments = () => DOCUMENTS;
+  // const getRequiredDocuments = () => DOCUMENTS;
 
   const handleBulkUpload = async (file: File) => {
     try {

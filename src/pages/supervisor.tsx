@@ -570,18 +570,19 @@ export default function Supervisor() {
       setConfirmTransferDialog(false);
       setTransferringWorker(null);
 
+      // If it's a bulk transfer, get the full worker details for each selected worker
       const workers = Array.isArray(workerOrWorkers)
-        ? workerOrWorkers
+        ? otherSiteWorkers.filter((w) => workerOrWorkers.includes(w.id))
         : [workerOrWorkers];
 
       for (const worker of workers) {
         await addDoc(collection(db, "transferRequests"), {
           workerId: worker.id,
           workerName: worker.name,
-          fromProject: worker.projectCode || "No Project",
-          toProject: projectCode || "No Project", // Use projectCode instead of selectedProject
-          fromSupervisor: worker.supervisorEmail || "", // Add fallback
-          toSupervisor: userEmail,
+          fromProject: projectCode || "No Project",
+          toProject: selectedProject || "No Project",
+          fromSupervisor: userEmail,
+          toSupervisor: worker.supervisorEmail || "",
           status: "pending",
           requestDate: new Date(),
           type: "outgoing",
@@ -599,33 +600,33 @@ export default function Supervisor() {
 
   const fetchTransferRequests = async () => {
     try {
-      const incomingQuery = query(
+      const outgoingQuery = query(
         collection(db, "transferRequests"),
         where("fromSupervisor", "==", userEmail),
         orderBy("requestDate", "desc")
       );
 
-      const outgoingQuery = query(
+      const incomingQuery = query(
         collection(db, "transferRequests"),
         where("toSupervisor", "==", userEmail),
         orderBy("requestDate", "desc")
       );
 
-      const [incomingSnapshot, outgoingSnapshot] = await Promise.all([
-        getDocs(incomingQuery),
+      const [outgoingSnapshot, incomingSnapshot] = await Promise.all([
         getDocs(outgoingQuery),
+        getDocs(incomingQuery),
       ]);
 
       const requests = [
-        ...incomingSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          type: "incoming",
-        })),
         ...outgoingSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
           type: "outgoing",
+        })),
+        ...incomingSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          type: "incoming",
         })),
       ];
 
