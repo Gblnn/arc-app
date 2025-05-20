@@ -79,7 +79,7 @@ const QuotationPage = ({
           justifyContent: "flex-end",
         }}
       >
-        <p style={{ color: "black", fontSize: "1rem" }}>
+        <p style={{ color: "black", fontSize: "0.8rem" }}>
           <b>DATE : {props.date}</b>
         </p>
       </div>
@@ -141,8 +141,11 @@ const QuotationPage = ({
 
       <div style={{ paddingLeft: "2rem", paddingRight: "2rem" }}>
         <div style={{ paddingBottom: "1rem" }}>
-          <p>
+          <p style={{ paddingBottom: "0.5rem" }}>
             <b>Subject : </b> {props.subject}
+          </p>
+          <p style={{ fontSize: "0.9rem", marginBottom: "0.25rem" }}>
+            We hereby submit the quotation for the following items as requested.
           </p>
         </div>
 
@@ -327,7 +330,7 @@ const QuotationPage = ({
           </div>
 
           <div style={{ padding: "2rem", fontSize: "0.9rem" }}>
-            <p style={{ fontWeight: "bold", marginBottom: "1rem" }}>
+            <p style={{ fontWeight: "600", marginBottom: "1rem" }}>
               Terms and Conditions:
             </p>
             <ol style={{ listStyle: "none", paddingLeft: "1.5rem" }}>
@@ -345,7 +348,7 @@ const QuotationPage = ({
             </ol>
           </div>
 
-          <div
+          {/* <div
             style={{
               display: "flex",
               paddingTop: "0.5rem",
@@ -359,7 +362,7 @@ const QuotationPage = ({
                 Contact : {props.contactNo || "92849282"}
               </b>
             </p>
-          </div>
+          </div> */}
 
           <div
             style={{
