@@ -71,7 +71,7 @@ const QuotationPage = ({
 
       <div
         style={{
-          paddingTop: "2rem",
+          paddingTop: "1rem",
           paddingLeft: "2rem",
           paddingRight: "2rem",
           display: "flex",
@@ -109,7 +109,7 @@ const QuotationPage = ({
         }}
       >
         <div
-          style={{ display: "flex", flexFlow: "column", fontSize: "0.9rem" }}
+          style={{ display: "flex", flexFlow: "column", fontSize: "0.8rem" }}
         >
           <p>TO</p>
           {props.clientName && (
@@ -126,7 +126,7 @@ const QuotationPage = ({
           </p>
         </div>
 
-        <div style={{ fontSize: "0.9rem", marginRight: "2rem" }}>
+        <div style={{ fontSize: "0.8rem", marginRight: "2rem" }}>
           <p>
             <b>ARC#{props.refNo}</b>
           </p>
@@ -140,13 +140,13 @@ const QuotationPage = ({
       </div>
 
       <div style={{ paddingLeft: "2rem", paddingRight: "2rem" }}>
-        <div style={{ paddingBottom: "1rem" }}>
-          <p style={{ paddingBottom: "0.5rem" }}>
+        <div style={{ paddingBottom: "0.75rem" }}>
+          <p style={{ paddingBottom: "0.25rem" }}>
             <b>Subject : </b> {props.subject}
           </p>
-          <p style={{ fontSize: "0.9rem", marginBottom: "0.25rem" }}>
+          {/* <p style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}>
             We hereby submit the quotation for the following items as requested.
-          </p>
+          </p> */}
         </div>
 
         <table
@@ -220,8 +220,8 @@ const QuotationPage = ({
                 <td
                   style={{
                     border: "1px solid black",
-                    padding: "0.5rem",
                     paddingBottom: "1rem",
+                    paddingLeft: "0.5rem",
                   }}
                 >
                   {startIndex + index + 1}
@@ -229,8 +229,9 @@ const QuotationPage = ({
                 <td
                   style={{
                     border: "1px solid black",
-                    padding: "0.5rem",
                     paddingBottom: "1rem",
+                    paddingLeft: "0.5rem",
+                    textTransform: "uppercase",
                   }}
                 >
                   {item.description}
@@ -238,8 +239,8 @@ const QuotationPage = ({
                 <td
                   style={{
                     border: "1px solid black",
-                    padding: "0.5rem",
                     paddingBottom: "1rem",
+                    paddingLeft: "0.5rem",
                   }}
                 >
                   {item.unit}
@@ -247,8 +248,8 @@ const QuotationPage = ({
                 <td
                   style={{
                     border: "1px solid black",
-                    padding: "0.5rem",
                     paddingBottom: "1rem",
+                    paddingLeft: "0.5rem",
                   }}
                 >
                   {item.amount.toFixed(3)}
@@ -256,8 +257,8 @@ const QuotationPage = ({
                 <td
                   style={{
                     border: "1px solid black",
-                    padding: "0.5rem",
                     paddingBottom: "1rem",
+                    paddingLeft: "0.5rem",
                   }}
                 >
                   {(Number(item.unit) * item.amount).toFixed(3)}
@@ -305,7 +306,7 @@ const QuotationPage = ({
               paddingRight: "2.5rem",
             }}
           >
-            <p style={{ textTransform: "capitalize" }}>
+            <p style={{ textTransform: "capitalize", fontSize: "0.8rem" }}>
               <b>
                 Riyal Omani{" "}
                 {(() => {
@@ -369,7 +370,9 @@ const QuotationPage = ({
               display: "flex",
               justifyContent: "space-between",
               fontSize: "0.9rem",
-              padding: "3rem",
+              paddingLeft: "3rem",
+              paddingRight: "3rem",
+              paddingTop: "0.5rem",
             }}
           >
             <p>Prepared By</p>
