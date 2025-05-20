@@ -19,7 +19,7 @@ interface Props {
   contactNo: string;
   unitTitle: string;
   letterhead?: string;
-  subject: string;
+  subject?: string;
 }
 
 interface PageProps extends Props {
