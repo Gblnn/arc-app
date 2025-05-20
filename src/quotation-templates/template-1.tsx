@@ -332,8 +332,11 @@ const QuotationPage = ({
             </p>
             <ol style={{ listStyle: "none", paddingLeft: "1.5rem" }}>
               {props.terms.map((term, index) => (
-                <li key={index} style={{ marginBottom: "  " }}>
-                  <span style={{ marginRight: "0.75rem", fontSize: "1.25rem" }}>
+                <li
+                  key={index}
+                  style={{ marginBottom: "  ", fontSize: "0.8rem" }}
+                >
+                  <span style={{ marginRight: "0.75rem", fontSize: "0.8rem" }}>
                     •
                   </span>
                   {term}
