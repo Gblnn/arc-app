@@ -19,6 +19,7 @@ interface Props {
   contactNo: string;
   unitTitle: string;
   letterhead?: string;
+  subject: string;
 }
 
 interface PageProps extends Props {
@@ -111,9 +112,12 @@ const QuotationPage = ({
           style={{ display: "flex", flexFlow: "column", fontSize: "0.9rem" }}
         >
           <p>TO</p>
-          <p>
-            <b>{props.clientName}</b>
-          </p>
+          {props.clientName && (
+            <p>
+              <b>M/s {props.clientName}</b>
+            </p>
+          )}
+
           <p style={{ border: "", width: "20ch" }}>
             <b>{props.clientAddress}</b>
           </p>
@@ -126,27 +130,37 @@ const QuotationPage = ({
           <p>
             <b>ARC#{props.refNo}</b>
           </p>
-          <p>Quotation No - ARC/{props.quotationNo}</p>
-          <p>Valid Until: {props.validityPeriod}</p>
+          <p>
+            <b>Quotation No - </b> ARC/{props.quotationNo}
+          </p>
+          <p>
+            <b>Valid Until: </b> {props.validityPeriod}
+          </p>
         </div>
       </div>
 
       <div style={{ paddingLeft: "2rem", paddingRight: "2rem" }}>
+        <div style={{ paddingBottom: "1rem" }}>
+          <p>
+            <b>Subject : </b> {props.subject}
+          </p>
+        </div>
+
         <table
           style={{
             width: "100%",
-            borderCollapse: "collapse",
             border: "1px solid black",
           }}
         >
-          <thead>
+          <thead style={{ width: "100%" }}>
             <tr>
               <th
                 style={{
                   border: "1px solid black",
-                  padding: "0.5rem",
-                  fontWeight: "normal",
+                  padding: "",
+                  fontWeight: "600",
                   width: "8%",
+                  paddingBottom: "1rem",
                 }}
               >
                 S No.
@@ -154,9 +168,10 @@ const QuotationPage = ({
               <th
                 style={{
                   border: "1px solid black",
-                  padding: "0.5rem",
-                  fontWeight: "normal",
+                  padding: "",
+                  paddingBottom: "1rem",
                   width: "60%",
+                  fontWeight: "600",
                 }}
               >
                 Description
@@ -164,9 +179,10 @@ const QuotationPage = ({
               <th
                 style={{
                   border: "1px solid black",
-                  padding: "0.5rem",
-                  fontWeight: "normal",
+                  padding: "",
+                  fontWeight: "600",
                   width: "10%",
+                  paddingBottom: "1rem",
                 }}
               >
                 {(props.unitTitle || "Qty").toUpperCase()}
@@ -174,9 +190,10 @@ const QuotationPage = ({
               <th
                 style={{
                   border: "1px solid black",
-                  padding: "0.5rem",
-                  fontWeight: "normal",
+                  padding: "",
+                  fontWeight: "600",
                   width: "10%",
+                  paddingBottom: "1rem",
                 }}
               >
                 Rate
@@ -184,9 +201,10 @@ const QuotationPage = ({
               <th
                 style={{
                   border: "1px solid black",
-                  padding: "0.5rem",
-                  fontWeight: "normal",
+                  padding: "",
+                  fontWeight: "600",
                   width: "15%",
+                  paddingBottom: "1rem",
                 }}
               >
                 Amount
@@ -196,19 +214,49 @@ const QuotationPage = ({
           <tbody>
             {items.map((item, index) => (
               <tr key={startIndex + index}>
-                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                <td
+                  style={{
+                    border: "1px solid black",
+                    padding: "0.5rem",
+                    paddingBottom: "1rem",
+                  }}
+                >
                   {startIndex + index + 1}
                 </td>
-                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                <td
+                  style={{
+                    border: "1px solid black",
+                    padding: "0.5rem",
+                    paddingBottom: "1rem",
+                  }}
+                >
                   {item.description}
                 </td>
-                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                <td
+                  style={{
+                    border: "1px solid black",
+                    padding: "0.5rem",
+                    paddingBottom: "1rem",
+                  }}
+                >
                   {item.unit}
                 </td>
-                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                <td
+                  style={{
+                    border: "1px solid black",
+                    padding: "0.5rem",
+                    paddingBottom: "1rem",
+                  }}
+                >
                   {item.amount.toFixed(3)}
                 </td>
-                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                <td
+                  style={{
+                    border: "1px solid black",
+                    padding: "0.5rem",
+                    paddingBottom: "1rem",
+                  }}
+                >
                   {(Number(item.unit) * item.amount).toFixed(3)}
                 </td>
               </tr>
@@ -223,12 +271,19 @@ const QuotationPage = ({
                     border: "1px solid black",
                     padding: "0.5rem",
                     textAlign: "left",
+                    paddingBottom: "1rem",
                   }}
                 >
                   TOTAL
                 </td>
 
-                <td style={{ border: "1px solid black", padding: "0.5rem" }}>
+                <td
+                  style={{
+                    border: "1px solid black",
+                    padding: "0.5rem",
+                    paddingBottom: "1rem",
+                  }}
+                >
                   {props.subtotal.toFixed(3)}
                 </td>
               </tr>
@@ -277,7 +332,10 @@ const QuotationPage = ({
             </p>
             <ol style={{ listStyle: "none", paddingLeft: "1.5rem" }}>
               {props.terms.map((term, index) => (
-                <li key={index} style={{ marginBottom: "0.5rem" }}>
+                <li key={index} style={{ marginBottom: "  " }}>
+                  <span style={{ marginRight: "0.75rem", fontSize: "1.25rem" }}>
+                    •
+                  </span>
                   {term}
                 </li>
               ))}

@@ -49,6 +49,7 @@ interface QuotationDetails {
   quotationNo: string;
   unitTitle: string;
   validityPeriod: string;
+  subject: string;
 }
 
 // Add this to your component's style section or to a CSS file
@@ -99,12 +100,15 @@ export default function DocumentGenerator() {
   // Quotation-specific state
   const [quotationNo, setQuotationNo] = useState("");
   const [validityPeriod, setValidityPeriod] = useState(
-    moment().add(30, "days").format("DD.MM.YYYY")
+    moment().add(10, "days").format("DD.MM.YYYY")
   );
   const [terms, setTerms] = useState<string[]>([
-    "Payment Terms: 100% advance payment",
-    "Delivery: Ex-stock",
-    "Validity: 30 days from the date of quotation",
+    "Diesel under scope of M/s ",
+    "Timesheet to be given to drivers by ",
+    "Maintenance of any machinery under scope of M/s Arc Engineering LLC",
+    "Food, Accomodation of drivers under scope of M/s Arc Engineering LLC",
+    "Minimum of 10 Working Hours per day",
+    "Valid driver's license with third party certificate and valid Wheel Loader third party certification.",
   ]);
 
   // Add a unit field to the document details section
@@ -125,6 +129,9 @@ export default function DocumentGenerator() {
 
   // Add state for letterhead selection
   const [letterhead, setLetterhead] = useState("ARC"); // Default to ARC Engineering
+
+  // Add state for subject
+  const [subject, setSubject] = useState("");
 
   useEffect(() => {
     console.log(selectedClient, selectedDocument);
@@ -333,6 +340,7 @@ export default function DocumentGenerator() {
           quotationNo,
           unitTitle,
           validityPeriod,
+          subject,
         };
         await addDoc(collection(db, "quotation-details"), data);
         await fetchQuotationDetails();
@@ -398,6 +406,7 @@ export default function DocumentGenerator() {
         setQuotationNo(quotation.quotationNo);
         setUnitTitle(quotation.unitTitle || "Qty");
         setValidityPeriod(quotation.validityPeriod);
+        setSubject(quotation.subject || "");
       }
     }
 
@@ -745,6 +754,15 @@ export default function DocumentGenerator() {
                 />
                 {documentType === "quotation" && (
                   <input
+                    type="text"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Subject"
+                    className="invoice-input"
+                  />
+                )}
+                {documentType === "quotation" && (
+                  <input
                     type="date"
                     value={moment(validityPeriod, "DD.MM.YYYY").format(
                       "YYYY-MM-DD"
@@ -1010,6 +1028,7 @@ export default function DocumentGenerator() {
                     contactNo={contactNo}
                     unitTitle={unitTitle}
                     letterhead={letterhead}
+                    subject={subject}
                   />
                 )}
               </div>

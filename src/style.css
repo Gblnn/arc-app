@@ -21,9 +21,9 @@ tr {
   border: 1px solid rgba(100 100 100/ 30%);
 }
 
-th {
+/* th {
   padding: 0.45rem;
-}
+} */
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
