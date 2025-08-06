@@ -29,6 +29,7 @@ import {
   Download,
   Factory,
   LoaderCircle,
+  Plus,
   Search,
   SquareArrowDownLeft,
   Upload,
@@ -1251,12 +1252,12 @@ export default function Supervisor() {
       {/* Floating Action Buttons */}
       {activeTab === "Workers" && !selectionMode && (
         <>
-          {/* <button
+          <button
             onClick={() => setWorkerManagementDialog(true)}
             style={{
               position: "fixed",
-              bottom: "2rem",
-              right: "2rem",
+              bottom: "6rem",
+              right: "1.5rem",
               width: "4rem",
               height: "4rem",
               borderRadius: "50%",
@@ -1274,7 +1275,7 @@ export default function Supervisor() {
             }}
           >
             <Plus size={24} color="white" />
-          </button> */}
+          </button>
         </>
       )}
 
