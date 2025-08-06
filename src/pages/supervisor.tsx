@@ -1,6 +1,7 @@
 import AttendanceSheet from "@/components/attendance-sheet";
 import CustomDropdown from "@/components/custom-dropdown";
 import DefaultDialog from "@/components/default-dialog";
+import DocumentsManager from "@/components/documents-manager";
 import HandoverHistory from "@/components/handover-history";
 import IndexDropDown from "@/components/index-dropdown";
 import RefreshButton from "@/components/refresh-button";
@@ -24,19 +25,18 @@ import {
 import {
   ArrowRight,
   CheckCircle,
+  Clock,
   Download,
-  Hash,
+  Factory,
   LoaderCircle,
-  Plus,
   Search,
   SquareArrowDownLeft,
   Upload,
-  X,
+  X
 } from "lucide-react";
 import moment from "moment";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DocumentsManager from "@/components/documents-manager";
 
 interface TransferRequest {
   id: string;
@@ -65,7 +65,7 @@ export default function Supervisor() {
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [targetSupervisor, setTargetSupervisor] = useState("");
   const [supervisors, setSupervisors] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState("Attendance");
+  const [activeTab, setActiveTab] = useState("Workers");
   const [incomingHandovers, setIncomingHandovers] = useState<any[]>([]);
   const [outgoingHandovers, setOutgoingHandovers] = useState<any[]>([]);
   const [newWorker, setNewWorker] = useState({
@@ -726,6 +726,10 @@ export default function Supervisor() {
     }
   };
 
+  const [attendanceMode, setAttendanceMode] = useState(false);
+  const [selectedForAttendance, setSelectedForAttendance] = useState<string[]>([]);
+  const [attendanceDialog, setAttendanceDialog] = useState(false);
+
   const tabs: Tab[] = [
     { id: "Workers", label: "Workers" },
     { id: "Attendance", label: "Attendance" },
@@ -757,7 +761,7 @@ export default function Supervisor() {
       ),
     },
     // { id: "Handovers", label: "Handovers" },
-    { id: "Documents", label: "Documents" },
+   
   ];
 
   const fetchAttendanceLogs = async () => {
@@ -822,28 +826,30 @@ export default function Supervisor() {
       {/* Header with Avatar */}
       <div
         style={{
-          padding: window.innerWidth >= 768 ? "1.25rem 1.5rem" : "1rem",
+          padding: "2rem 1rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          background: "rgba(30, 30, 40, 0.85)",
+          background: "rgba(20, 20, 30, 0.95)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
           zIndex: 40,
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          height: "3.5rem"
         }}
       >
         <div>
           <h2
             style={{
-              fontSize: "1.5rem",
+              fontSize: "1.25rem",
               fontWeight: "600",
               display: "flex",
               alignItems: "center",
-              gap: "0.5rem",
+              gap: "0.75rem",
             }}
           >
-            {<Hash color="crimson" />}
+            {<Factory color="crimson" />}
             {projectCodeLoading ? (
               <LoaderCircle
                 size={24}
@@ -868,24 +874,28 @@ export default function Supervisor() {
       {/* New Tab Navigation */}
       <div
         style={{
+          
           display: "flex",
-
-          background: "rgba(40, 40, 50, 0.5)",
+          background: "rgba(25, 25, 35, 0.95)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
           overflowX: "auto",
-          border: "",
+          padding: "1rem",
+          width: "100%",
+          position: "fixed",
+          bottom: 0,
+          zIndex: 30,
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+        
         }}
       >
         <div
           style={{
             display: "flex",
-            gap: "0.5rem",
+            gap: "0.75rem",
             width: "100%",
-            margin: "0.5rem",
-            // padding: "0.5rem",
-            // paddingLeft: "0",
-            // paddingRight: "0.5rem",
-            border: "",
+            justifyContent: "center",
+            alignItems: "center"
           }}
         >
           {tabs.map((tab) => (
@@ -893,19 +903,23 @@ export default function Supervisor() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: "0.5rem 1rem",
+                padding: "0.65rem 1.25rem",
                 background:
                   activeTab === tab.id
-                    ? "rgba(220, 20, 60, 0.1)"
-                    : "transparent",
+                    ? "rgba(220, 20, 60, 0.15)"
+                    : "rgba(40, 40, 50, 0.3)",
                 border: `1px solid ${
                   activeTab === tab.id
-                    ? "rgba(220, 20, 60, 0.2)"
-                    : "rgba(255, 255, 255, 0.1)"
+                    ? "rgba(220, 20, 60, 0.3)"
+                    : "rgba(255, 255, 255, 0.05)"
                 }`,
                 borderRadius: "0.5rem",
-                color: activeTab === tab.id ? "salmon" : "#94a3b8",
+                color: activeTab === tab.id ? "white" : "#94a3b8",
                 fontSize: "0.9rem",
+                fontWeight: activeTab === tab.id ? "500" : "400",
+                transition: "all 0.2s ease",
+                transform: activeTab === tab.id ? "translateY(-1px)" : "none",
+                boxShadow: activeTab === tab.id ? "0 4px 12px rgba(220, 20, 60, 0.15)" : "none"
               }}
             >
               {tab.label}
@@ -929,25 +943,27 @@ export default function Supervisor() {
           >
             <div
               style={{
-                padding: "1rem",
+                padding: "0.75rem",
                 background: "rgba(30, 30, 40, 0.85)",
                 borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
                 backdropFilter: "blur(16px)",
                 WebkitBackdropFilter: "blur(16px)",
                 display: "flex",
                 flexDirection: "column",
-                gap: "1rem",
+                gap: "0.5rem",
               }}
             >
-              {/* Search Bar */}
+              {/* Search Bar with Selection Controls */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.5rem",
+                  gap: "0.75rem",
                   background: "rgba(40, 40, 50, 0.5)",
-                  padding: "0.25rem 1rem",
-                  borderRadius: "0.5rem",
+                  padding: "0.25rem 0.75rem",
+                  borderRadius: "1rem",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
                 }}
               >
                 <Search size={18} color="#94a3b8" />
@@ -955,13 +971,13 @@ export default function Supervisor() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
+                  placeholder="Search workers..."
                   style={{
                     flex: 1,
                     background: "none",
                     border: "none",
                     color: "white",
-                    fontSize: "0.9rem",
+                    fontSize: "1rem",
                     outline: "none",
                   }}
                 />
@@ -979,73 +995,145 @@ export default function Supervisor() {
                     ✕
                   </button>
                 )}
-              </div>
-
-              {/* Selection Controls */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  alignItems: "center",
-                  height: "40px",
-                }}
-              >
+                <div style={{ width: "1px", height: "24px", background: "rgba(255, 255, 255, 0.1)" }} />
                 <button
-                  onClick={
-                    selectionMode
-                      ? handleSelectAll
-                      : () => setSelectionMode(true)
-                  }
+                  onClick={() => {
+                    setAttendanceMode(!attendanceMode);
+                    setSelectionMode(false);
+                    setSelectedWorkers([]);
+                    setSelectedForAttendance([]);
+                  }}
                   style={{
-                    padding: "0.45rem 1rem",
-                    fontSize: "0.8rem",
-                    color: "#94a3b8",
-                    background: "rgba(40, 40, 50, 0.5)",
+                    background: attendanceMode ? "rgba(220, 20, 60, 0.15)" : "none",
+                    border: "none",
+                    padding: "0.5rem",
                     borderRadius: "0.5rem",
+                    cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.5rem",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    justifyContent: "center",
+                  }}
+                  title={attendanceMode ? "Exit Attendance Mode" : "Mark Attendance"}
+                >
+                  <Clock 
+                    size={18} 
+                    color={attendanceMode ? "crimson" : "#94a3b8"}
+                    strokeWidth={2.5}
+                  />
+                </button>
+                <div style={{ width: "1px", height: "24px", background: "rgba(255, 255, 255, 0.1)" }} />
+                <button
+                  onClick={() => {
+                    setSelectionMode(!selectionMode);
+                    setAttendanceMode(false);
+                    setSelectedForAttendance([]);
+                  }}
+                  style={{
+                    background: selectionMode ? "rgba(220, 20, 60, 0.15)" : "none",
+                    border: "none",
+                    padding: "0.5rem",
+                    borderRadius: "0.5rem",
                     cursor: "pointer",
-                    height: "36px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  title={selectionMode ? "Exit Selection Mode" : "Enter Selection Mode"}
+                >
+                  <CheckCircle 
+                    size={18} 
+                    color={selectionMode ? "crimson" : "#94a3b8"}
+                    strokeWidth={2.5}
+                  />
+                </button>
+              </div>
+
+              {/* Selection Controls - Shown in selection mode and attendance mode */}
+              {(selectionMode || attendanceMode) && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.5rem 0.75rem",
+                    background: "rgba(220, 20, 60, 0.1)",
+                    borderRadius: "0.75rem",
+                    border: "1px solid rgba(220, 20, 60, 0.2)",
+                    marginTop: "0.5rem",
                   }}
                 >
-                  <CheckCircle color="crimson" strokeWidth={3} size={16} />
-                  {selectionMode ? (
-                    <>
-                      Selected {selectedWorkers.length}
-                      {filteredWorkers.length > 0 && (
-                        <span style={{ color: "crimson", fontWeight: "bold" }}>
-                          {selectedWorkers.length === filteredWorkers.length
-                            ? " Deselect All"
-                            : " Select All"}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    "Select Workers"
-                  )}
-                </button>
-                {selectionMode && (
+                  <div style={{ color: "#94a3b8", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    {selectionMode ? (
+                      <>
+                        <CheckCircle size={16} color="crimson" />
+                        Selected: {selectedWorkers.length}
+                      </>
+                    ) : (
+                      <>
+                        <Clock size={16} color="crimson" />
+                        Selected: {selectedForAttendance.length}
+                      </>
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }} />
                   <button
                     onClick={() => {
-                      setSelectionMode(false);
-                      setSelectedWorkers([]);
+                      if (selectionMode) {
+                        handleSelectAll();
+                      } else {
+                        // Handle select all for attendance
+                        if (selectedForAttendance.length === filteredWorkers.length) {
+                          setSelectedForAttendance([]);
+                        } else {
+                          setSelectedForAttendance(filteredWorkers.map((w:any) => w.id));
+                        }
+                      }
                     }}
                     style={{
-                      padding: "0.5rem 1rem",
+                      padding: "0.4rem 0.75rem",
+                      fontSize: "0.8rem",
+                      color: "#94a3b8",
                       background: "rgba(40, 40, 50, 0.5)",
-                      borderRadius: "0.375rem",
-                      fontSize: "0.9rem",
+                      borderRadius: "0.5rem",
                       border: "1px solid rgba(255, 255, 255, 0.1)",
-                      minWidth: "80px",
-                      height: "36px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
                     }}
                   >
+                    {(selectionMode ? selectedWorkers.length : selectedForAttendance.length) === filteredWorkers.length 
+                      ? "Deselect All" 
+                      : "Select All"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (selectionMode) {
+                        setSelectionMode(false);
+                        setSelectedWorkers([]);
+                      } else {
+                        setAttendanceMode(false);
+                        setSelectedForAttendance([]);
+                      }
+                    }}
+                    style={{
+                      padding: "0.4rem 0.75rem",
+                      fontSize: "0.8rem",
+                      color: "#94a3b8",
+                      background: "rgba(40, 40, 50, 0.5)",
+                      borderRadius: "0.5rem",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <X size={16} />
                     Cancel
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <div style={{ flex: 1, overflow: "auto", padding: "1rem" }}>
@@ -1061,19 +1149,34 @@ export default function Supervisor() {
                 {filteredWorkers.map((worker: any) => (
                   <div
                     key={worker.id}
-                    onClick={() =>
-                      selectionMode && toggleWorkerSelection(worker.id)
-                    }
+                    onClick={() => {
+                      if (selectionMode) {
+                        toggleWorkerSelection(worker.id);
+                      } else if (attendanceMode) {
+                        setSelectedForAttendance(prev =>
+                          prev.includes(worker.id)
+                            ? prev.filter(id => id !== worker.id)
+                            : [...prev, worker.id]
+                        );
+                      }
+                    }}
                     style={{
-                      padding: "1rem",
-                      background: selectedWorkers.includes(worker.id)
-                        ? "rgba(220, 20, 60, 0.1)"
+                      padding: "1.25rem",
+                      background: selectedWorkers.includes(worker.id) || selectedForAttendance.includes(worker.id)
+                        ? "rgba(220, 20, 60, 0.15)"
                         : "rgba(30, 30, 40, 0.5)",
-                      borderRadius: "0.5rem",
+                      borderRadius: "1rem",
                       cursor: selectionMode ? "pointer" : "default",
                       border: selectedWorkers.includes(worker.id)
                         ? "1px solid rgba(220, 20, 60, 0.3)"
-                        : "1px solid rgba(255, 255, 255, 0.05)",
+                        : "1px solid rgba(255, 255, 255, 0.08)",
+                      transition: "all 0.2s ease",
+                      transform: selectedWorkers.includes(worker.id) ? "scale(1.02)" : "none",
+                      boxShadow: selectedWorkers.includes(worker.id)
+                        ? "0 8px 16px rgba(220, 20, 60, 0.15)"
+                        : "0 4px 6px rgba(0, 0, 0, 0.1)",
+                      position: "relative",
+                      overflow: "hidden"
                     }}
                   >
                     <WorkerCard
@@ -1160,28 +1263,132 @@ export default function Supervisor() {
       {/* Floating Action Buttons */}
       {activeTab === "Workers" && !selectionMode && (
         <>
-          <button
+          {/* <button
             onClick={() => setWorkerManagementDialog(true)}
             style={{
               position: "fixed",
               bottom: "2rem",
               right: "2rem",
-              width: "3.5rem",
-              height: "3.5rem",
+              width: "4rem",
+              height: "4rem",
               borderRadius: "50%",
-              background: "crimson",
+              background: "linear-gradient(135deg, #dc143c 0%, #ff4d6d 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+              boxShadow: "0 8px 20px rgba(220, 20, 60, 0.3)",
               zIndex: 50,
               border: "none",
               cursor: "pointer",
+              transition: "all 0.2s ease",
+              transform: "scale(1)",
+              
             }}
           >
             <Plus size={24} color="white" />
-          </button>
+          </button> */}
         </>
+      )}
+
+      {/* Attendance Dialog */}
+      <DefaultDialog
+        title="Post Attendance"
+        titleIcon={<Clock color="#94a3b8" />}
+        open={attendanceDialog}
+        onCancel={() => {
+          setAttendanceDialog(false);
+          setSelectedForAttendance([]);
+          setAttendanceMode(false);
+        }}
+        onOk={() => {
+          setAttendanceDialog(false);
+          setSelectedForAttendance([]);
+          setAttendanceMode(false);
+        }}
+        OkButtonText="Post Attendance"
+        extra={
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ 
+              padding: "0.75rem",
+              background: "rgba(30, 30, 40, 0.5)",
+              borderRadius: "0.5rem",
+              border: "1px solid rgba(255, 255, 255, 0.05)",
+            }}>
+              <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                Posting attendance for {selectedForAttendance.length} worker{selectedForAttendance.length > 1 ? 's' : ''}
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <label style={{ color: "#94a3b8", fontSize: "0.9rem" }}>Status</label>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                {["present", "absent", "mc", "leave"].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      const hours = s === "present" ? 8 : 0;
+                      selectedForAttendance.forEach(workerId => {
+                        const worker = users.find((w:any) => w.id === workerId);
+                        if (worker) {
+                          handleMarkAttendance(workerId, s, hours);
+                        }
+                      });
+                      setAttendanceDialog(false);
+                      setSelectedForAttendance([]);
+                      setAttendanceMode(false);
+                      message.success(`Attendance posted for ${selectedForAttendance.length} worker${selectedForAttendance.length > 1 ? 's' : ''}`);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: "0.75rem",
+                      background: "rgba(40, 40, 50, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.05)",
+                      borderRadius: "0.5rem",
+                      color: "#94a3b8",
+                      cursor: "pointer",
+                      textTransform: "capitalize"
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        }
+      />
+
+      {/* Attendance Action Button */}
+      {activeTab === "Workers" && attendanceMode && selectedForAttendance.length > 0 && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "1rem",
+            background: "rgba(30, 30, 40, 0.95)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+            zIndex: 50,
+          }}
+        >
+          <button
+            onClick={() => setAttendanceDialog(true)}
+            style={{
+              width: "100%",
+              padding: "1rem",
+              background: "crimson",
+              borderRadius: "0.5rem",
+              fontSize: "0.9rem",
+              fontWeight: "500",
+              color: "white",
+            }}
+          >
+            Post Attendance ({selectedForAttendance.length})
+          </button>
+        </div>
       )}
 
       {/* Fixed Action Buttons */}

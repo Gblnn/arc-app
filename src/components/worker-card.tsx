@@ -13,14 +13,7 @@ export default function WorkerCard({
   selectionMode,
 }: WorkerCardProps) {
   return (
-    <div
-      style={{
-        background: "rgba(30, 30, 40, 0.5)",
-        borderRadius: "0.5rem",
-        padding: "1rem",
-        border: "1px solid rgba(255, 255, 255, 0.05)",
-      }}
-    >
+    
       <div
         style={{
           display: "flex",
@@ -66,6 +59,6 @@ export default function WorkerCard({
           </button>
         )}
       </div>
-    </div>
+    
   );
 }
