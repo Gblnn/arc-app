@@ -44,7 +44,7 @@ export default function CustomDropdown({
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          width: "14ch",
+          width: "100%",
           padding: "0.5rem 1rem",
           border: "1px solid rgba(100 100 100/ 15%)",
           borderRadius: "0.375rem",

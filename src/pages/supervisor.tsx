@@ -874,19 +874,20 @@ export default function Supervisor() {
       {/* New Tab Navigation */}
       <div
         style={{
-          
           display: "flex",
           background: "rgba(25, 25, 35, 0.95)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+          borderTop: "1px solid rgba(255, 255, 255, 0.05)",
           overflowX: "auto",
           padding: "1rem",
+          paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
           width: "100%",
           position: "fixed",
           bottom: 0,
+          left: 0,
+          right: 0,
           zIndex: 30,
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
-        
         }}
       >
         <div
@@ -935,6 +936,7 @@ export default function Supervisor() {
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
+          paddingBottom: "calc(4rem + env(safe-area-inset-bottom))", // Account for tab bar height + safe area
         }}
       >
         {activeTab === "Workers" && (
@@ -1149,46 +1151,32 @@ export default function Supervisor() {
                 {filteredWorkers.map((worker: any) => (
                   <div
                     key={worker.id}
-                    onClick={() => {
-                      if (selectionMode) {
-                        toggleWorkerSelection(worker.id);
-                      } else if (attendanceMode) {
-                        setSelectedForAttendance(prev =>
-                          prev.includes(worker.id)
-                            ? prev.filter(id => id !== worker.id)
-                            : [...prev, worker.id]
-                        );
-                      }
-                    }}
-                    style={{
-                      padding: "1.25rem",
-                      background: selectedWorkers.includes(worker.id) || selectedForAttendance.includes(worker.id)
-                        ? "rgba(220, 20, 60, 0.15)"
-                        : "rgba(30, 30, 40, 0.5)",
-                      borderRadius: "1rem",
-                      cursor: selectionMode ? "pointer" : "default",
-                      border: selectedWorkers.includes(worker.id)
-                        ? "1px solid rgba(220, 20, 60, 0.3)"
-                        : "1px solid rgba(255, 255, 255, 0.08)",
-                      transition: "all 0.2s ease",
-                      transform: selectedWorkers.includes(worker.id) ? "scale(1.02)" : "none",
-                      boxShadow: selectedWorkers.includes(worker.id)
-                        ? "0 8px 16px rgba(220, 20, 60, 0.15)"
-                        : "0 4px 6px rgba(0, 0, 0, 0.1)",
-                      position: "relative",
-                      overflow: "hidden"
-                    }}
                   >
                     <WorkerCard
                       worker={worker}
-                      selected={selectedWorkers.includes(worker.id)}
+                      selected={selectedWorkers.includes(worker.id) || selectedForAttendance.includes(worker.id)}
                       onHandover={() => {
-                        if (!selectionMode) {
+                        if (!selectionMode && !attendanceMode) {
                           setSelectedWorker(worker);
                           setHandoverDialog(true);
                         }
                       }}
-                      selectionMode={selectionMode}
+                      selectionMode={selectionMode || attendanceMode}
+                      onClick={() => {
+                        if (!selectionMode && !attendanceMode) {
+                          setAttendanceMode(true);
+                          setSelectedForAttendance([worker.id]);
+                          
+                        } else if (selectionMode) {
+                          toggleWorkerSelection(worker.id);
+                        } else if (attendanceMode) {
+                          setSelectedForAttendance(prev =>
+                            prev.includes(worker.id)
+                              ? prev.filter(id => id !== worker.id)
+                              : [...prev, worker.id]
+                          );
+                        }
+                      }}
                     />
                   </div>
                 ))}

@@ -5,15 +5,30 @@ interface WorkerCardProps {
   selected?: boolean;
   onHandover: () => void;
   selectionMode?: boolean;
+  onClick?: () => void;
 }
 
 export default function WorkerCard({
   worker,
   onHandover,
   selectionMode,
+  onClick,
+  selected,
 }: WorkerCardProps) {
   return (
-    
+    <div 
+      onClick={onClick}
+      style={{ 
+        cursor: onClick ? 'pointer' : 'default',
+        padding: "1.25rem",
+        background: selected ? "rgba(220, 20, 60, 0.15)" : "rgba(30, 30, 40, 0.5)",
+        borderRadius: "1rem",
+        border: selected ? "1px solid rgba(220, 20, 60, 0.3)" : "1px solid rgba(255, 255, 255, 0.08)",
+        transition: "all 0.2s ease",
+        transform: selected ? "scale(1.02)" : "none",
+        boxShadow: selected ? "0 8px 16px rgba(220, 20, 60, 0.15)" : "0 4px 6px rgba(0, 0, 0, 0.1)",
+      }}
+    >
       <div
         style={{
           display: "flex",
@@ -40,7 +55,10 @@ export default function WorkerCard({
         </div>
         {!selectionMode && (
           <button
-            onClick={onHandover}
+            onClick={(e) => {
+              e.stopPropagation();
+              onHandover();
+            }}
             style={{
               padding: "0.5rem",
               paddingLeft: "0.75rem",
@@ -59,6 +77,6 @@ export default function WorkerCard({
           </button>
         )}
       </div>
-    
+    </div>
   );
 }
