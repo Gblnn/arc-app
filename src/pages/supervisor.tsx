@@ -1436,7 +1436,8 @@ export default function Supervisor() {
       {/* Worker Management Dialog */}
       <DefaultDialog
         close
-        title="Worker Management"
+        title="Add Worker"
+        titleIcon={<Plus color="crimson" />}
         open={workerManagementDialog}
         onCancel={() => setWorkerManagementDialog(false)}
         extra={
@@ -1454,7 +1455,7 @@ export default function Supervisor() {
                   fontWeight: "500",
                 }}
               >
-                Add Worker Manually
+                
               </h3>
               <div
                 style={{
